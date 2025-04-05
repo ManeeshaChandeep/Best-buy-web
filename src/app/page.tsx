@@ -1,54 +1,80 @@
 import Image from "next/image";
-import Header from "@/components/header/Header";
+import Header from "@/components/Header";
 import React from "react";
 
+// images
 import mainImage from "@/../public/images/main-imge.png"
-import ItemCategory from "@/components/item-category/ItemCategory";
+import categoryOne from "@/../public/images/tv.png"
+import categoryTwo from "@/../public/images/smartPhone.png"
+import categoryThree from "@/../public/images/soundSystems.jpg"
+import categoryFour from "@/../public/images/Refrigerators.jpg"
+import categoryFive from "@/../public/images/washingMashing.jpg"
+
+import CategoryCard from "@/components/ItemCategory";
+import HeroSection from "@/components/HeroSection";
+import ItemCard from "@/components/ItemCard";
 export default function Home() {
   return (
     <div>
       <Header/>
 
-        <section className="relative bg-gray-100">
-            <div className="container mx-auto flex flex-col  items-center justify-between px-6 py-20">
+      <HeroSection/>
 
-                {/* Left Side - Text */}
-                <div className="max-w-2xl text-center ">
-                    <h1 className="text-4xl lg:text-6xl font-bold text-gray-900">
-                        Discover the Best <span className="text-red-600">Electronics</span>
-                    </h1>
-                    <p className="mt-4 text-gray-600 text-lg">
-                        Find the latest gadgets, smartphones, laptops, and accessories at unbeatable prices.
-                    </p>
-
-                    {/* CTA Buttons */}
-                    <div className="mt-6 flex justify-center  space-x-4">
-                        <a href="#" className="px-6 py-2 text-white bg-red-600 hover:bg-red-700 rounded-full shadow-md text-lg">
-                            Shop Now
-                        </a>
-                        <a href="#" className="px-6 py-2 text-gray-900 border border-gray-300 hover:bg-gray-200 rounded-full text-lg">
-                            Explore
-                        </a>
-                    </div>
-                </div>
-
-                {/* Right Side - Hero Image */}
-                <div className="mt-10 ">
-                    <Image
-                        src={mainImage} // Replace with your actual image
-                        alt="Electronics"
-                        width={700}
-                        height={700}
-                    />
-                </div>
-
-            </div>
+        <section className='flex justify-center overflow-x-auto no-scrollbar space-x-6 '>
+        <CategoryCard imageSrc={categoryOne} title="Tv & Home" />
+        <CategoryCard imageSrc={categoryTwo} title="Smart Phones" />
+        <CategoryCard imageSrc={categoryThree} title="soundSy Systems" />
+        <CategoryCard imageSrc={categoryFour} title="Frigerators" />
+        <CategoryCard imageSrc={categoryFive} title="Washing Machines" />
         </section>
 
-        <ItemCategory/>
-        <ItemCategory/>
-        <ItemCategory/>
-        <ItemCategory/>
+
+        <section className='flex justify-center  flex-wrap'>
+          <div className='grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6'>
+          <ItemCard
+              imageSrc={categoryOne}
+              title="Smart Ultra HD LED TV"
+              oldPrice="240000"
+              newPrice="240000"
+              inStock={true}/>
+
+            <ItemCard
+                imageSrc={categoryOne}
+                title="Smart Ultra HD LED TV"
+                oldPrice="240000"
+                newPrice="240000"
+                inStock={true}/>
+
+            <ItemCard
+                imageSrc={categoryOne}
+                title="Smart Ultra HD LED TV"
+                oldPrice="240000"
+                newPrice="240000"
+                inStock={true}/>
+
+            <ItemCard
+                imageSrc={categoryOne}
+                title="Smart Ultra HD LED TV"
+                oldPrice="240000"
+                newPrice="240000"
+                inStock={true}/>
+
+            <ItemCard
+                imageSrc={categoryOne}
+                title="Smart Ultra HD LED TV"
+                oldPrice="240000"
+                newPrice="240000"
+                inStock={true}/>
+
+            <ItemCard
+                imageSrc={categoryOne}
+                title="Smart Ultra HD LED TV"
+                oldPrice="240000"
+                newPrice="240000"
+                inStock={true}/>
+          </div>
+
+        </section>
     </div>
   );
 }
