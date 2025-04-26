@@ -1,8 +1,8 @@
-import Image from 'next/image';
+import Image, {StaticImageData} from 'next/image';
 import { ReactNode } from 'react';
 
 interface ProductCardProps {
-    imageSrc: string;
+    imageSrc: StaticImageData;
     title: string;
     oldPrice: number | string;
     newPrice: number | string;
