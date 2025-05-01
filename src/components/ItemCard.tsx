@@ -1,5 +1,6 @@
 import Image, {StaticImageData} from 'next/image';
 import { ReactNode } from 'react';
+import {images} from "next/dist/build/webpack/config/blocks/images";
 
 interface ProductCardProps {
     imageSrc: StaticImageData;
@@ -21,7 +22,7 @@ const ProductCard = ({ imageSrc, title, oldPrice, newPrice, inStock }: ProductCa
                 <Image
                     src={imageSrc}
                     alt={title}
-                    className="rounded w-32 object-cover"
+                    className="rounded w-40 object-cover"
                     width={128}
                     height={128}
                 />
@@ -43,3 +44,6 @@ const ProductCard = ({ imageSrc, title, oldPrice, newPrice, inStock }: ProductCa
 };
 
 export default ProductCard;
+
+
+

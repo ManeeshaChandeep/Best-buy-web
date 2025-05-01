@@ -11,6 +11,7 @@ import categoryFive from "@/../public/images/washingMashing.jpg"
 
 import postOne from "@/../public/images/posts/postOne.png"
 import postTwo from "@/../public/images/posts/postTwo.png"
+import postThree from "@/../public/images/posts/postThree.png"
 
 import itemTvOne from "@/../public/images/tvOne.png"
 import itemTvTwo from "@/../public/images/tvTwo.png"
@@ -38,10 +39,21 @@ import blenderFour from "@/../public/images/blenderFour.png"
 
 import acOne from "@/../public/images/acOne.png"
 
+import washingMachineOne from "@/../public/images/washingMashingOne.png"
+import washingMachineTwo from "@/../public/images/washingMashingTwo.png"
+import washingMachineThree from "@/../public/images/washingMashingThree.png"
+import washingMachineFour from "@/../public/images/washingMashingFour.png"
+import washingMachineFive from "@/../public/images/washingMashingFive.png"
+import washingMachineSix from "@/../public/images/washingMashingSix.png"
+import washingMachineSeven from "@/../public/images/washingMashingSeven.png"
+
+
+
 
 import CategoryCard from "@/components/ItemCategory";
 import HeroSection from "@/components/HeroSection";
 import ItemCard from "@/components/ItemCard";
+import Footer from "@/components/Footer";
 
 export default function Home() {
     return (
@@ -361,9 +373,193 @@ export default function Home() {
 
                 </div>
 
+
+                <div className='w-3/4 mx-auto mt-5'>
+                    <div>
+                        <div className="border-b border-gray-300 pb-1 mb-2 ">
+                            <div className="flex justify-between items-center">
+                                <h1 className=" text-gray-800 text-xs md:text-sm font-medium">washing Machine</h1>
+                                <a href="#" className="text-blue-600 hover:text-blue-800 text-xs md:text-sm">VIEW
+                                    ALL</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div className='grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6'>
+                    <ItemCard
+                        imageSrc={washingMachineSeven}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                    <ItemCard
+                        imageSrc={washingMachineTwo}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                    <ItemCard
+                        imageSrc={washingMachineThree}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                    <ItemCard
+                        imageSrc={washingMachineFour}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                    <ItemCard
+                        imageSrc={washingMachineFive}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                    <ItemCard
+                        imageSrc={washingMachineSix}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                </div>
+
+
+
+                <div className='w-3/4 mx-auto mt-5'>
+                    <div>
+                        <div className="border-b border-gray-300 pb-1 mb-2 ">
+                            <div className="flex justify-between items-center">
+                                <h1 className=" text-gray-800 text-xs md:text-sm font-medium">Air Conditioners</h1>
+                                <a href="#" className="text-blue-600 hover:text-blue-800 text-xs md:text-sm">VIEW
+                                    ALL</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div className='grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6'>
+                    <ItemCard
+                        imageSrc={acOne}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                    <ItemCard
+                        imageSrc={acOne}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                    <ItemCard
+                        imageSrc={acOne}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                    <ItemCard
+                        imageSrc={acOne}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                    <ItemCard
+                        imageSrc={acOne}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                    <ItemCard
+                        imageSrc={acOne}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                </div>
+
+
+
+                <div className='w-3/4 mx-auto mt-5'>
+                    <div>
+                        <div className="border-b border-gray-300 pb-1 mb-2 ">
+                            <div className="flex justify-between items-center">
+                                <h1 className=" text-gray-800 text-xs md:text-sm font-medium">Air Conditioners</h1>
+                                <a href="#" className="text-blue-600 hover:text-blue-800 text-xs md:text-sm">VIEW
+                                    ALL</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <div className='grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6'>
+                    <ItemCard
+                        imageSrc={categoryOne}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                    <ItemCard
+                        imageSrc={itemTvOne}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                    <ItemCard
+                        imageSrc={itemTvTwo}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                    <ItemCard
+                        imageSrc={itemTvThree}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                    <ItemCard
+                        imageSrc={itemMicrowaveOne}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                    <ItemCard
+                        imageSrc={itemWashingMashingOne}
+                        title="Smart Ultra HD LED TV"
+                        oldPrice="240000"
+                        newPrice="240000"
+                        inStock={true}/>
+
+                </div>
+
+                <div>
+                    <Image src={postThree} alt={""} className='rounded-md'/>
+                </div>
+
             </section>
 
-
+            <Footer/>
         </div>
     );
 }
