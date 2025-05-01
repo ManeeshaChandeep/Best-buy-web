@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Header from "@/components/Header";
 import React from "react";
 
 // images
@@ -53,12 +52,11 @@ import washingMachineSeven from "@/../public/images/washingMashingSeven.png"
 import CategoryCard from "@/components/ItemCategory";
 import HeroSection from "@/components/HeroSection";
 import ItemCard from "@/components/ItemCard";
-import Footer from "@/components/Footer";
+
 
 export default function Home() {
     return (
         <div>
-            <Header/>
 
             <HeroSection/>
 
@@ -559,7 +557,6 @@ export default function Home() {
 
             </section>
 
-            <Footer/>
         </div>
     );
 }

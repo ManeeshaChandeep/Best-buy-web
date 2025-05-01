@@ -3,14 +3,17 @@ import { FaFacebook, FaTwitter, FaInstagram, FaYoutube } from 'react-icons/fa';
 
 const Footer: React.FC = () => {
     return (
-        <footer className="bg-white py-10">
+        <footer className="bg-white py-10 drop-shadow-lg mt-14">
             <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
 
                 {/* Brand Info */}
                 <div>
                     <h2 className="text-2xl font-bold mb-4 text-red-600">BestBuy</h2>
                     <p className="text-sm">
-                        Discover the latest in electronics – from cutting-edge gadgets to premium accessories. Enjoy exclusive deals, fast shipping, and a seamless shopping experience.
+                        Discover the latest in electronics – from cutting-edge gadgets to premium accessories.
+                    </p>
+                    <p className="text-sm mt-7">
+                        Wanchawala Galle, Sri Lanka.
                     </p>
                 </div>
 
@@ -27,12 +30,12 @@ const Footer: React.FC = () => {
 
                 {/* Customer Service */}
                 <div>
-                    <h3 className="text-xl font-semibold mb-3">Customer Service</h3>
+                    <h3 className="text-xl font-semibold mb-3">Help</h3>
                     <ul className="space-y-2 text-sm">
-                        <li><a href="/faq" className="hover:underline">FAQs</a></li>
-                        <li><a href="/returns" className="hover:underline">Returns</a></li>
-                        <li><a href="/support" className="hover:underline">Support</a></li>
-                        <li><a href="/track-order" className="hover:underline">Track Order</a></li>
+                        <li><a href="/faq" className="hover:underline">Customer Support</a></li>
+                        <li><a href="/returns" className="hover:underline">Terms & Conditions</a></li>
+                        <li><a href="/support" className="hover:underline">Privacy Policy</a></li>
+                        <li><a href="/track-order" className="hover:underline">Return and Refund Policy</a></li>
                     </ul>
                 </div>
 
