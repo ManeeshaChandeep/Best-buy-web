@@ -52,12 +52,15 @@ import washingMachineSeven from "@/../public/images/washingMashingSeven.png"
 import CategoryCard from "@/components/ItemCategory";
 import HeroSection from "@/components/HeroSection";
 import ItemCard from "@/components/ItemCard";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 
 export default function Home() {
     return (
         <div>
 
+            <Header/>
             <HeroSection/>
 
             <section className='flex justify-center overflow-x-auto no-scrollbar space-x-6 '>
@@ -556,7 +559,7 @@ export default function Home() {
                 </div>
 
             </section>
-
+            <Footer/>
         </div>
     );
 }
