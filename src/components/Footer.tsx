@@ -1,7 +1,23 @@
-import React from 'react';
+'use client'
+import React, { useState, useEffect } from 'react';
 import { FaFacebook, FaTwitter, FaInstagram, FaYoutube } from 'react-icons/fa';
 
 const Footer: React.FC = () => {
+    const [isMobile, setIsMobile] = useState(false);
+    const [showPolicies, setShowPolicies] = useState(false);
+    const [showHelp, setShowHelp] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 700);
+        };
+
+        handleResize(); // Check initially
+        window.addEventListener('resize', handleResize);
+
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     return (
         <footer className="bg-white py-10 drop-shadow-lg mt-14">
             <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -19,24 +35,40 @@ const Footer: React.FC = () => {
 
                 {/* Policies */}
                 <div>
-                    <h3 className="text-xl font-semibold mb-3">Policies</h3>
-                    <ul className="space-y-2 text-sm">
-                        <li><a href="/" className="hover:underline">Customer Support</a></li>
-                        <li><a href="/shop" className="hover:underline">Terms & Conditions</a></li>
-                        <li><a href="/about" className="hover:underline">Privacy Policy</a></li>
-                        <li><a href="/contact" className="hover:underline">Return and Refund Policy</a></li>
-                    </ul>
+                    <h3
+                        className="text-xl font-semibold mb-3 cursor-pointer flex justify-between items-center"
+                        onClick={() => isMobile && setShowPolicies(!showPolicies)}
+                    >
+                        Policies
+                        {isMobile && <span>{showPolicies ? '−' : '+'}</span>}
+                    </h3>
+                    {(showPolicies || !isMobile) && (
+                        <ul className="space-y-2 text-sm">
+                            <li><a href="/" className="hover:underline">Customer Support</a></li>
+                            <li><a href="/shop" className="hover:underline">Terms & Conditions</a></li>
+                            <li><a href="/about" className="hover:underline">Privacy Policy</a></li>
+                            <li><a href="/contact" className="hover:underline">Return and Refund Policy</a></li>
+                        </ul>
+                    )}
                 </div>
 
-                {/* Customer Service */}
+                {/* Help */}
                 <div>
-                    <h3 className="text-xl font-semibold mb-3">Help</h3>
-                    <ul className="space-y-2 text-sm">
-                        <li><a href="/faq" className="hover:underline">Customer Support</a></li>
-                        <li><a href="/returns" className="hover:underline">Terms & Conditions</a></li>
-                        <li><a href="/support" className="hover:underline">Privacy Policy</a></li>
-                        <li><a href="/track-order" className="hover:underline">Return and Refund Policy</a></li>
-                    </ul>
+                    <h3
+                        className="text-xl font-semibold mb-3 cursor-pointer flex justify-between items-center"
+                        onClick={() => isMobile && setShowHelp(!showHelp)}
+                    >
+                        Help
+                        {isMobile && <span>{showHelp ? '−' : '+'}</span>}
+                    </h3>
+                    {(showHelp || !isMobile) && (
+                        <ul className="space-y-2 text-sm">
+                            <li><a href="/faq" className="hover:underline">Customer Support</a></li>
+                            <li><a href="/returns" className="hover:underline">Terms & Conditions</a></li>
+                            <li><a href="/support" className="hover:underline">Privacy Policy</a></li>
+                            <li><a href="/track-order" className="hover:underline">Return and Refund Policy</a></li>
+                        </ul>
+                    )}
                 </div>
 
                 {/* Social Media */}

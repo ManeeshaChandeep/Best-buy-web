@@ -14,7 +14,7 @@ export default function Navbar() {
 
                 {/* Search Bar (Hidden on Mobile) */}
                 <div className="hidden lg:flex flex-1 justify-end mx-6">
-                    <div className="relative w-full max-w-md">
+                    <div className="relative w-4/5">
                         <input
                             type="text"
                             placeholder="What are you looking for?"
