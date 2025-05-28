@@ -1,91 +1,219 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { FaFacebook, FaTwitter, FaInstagram, FaYoutube } from 'react-icons/fa';
+import { FaFacebook, FaTwitter, FaInstagram, FaYoutube, FaLinkedin, FaTiktok } from 'react-icons/fa';
+import { IoMdArrowDropdown, IoMdArrowDropup } from 'react-icons/io';
+import { MdEmail, MdPhone, MdLocationOn } from 'react-icons/md';
 
 const Footer: React.FC = () => {
     const [isMobile, setIsMobile] = useState(false);
-    const [showPolicies, setShowPolicies] = useState(false);
-    const [showHelp, setShowHelp] = useState(false);
+    const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+        policies: false,
+        help: false,
+        company: false
+    });
 
     useEffect(() => {
         const handleResize = () => {
-            setIsMobile(window.innerWidth < 700);
+            setIsMobile(window.innerWidth < 768);
         };
 
-        handleResize(); // Check initially
+        handleResize();
         window.addEventListener('resize', handleResize);
 
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    const toggleSection = (section: string) => {
+        if (isMobile) {
+            setExpandedSections(prev => ({
+                ...prev,
+                [section]: !prev[section]
+            }));
+        }
+    };
+
+    const socialLinks = [
+        { icon: <FaFacebook size={20} />, color: 'hover:text-blue-600', label: 'Facebook' },
+        { icon: <FaTwitter size={20} />, color: 'hover:text-blue-400', label: 'Twitter' },
+        { icon: <FaInstagram size={20} />, color: 'hover:text-pink-600', label: 'Instagram' },
+    ];
+
     return (
-        <footer className="bg-white py-10 drop-shadow-lg mt-14">
-            <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
+        <footer className="bg-gradient-to-b from-gray-50 to-gray-100 border-t border-gray-200 pt-12 pb-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+                    {/* Brand Info */}
+                    <div className="lg:col-span-2">
+                        <div className="flex items-center mb-4">
+                            <span className="text-3xl font-bold text-red-600 mr-2">BestBuy</span>
+                            <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">Premium</span>
+                        </div>
+                        <p className="text-gray-600 text-sm mb-6">
+                            Your trusted destination for cutting-edge electronics, premium gadgets, and exceptional service since 2010.
+                        </p>
+                        
+                        <div className="space-y-3">
+                            <div className="flex items-center text-gray-600">
+                                <MdLocationOn className="mr-2 text-red-500" />
+                                <span className="text-sm">Wanchawala Galle, Sri Lanka</span>
+                            </div>
+                            <div className="flex items-center text-gray-600">
+                                <MdPhone className="mr-2 text-red-500" />
+                                <span className="text-sm">+94 76 123 4567</span>
+                            </div>
+                            <div className="flex items-center text-gray-600">
+                                <MdEmail className="mr-2 text-red-500" />
+                                <span className="text-sm">support@bestbuy.lk</span>
+                            </div>
+                        </div>
+                    </div>
 
-                {/* Brand Info */}
-                <div>
-                    <h2 className="text-2xl font-bold mb-4 text-red-600">BestBuy</h2>
-                    <p className="text-sm">
-                        Discover the latest in electronics – from cutting-edge gadgets to premium accessories.
-                    </p>
-                    <p className="text-sm mt-7">
-                        Wanchawala Galle, Sri Lanka.
-                    </p>
-                </div>
+                    {/* Policies */}
+                    <div>
+                        <h3
+                            className="text-lg font-semibold text-gray-800 mb-4 flex justify-between items-center cursor-pointer"
+                            onClick={() => toggleSection('policies')}
+                        >
+                            Policies
+                            {isMobile && (
+                                expandedSections.policies ? <IoMdArrowDropup /> : <IoMdArrowDropdown />
+                            )}
+                        </h3>
+                        {(expandedSections.policies || !isMobile) && (
+                            <ul className="space-y-3">
+                                {[
+                                    { label: 'Shipping Policy', url: '/shipping' },
+                                    { label: 'Return Policy', url: '/returns' },
+                                    { label: 'Refund Policy', url: '/refunds' },
+                                    { label: 'Warranty', url: '/warranty' },
+                                    { label: 'Terms of Service', url: '/terms' }
+                                ].map((item, index) => (
+                                    <li key={index}>
+                                        <a 
+                                            href={item.url} 
+                                            className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200 flex items-center"
+                                        >
+                                            <span className="w-1 h-1 bg-gray-400 rounded-full mr-2"></span>
+                                            {item.label}
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
 
-                {/* Policies */}
-                <div>
-                    <h3
-                        className="text-xl font-semibold mb-3 cursor-pointer flex justify-between items-center"
-                        onClick={() => isMobile && setShowPolicies(!showPolicies)}
-                    >
-                        Policies
-                        {isMobile && <span>{showPolicies ? '−' : '+'}</span>}
-                    </h3>
-                    {(showPolicies || !isMobile) && (
-                        <ul className="space-y-2 text-sm">
-                            <li><a href="/" className="hover:underline">Customer Support</a></li>
-                            <li><a href="/shop" className="hover:underline">Terms & Conditions</a></li>
-                            <li><a href="/about" className="hover:underline">Privacy Policy</a></li>
-                            <li><a href="/contact" className="hover:underline">Return and Refund Policy</a></li>
-                        </ul>
-                    )}
-                </div>
+                    {/* Help & Support */}
+                    <div>
+                        <h3
+                            className="text-lg font-semibold text-gray-800 mb-4 flex justify-between items-center cursor-pointer"
+                            onClick={() => toggleSection('help')}
+                        >
+                            Help Center
+                            {isMobile && (
+                                expandedSections.help ? <IoMdArrowDropup /> : <IoMdArrowDropdown />
+                            )}
+                        </h3>
+                        {(expandedSections.help || !isMobile) && (
+                            <ul className="space-y-3">
+                                {[
+                                    { label: 'FAQs', url: '/faq' },
+                                    { label: 'Track Order', url: '/track-order' },
+                                    { label: 'Contact Us', url: '/contact' },
+                                    { label: 'Live Chat', url: '/chat' },
+                                    { label: 'Feedback', url: '/feedback' }
+                                ].map((item, index) => (
+                                    <li key={index}>
+                                        <a 
+                                            href={item.url} 
+                                            className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200 flex items-center"
+                                        >
+                                            <span className="w-1 h-1 bg-gray-400 rounded-full mr-2"></span>
+                                            {item.label}
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
 
-                {/* Help */}
-                <div>
-                    <h3
-                        className="text-xl font-semibold mb-3 cursor-pointer flex justify-between items-center"
-                        onClick={() => isMobile && setShowHelp(!showHelp)}
-                    >
-                        Help
-                        {isMobile && <span>{showHelp ? '−' : '+'}</span>}
-                    </h3>
-                    {(showHelp || !isMobile) && (
-                        <ul className="space-y-2 text-sm">
-                            <li><a href="/faq" className="hover:underline">Customer Support</a></li>
-                            <li><a href="/returns" className="hover:underline">Terms & Conditions</a></li>
-                            <li><a href="/support" className="hover:underline">Privacy Policy</a></li>
-                            <li><a href="/track-order" className="hover:underline">Return and Refund Policy</a></li>
-                        </ul>
-                    )}
-                </div>
+                    {/* Company & Social */}
+                    <div>
+                        <h3
+                            className="text-lg font-semibold text-gray-800 mb-4 flex justify-between items-center cursor-pointer"
+                            onClick={() => toggleSection('company')}
+                        >
+                            Company
+                            {isMobile && (
+                                expandedSections.company ? <IoMdArrowDropup /> : <IoMdArrowDropdown />
+                            )}
+                        </h3>
+                        {(expandedSections.company || !isMobile) && (
+                            <div className="space-y-6">
+                                <ul className="space-y-3">
+                                    {[
+                                        { label: 'About Us', url: '/about' },
+                                        { label: 'Careers', url: '/careers' },
+                                        { label: 'Blog', url: '/blog' },
+                                        { label: 'Press', url: '/press' }
+                                    ].map((item, index) => (
+                                        <li key={index}>
+                                            <a 
+                                                href={item.url} 
+                                                className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200 flex items-center"
+                                            >
+                                                <span className="w-1 h-1 bg-gray-400 rounded-full mr-2"></span>
+                                                {item.label}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
 
-                {/* Social Media */}
-                <div>
-                    <h3 className="text-xl font-semibold mb-3">Follow Us</h3>
-                    <div className="flex space-x-4">
-                        <a href="#" className="hover:text-blue-500"><FaFacebook size={20} /></a>
-                        <a href="#" className="hover:text-blue-400"><FaTwitter size={20} /></a>
-                        <a href="#" className="hover:text-pink-500"><FaInstagram size={20} /></a>
-                        <a href="#" className="hover:text-red-600"><FaYoutube size={20} /></a>
+                                <div>
+                                    <h4 className="text-sm font-medium text-gray-800 mb-3">Connect With Us</h4>
+                                    <div className="flex flex-wrap gap-3">
+                                        {socialLinks.map((social, index) => (
+                                            <a 
+                                                key={index}
+                                                href="#" 
+                                                className={`p-2 rounded-full bg-white shadow-sm ${social.color} transition-colors duration-200`}
+                                                aria-label={social.label}
+                                            >
+                                                {social.icon}
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
-            </div>
 
-            {/* Bottom line */}
-            <div className="text-center text-sm text-gray-400 mt-10">
-                &copy; {new Date().getFullYear()} BestBuy. All rights reserved.
+                {/* Divider */}
+                <div className="border-t border-gray-200 my-8"></div>
+
+                {/* Bottom section */}
+                <div className="flex flex-col md:flex-row justify-between items-center">
+                    <div className="text-gray-500 text-xs mb-4 md:mb-0">
+                        &copy; {new Date().getFullYear()} BestBuy Electronics. All rights reserved.
+                    </div>
+                    
+                    <div className="flex items-center space-x-6">
+                        <a href="/privacy" className="text-gray-500 hover:text-red-600 text-xs">Privacy Policy</a>
+                        <a href="/terms" className="text-gray-500 hover:text-red-600 text-xs">Terms of Service</a>
+                        <a href="/cookies" className="text-gray-500 hover:text-red-600 text-xs">Cookie Policy</a>
+                    </div>
+
+                    <div className="mt-4 md:mt-0">
+                        <div className="flex items-center">
+                            <span className="text-gray-500 text-xs mr-2">Secure payments:</span>
+                            <div className="flex space-x-2">
+                                <div className="w-6 h-4 bg-gray-200 rounded-sm"></div>
+                                <div className="w-6 h-4 bg-gray-200 rounded-sm"></div>
+                                <div className="w-6 h-4 bg-gray-200 rounded-sm"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </footer>
     );
