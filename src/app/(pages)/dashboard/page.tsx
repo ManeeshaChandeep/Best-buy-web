@@ -5,7 +5,7 @@ import AddProduct from "@/components/AddItem";
 import ViewProducts from "@/components/ViewProductList";
 
 
-type ViewType = "add" | "view";
+export type ViewType = "add" | "view";
 
 const Dashboard = () => {
     const [activeView, setActiveView] = useState<ViewType>("add");

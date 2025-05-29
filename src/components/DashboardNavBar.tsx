@@ -1,9 +1,10 @@
-import React from "react";
+import React, {Dispatch, SetStateAction} from "react";
+import {ViewType} from "@/app/(pages)/dashboard/page";
 import { FiPlus, FiList, FiMenu } from "react-icons/fi";
 
 type SidebarProps = {
     active: string;
-    setActive: (view: string) => void;
+    setActive: Dispatch<SetStateAction<ViewType>>;
 };
 
 const Sidebar: React.FC<SidebarProps> = ({ active, setActive }) => {
