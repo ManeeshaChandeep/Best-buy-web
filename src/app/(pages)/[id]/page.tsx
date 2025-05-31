@@ -5,6 +5,10 @@ import { ShieldCheckIcon } from '@heroicons/react/24/solid';
 import itemTvThree from '@/../public/images/tvThree.png';
 import itemTvOne from "@/../public/images/tvOne.png"
 import itemTvTwo from "@/../public/images/tvTwo.png"
+
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+
 const ItemView: React.FC = () => {
     const title = "Smart LED TV 55\" 4K UHD";
     const description = "Experience stunning visuals with this 4K Smart TV featuring HDR support and immersive sound.";
@@ -17,6 +21,7 @@ const ItemView: React.FC = () => {
 
     return (
         <div className="max-w-6xl mx-auto p-6  rounded-md mt-14">
+        <Header/>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 {/* Image Viewer */}
                 <div>

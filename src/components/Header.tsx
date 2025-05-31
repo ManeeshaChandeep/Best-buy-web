@@ -10,6 +10,7 @@ export default function Navbar() {
     const [searchQuery, setSearchQuery] = useState("");
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
     const [showMobileCategories, setShowMobileCategories] = useState(false);
+    const [showMobileSearch, setShowMobileSearch] = useState(false);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -25,11 +26,18 @@ export default function Navbar() {
         { name: "Audio", subcategories: ["Headphones", "Speakers", "Earbuds"] }
     ];
 
+    const toggleSearch = () => {
+        setShowMobileSearch(!showMobileSearch);
+        if (!showMobileSearch) {
+            setMenuOpen(false);
+        }
+    };
+
     return (
         <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? "bg-white shadow-lg backdrop-blur-sm bg-opacity-90" : "bg-white"}`}>
             <div className="container mx-auto px-4">
                 {/* Main Navbar */}
-                <div className="flex justify-between items-center py-4">
+                <div className="flex justify-between items-center py-4 relative">
                     {/* Mobile Category Button (hidden on desktop) */}
                     <div className="lg:hidden flex items-center">
                         <button 
@@ -47,27 +55,43 @@ export default function Navbar() {
 
                     {/* Right side icons (cart and mobile menu) */}
                     <div className="flex items-center space-x-4">
-                        {/* Cart Icon - Hidden on mobile when menu is open */}
-                       
-                        
-                        {/* Mobile Menu Button */}
-                        <button 
-                            onClick={() => setMenuOpen(!menuOpen)} 
-                            className="lg:hidden text-gray-700 hover:text-red-600"
-                        >
-                            {menuOpen ? <HiX size={24} /> : <FiSearch size={24} />}
+                        {/* Cart Icon */}
+                        <button className="text-gray-700 hover:text-red-600 relative">
+                            <GrCart size={24} />
+                            <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                3
+                            </span>
                         </button>
 
- {!menuOpen && (
-                            <button className="text-gray-700 hover:text-red-600 relative">
-                                <GrCart size={24} />
-                                {/* Optional cart item count badge */}
-                                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                                    3
-                                </span>
-                            </button>
-                        )}
+                        {/* Mobile Search Button */}
+                        <button 
+                            onClick={toggleSearch} 
+                            className="lg:hidden text-gray-700 hover:text-red-600"
+                        >
+                            <FiSearch size={24} />
+                        </button>
+                    </div>
 
+                    {/* Mobile Search Bar (appears when search icon is clicked) */}
+                    <div className={`lg:hidden absolute top-full left-0 right-0 bg-white px-4 py-3 shadow-md transition-all duration-300 ease-in-out ${showMobileSearch ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0 pointer-events-none'}`}>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search products..."
+                                className="w-full px-4 py-2 pl-10 border text-gray-700 border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500 shadow-sm transition-all duration-200"
+                            />
+                            <FiSearch className="absolute left-3 top-3 text-gray-400" size={18} />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery("")}
+                                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                                >
+                                    ✕
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -128,15 +152,15 @@ export default function Navbar() {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search for premium electronics..."
-                                className="w-full px-5 py-2.5 border text-gray-700 border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent shadow-sm"
+                                className="w-full px-5 py-2.5 border text-gray-700 border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent shadow-sm transition-all duration-200"
                             />
-                            <button className="absolute right-4 top-2.5 text-gray-500 hover:text-red-600">
+                            <button className="absolute right-4 top-2.5 text-gray-500 hover:text-red-600 transition-colors duration-200">
                                 <FiSearch size={20} />
                             </button>
                             {searchQuery && (
                                 <button
                                     onClick={() => setSearchQuery("")}
-                                    className="absolute right-12 top-2.5 text-gray-400 hover:text-gray-600"
+                                    className="absolute right-12 top-2.5 text-gray-400 hover:text-gray-600 transition-colors duration-200"
                                 >
                                     ✕
                                 </button>
@@ -147,7 +171,7 @@ export default function Navbar() {
 
                 {/* Mobile Categories Panel (appears when category icon is clicked) */}
                 {showMobileCategories && (
-                    <div className="lg:hidden bg-white border border-gray-200 rounded-lg shadow-sm mb-3">
+                    <div className="lg:hidden bg-white border border-gray-200 rounded-lg shadow-sm mb-3 transition-all duration-300 ease-in-out">
                         <div className="px-4 py-3 font-medium text-gray-700 border-b border-gray-200">
                             All Categories
                         </div>
@@ -162,7 +186,7 @@ export default function Navbar() {
                                             <a
                                                 key={sub}
                                                 href="#"
-                                                className="block py-1.5 text-sm text-gray-600 hover:text-red-600"
+                                                className="block py-1.5 text-sm text-gray-600 hover:text-red-600 transition-colors duration-200"
                                             >
                                                 {sub}
                                             </a>
@@ -174,33 +198,6 @@ export default function Navbar() {
                     </div>
                 )}
             </div>
-
-            {/* Mobile Menu */}
-            {menuOpen && (
-                <div className="lg:hidden bg-white border-t border-gray-100 shadow-inner">
-                    {/* Mobile Search */}
-                    <div className="px-4 py-3">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search products..."
-                                className="w-full px-4 py-1 pl-10 border text-gray-700 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 shadow-sm"
-                            />
-                            <FiSearch className="absolute left-3 top-3 text-gray-400" size={18} />
-                            {searchQuery && (
-                                <button
-                                    onClick={() => setSearchQuery("")}
-                                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                                >
-                                    ✕
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
         </nav>
     );
 }
