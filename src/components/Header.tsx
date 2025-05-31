@@ -56,12 +56,7 @@ export default function Navbar() {
                     {/* Right side icons (cart and mobile menu) */}
                     <div className="flex items-center space-x-4">
                         {/* Cart Icon */}
-                        <button className="text-gray-700 hover:text-red-600 relative">
-                            <GrCart size={24} />
-                            <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                                3
-                            </span>
-                        </button>
+                      
 
                         {/* Mobile Search Button */}
                         <button 
@@ -70,10 +65,17 @@ export default function Navbar() {
                         >
                             <FiSearch size={24} />
                         </button>
+
+                          <button className="text-gray-700 hover:text-red-600 relative">
+                            <GrCart size={24} />
+                            <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                3
+                            </span>
+                        </button>
                     </div>
 
                     {/* Mobile Search Bar (appears when search icon is clicked) */}
-                    <div className={`lg:hidden absolute top-full left-0 right-0 bg-white px-4 py-3 shadow-md transition-all duration-300 ease-in-out ${showMobileSearch ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0 pointer-events-none'}`}>
+                    <div className={`lg:hidden absolute top-full left-0 right-0 bg-transparent px-4 py-3 transition-all duration-300 ease-in-out ${showMobileSearch ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0 pointer-events-none'}`}>
                         <div className="relative">
                             <input
                                 type="text"
