@@ -82,7 +82,7 @@ export default function Navbar() {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search products..."
-                                className="w-full px-4 py-2 pl-10 border text-gray-700 border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500 shadow-sm transition-all duration-200"
+                                className="w-full px-4 py-2 pl-10 bg-white border text-gray-700 border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500 shadow-sm transition-all duration-200"
                             />
                             <FiSearch className="absolute left-3 top-3 text-gray-400" size={18} />
                             {searchQuery && (
