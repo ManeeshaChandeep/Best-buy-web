@@ -14,11 +14,13 @@ const ProductCard = ({ imageSrc, title, oldPrice, newPrice, inStock }: ProductCa
     return (
         <div className="flex flex-col items-center p-4 bg-white rounded-lg hover:shadow-lg transition-shadow">
             <div className="relative w-full">
-                {inStock && (
+               
+                  {inStock && (
                     <span className="absolute top-2 left-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                         IN STOCK
                     </span>
                 )}
+                
                 <Image
                     src={imageSrc}
                     alt={title}
