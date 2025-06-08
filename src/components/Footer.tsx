@@ -43,7 +43,7 @@ const Footer: React.FC = () => {
             <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
                 <div className=" text-white py-6">
-                    <div className=" mx-auto grid grid-cols-2 md:grid-cols-4 gap-1 text-center">
+                    <div className=" mx-auto grid grid-cols-2 md:grid-cols-4 gap-0.5 text-center">
                         {/* Customer Support */}
                         <div className='bg-red-500 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
                             <div className="flex justify-center mb-2 w-f">
@@ -87,30 +87,7 @@ const Footer: React.FC = () => {
                 </div>
 
                 <div className="grid px-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6"> {/* Reduced gap from gap-6 md:gap-10 */}
-                    {/* Brand Info */}
-                    <div className="lg:col-span-2">
-                        <div className="flex items-center mb-4">
-                            <span className="text-3xl font-bold text-red-600 mr-2">BestBuy</span>
-                            <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">Premium</span>
-                        </div>
-                        <p className="text-gray-600 text-sm mb-6">
-                            Your trusted destination for cutting-edge electronics, premium gadgets, and exceptional service since 2010.
-                        </p>
-                        <div className="space-y-3">
-                            <div className="flex items-center text-gray-600">
-                                <MdLocationOn className="mr-2 text-red-500" />
-                                <span className="text-sm">Wanchawala Galle, Sri Lanka</span>
-                            </div>
-                            <div className="flex items-center text-gray-600">
-                                <MdPhone className="mr-2 text-red-500" />
-                                <span className="text-sm">+94 76 123 4567</span>
-                            </div>
-                            <div className="flex items-center text-gray-600">
-                                <MdEmail className="mr-2 text-red-500" />
-                                <span className="text-sm">support@bestbuy.lk</span>
-                            </div>
-                        </div>
-                    </div>
+                  
 
                     {/* Policies */}
                     <div className="mt-2 md:mt-0"> {/* Reduced mt-4 to mt-2 */}
@@ -156,7 +133,7 @@ const Footer: React.FC = () => {
                             }`}
                             onClick={() => toggleSection('help')}
                         >
-                            Help Center
+                            Help 
                             {isMobile && (
                                 expandedSections.help ? <IoMdArrowDropup /> : <IoMdArrowDropdown />
                             )}
@@ -192,7 +169,7 @@ const Footer: React.FC = () => {
                             }`}
                             onClick={() => toggleSection('company')}
                         >
-                            Company
+                            About
                             {isMobile && (
                                 expandedSections.company ? <IoMdArrowDropup /> : <IoMdArrowDropdown />
                             )}
@@ -235,6 +212,34 @@ const Footer: React.FC = () => {
                             </div>
                         )}
                     </div>
+
+
+                      {/* Brand Info */}
+                    <div className="lg:col-span-2">
+                        <div className="flex items-center mb-4">
+                            <span className="text-3xl font-bold text-red-600 mr-2">BestBuy</span>
+                            <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">Premium</span>
+                        </div>
+                        <p className="text-gray-600 text-sm mb-6">
+                            Your trusted destination for cutting-edge electronics, premium gadgets, and exceptional service since 2010.
+                        </p>
+                        <div className="space-y-3">
+                            <div className="flex items-center text-gray-600">
+                                <MdLocationOn className="mr-2 text-red-500" />
+                                <span className="text-sm">Wanchawala Galle, Sri Lanka</span>
+                            </div>
+                            <div className="flex items-center text-gray-600">
+                                <MdPhone className="mr-2 text-red-500" />
+                                <span className="text-sm">+94 76 123 4567</span>
+                            </div>
+                            <div className="flex items-center text-gray-600">
+                                <MdEmail className="mr-2 text-red-500" />
+                                <span className="text-sm">support@bestbuy.lk</span>
+                            </div>
+                        </div>
+                    </div>
+
+
                 </div>
 
                 <div className="border-t border-gray-200 my-4 md:my-6"></div> {/* Reduced my-6 md:my-8 to my-4 md:my-6 */}
