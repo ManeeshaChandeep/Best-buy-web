@@ -40,13 +40,13 @@ const Footer: React.FC = () => {
     return (
         <footer className="bg-gradient-to-b from-gray-50 to-gray-100 border-t border-gray-200 pt-12 pb-6">
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
                 <div className=" text-white py-6">
-                    <div className=" mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-1 text-center">
+                    <div className=" mx-auto grid grid-cols-2 md:grid-cols-4 gap-1 text-center">
                         {/* Customer Support */}
-                        <div className='bg-red-500 p-3'>
-                            <div className="flex justify-center mb-2 ">
+                        <div className='bg-red-500 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
+                            <div className="flex justify-center mb-2 w-f">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                     <path d="M18 15a3 3 0 0 0 3-3V9a6 6 0 0 0-12 0v3a3 3 0 0 0 3 3h6zm-6 4v2m-6-2a6 6 0 0 0 12 0" />
                                 </svg>
@@ -55,7 +55,7 @@ const Footer: React.FC = () => {
                         </div>
 
                         {/* Island-wide Delivery */}
-                        <div className='bg-red-500 p-3'>
+                        <div className='bg-red-500 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
                             <div className="flex justify-center mb-2">
                                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 2C8.13 2 5 5.13 5 9c0 4.25 7 13 7 13s7-8.75 7-13c0-3.87-3.13-7-7-7z" />
@@ -65,7 +65,7 @@ const Footer: React.FC = () => {
                         </div>
 
                         {/* Express Delivery */}
-                        <div className='bg-red-500 p-3'>
+                        <div className='bg-red-500 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
                             <div className="flex justify-center mb-2">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                     <path d="M13 16h-1v-4h-1M12 8h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
@@ -75,7 +75,7 @@ const Footer: React.FC = () => {
                         </div>
 
                         {/* 100+ Service Centers */}
-                        <div className='bg-red-500 p-3'>
+                        <div className='bg-red-500 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
                             <div className="flex justify-center mb-2">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                     <path d="M12 8v4l3 3M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" />
@@ -86,7 +86,7 @@ const Footer: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6"> {/* Reduced gap from gap-6 md:gap-10 */}
+                <div className="grid px-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6"> {/* Reduced gap from gap-6 md:gap-10 */}
                     {/* Brand Info */}
                     <div className="lg:col-span-2">
                         <div className="flex items-center mb-4">
