@@ -2,6 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import dynamic from 'next/dynamic';
+
+// Import react-quill-new with dynamic loading
+const ReactQuill = dynamic(() => import('react-quill-new'), {
+    ssr: false,
+    loading: () => <p className="text-gray-500">Loading editor...</p>,
+});
+import 'react-quill-new/dist/quill.snow.css';
 
 interface Category {
     _id: string;
@@ -19,6 +27,8 @@ const AddProduct: React.FC = () => {
     const [subcategories, setSubcategories] = useState<SubCategory[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [filteredSubcategories, setFilteredSubcategories] = useState<SubCategory[]>([]);
+    const [description, setDescription] = useState<string>('');
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -27,7 +37,6 @@ const AddProduct: React.FC = () => {
         price: '',
         oldPrice: '',
         quantity: '',
-        description: '',
         warranty: '',
         deliveryAvailable: false,
         categoryId: '',
@@ -35,28 +44,45 @@ const AddProduct: React.FC = () => {
         images: [] as File[],
     });
 
+    // ReactQuill modules configuration
+    const modules = {
+        toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            ['link', 'image'],
+            ['clean'],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'align': [] }],
+        ],
+    };
+
     useEffect(() => {
-        const fetchCategories = async () => {
-            const res = await axios.get('/api/categories');
-            setCategories(res.data);
+        const fetchData = async () => {
+            try {
+                const [categoriesRes, subcategoriesRes] = await Promise.all([
+                    axios.get('/api/categories'),
+                    axios.get('/api/subcategories')
+                ]);
+                setCategories(categoriesRes.data);
+                setSubcategories(subcategoriesRes.data);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
         };
 
-        const fetchSubcategories = async () => {
-            const res = await axios.get('/api/subcategories');
-            setSubcategories(res.data);
-        };
-
-        fetchCategories();
-        fetchSubcategories();
+        fetchData();
     }, []);
 
     useEffect(() => {
         setFilteredSubcategories(
             subcategories.filter((sub) => sub.categoryId === selectedCategory)
         );
+        // Reset subcategory when category changes
+        setFormData(prev => ({ ...prev, subcategoryId: '' }));
     }, [selectedCategory, subcategories]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({
             ...prev,
@@ -74,7 +100,7 @@ const AddProduct: React.FC = () => {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            const filesArray = Array.from(e.target.files).slice(0, 4); // Limit to 4 files
+            const filesArray = Array.from(e.target.files).slice(0, 4);
             setFormData((prev) => ({
                 ...prev,
                 images: filesArray,
@@ -84,24 +110,23 @@ const AddProduct: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const productData = new FormData();
+        setIsSubmitting(true);
 
-        // Append all text fields
+        const productData = new FormData();
         productData.append('name', formData.name);
         productData.append('sku', formData.sku);
         productData.append('modelNumber', formData.modelNumber);
         productData.append('price', formData.price);
         productData.append('oldPrice', formData.oldPrice);
         productData.append('quantity', formData.quantity);
-        productData.append('description', formData.description);
+        productData.append('description', description);
         productData.append('warranty', formData.warranty);
         productData.append('deliveryAvailable', String(formData.deliveryAvailable));
         productData.append('categoryId', formData.categoryId);
         productData.append('subcategoryId', formData.subcategoryId);
 
-        // Append all images
-        formData.images.forEach((image, index) => {
-            productData.append(`images`, image);
+        formData.images.forEach((image) => {
+            productData.append('images', image);
         });
 
         try {
@@ -111,7 +136,8 @@ const AddProduct: React.FC = () => {
                 },
             });
             alert('Product added successfully');
-            // Reset form after successful submission
+
+            // Reset form
             setFormData({
                 name: '',
                 sku: '',
@@ -119,139 +145,156 @@ const AddProduct: React.FC = () => {
                 price: '',
                 oldPrice: '',
                 quantity: '',
-                description: '',
                 warranty: '',
                 deliveryAvailable: false,
                 categoryId: '',
                 subcategoryId: '',
                 images: [],
             });
+            setDescription('');
         } catch (error) {
-            console.error(error);
-            alert('Error adding product');
+            console.error('Error adding product:', error);
+            alert('Error adding product. Please try again.');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="max-w-3xl ml-3 p-6 mt-10">
-            <h2 className="text-2xl font-semibold mb-6">Add Product</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className=" m-4 p-4 bg-white rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Add New Product</h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    {/* Product Name */}
                     <div>
-                        <label className="block mb-1 font-medium">Product Name*</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Product Name*</label>
                         <input
                             type="text"
                             name="name"
-                            className="w-full border border-gray-300 rounded px-3 py-2"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.name}
                             onChange={handleChange}
                             required
                         />
                     </div>
 
+                    {/* SKU */}
                     <div>
-                        <label className="block mb-1 font-medium">SKU*</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">SKU*</label>
                         <input
                             type="text"
                             name="sku"
-                            className="w-full border border-gray-300 rounded px-3 py-2"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.sku}
                             onChange={handleChange}
                             required
                         />
                     </div>
 
+                    {/* Model Number */}
                     <div>
-                        <label className="block mb-1 font-medium">Model Number</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Model Number</label>
                         <input
                             type="text"
                             name="modelNumber"
-                            className="w-full border border-gray-300 rounded px-3 py-2"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.modelNumber}
                             onChange={handleChange}
                         />
                     </div>
 
+                    {/* Price */}
                     <div>
-                        <label className="block mb-1 font-medium">Price*</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Price*</label>
                         <input
                             type="number"
                             name="price"
-                            className="w-full border border-gray-300 rounded px-3 py-2"
+                            min="0"
+                            step="0.01"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.price}
                             onChange={handleChange}
                             required
                         />
                     </div>
 
+                    {/* Old Price */}
                     <div>
-                        <label className="block mb-1 font-medium">Old Price</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Old Price</label>
                         <input
                             type="number"
                             name="oldPrice"
-                            className="w-full border border-gray-300 rounded px-3 py-2"
+                            min="0"
+                            step="0.01"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.oldPrice}
                             onChange={handleChange}
                         />
                     </div>
 
+                    {/* Quantity */}
                     <div>
-                        <label className="block mb-1 font-medium">Quantity*</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Quantity*</label>
                         <input
                             type="number"
                             name="quantity"
-                            className="w-full border border-gray-300 rounded px-3 py-2"
+                            min="0"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.quantity}
                             onChange={handleChange}
                             required
                         />
                     </div>
 
+                    {/* Warranty */}
                     <div>
-                        <label className="block mb-1 font-medium">Warranty</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Warranty</label>
                         <input
                             type="text"
                             name="warranty"
-                            className="w-full border border-gray-300 rounded px-3 py-2"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.warranty}
                             onChange={handleChange}
                             placeholder="e.g., 1 year manufacturer warranty"
                         />
                     </div>
 
+                    {/* Delivery Available */}
                     <div className="flex items-center">
                         <input
                             type="checkbox"
                             name="deliveryAvailable"
                             id="deliveryAvailable"
-                            className="mr-2"
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                             checked={formData.deliveryAvailable}
                             onChange={handleCheckboxChange}
                         />
-                        <label htmlFor="deliveryAvailable" className="font-medium">
+                        <label htmlFor="deliveryAvailable" className="ml-2 block text-sm text-gray-700">
                             Delivery Available
                         </label>
                     </div>
                 </div>
 
+                {/* Description */}
                 <div>
-                    <label className="block mb-1 font-medium">Description*</label>
-                    <textarea
-                        name="description"
-                        className="w-full border border-gray-300 rounded px-3 py-2"
-                        value={formData.description}
-                        onChange={handleChange}
-                        rows={4}
-                        required
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description*</label>
+                    <ReactQuill
+                        theme="snow"
+                        value={description}
+                        onChange={setDescription}
+                        modules={modules}
+                        className="bg-white rounded-md border border-gray-300 focus:border-blue-500"
+                        placeholder="Enter product description..."
                     />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Category and Subcategory */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block mb-1 font-medium">Category*</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Category*</label>
                         <select
                             name="categoryId"
-                            className="w-full border border-gray-300 rounded px-3 py-2"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.categoryId}
                             onChange={(e) => {
                                 handleChange(e);
@@ -269,13 +312,14 @@ const AddProduct: React.FC = () => {
                     </div>
 
                     <div>
-                        <label className="block mb-1 font-medium">Subcategory*</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Subcategory*</label>
                         <select
                             name="subcategoryId"
-                            className="w-full border border-gray-300 rounded px-3 py-2"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.subcategoryId}
                             onChange={handleChange}
                             required
+                            disabled={!formData.categoryId}
                         >
                             <option value="">Select a subcategory</option>
                             {filteredSubcategories.map((sub) => (
@@ -287,30 +331,39 @@ const AddProduct: React.FC = () => {
                     </div>
                 </div>
 
+                {/* Product Images */}
                 <div>
-                    <label className="block mb-1 font-medium">Product Images* (Max 4)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Product Images* (Max 4)</label>
                     <input
                         type="file"
                         accept="image/*"
                         onChange={handleFileChange}
                         multiple
+                        className="block w-full text-sm text-gray-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-md file:border-0
+              file:text-sm file:font-semibold
+              file:bg-blue-50 file:text-blue-700
+              hover:file:bg-blue-100"
                         required
                     />
                     {formData.images.length > 0 && (
-                        <div className="mt-2">
-                            <p className="text-sm text-gray-600">
-                                Selected {formData.images.length} file(s)
-                            </p>
+                        <div className="mt-2 text-sm text-gray-500">
+                            Selected {formData.images.length} file(s)
                         </div>
                     )}
                 </div>
 
-                <button
-                    type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded"
-                >
-                    Add Product
-                </button>
+                {/* Submit Button */}
+                <div className="flex justify-end">
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className={`px-6 py-2 rounded-md text-white font-medium ${isSubmitting ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+                    >
+                        {isSubmitting ? 'Adding...' : 'Add Product'}
+                    </button>
+                </div>
             </form>
         </div>
     );

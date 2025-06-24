@@ -1,16 +1,65 @@
-import React from "react";
+import { useState } from 'react';
+import axios from 'axios';
 
-const ViewProducts: React.FC = () => {
+export default function ViewProducts() {
+    const [isLoading, setIsLoading] = useState(false);
+    const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
+
+    const handleAddProduct = async () => {
+        const productData = {
+            name: "Dell Inspiron",
+            sku: "D125",
+            model_number: "INS-15",
+            price: 150000,
+            old_price: 165000,
+            quantity: 10,
+            warranty: "1 year",
+            delivery_available: true,
+            description: "High performance laptop",
+            category: 1,
+            subcategory: 2
+        };
+
+        setIsLoading(true);
+        setError('');
+        setMessage('');
+
+        try {
+            const response = await axios.post(
+                'https://api.bestbuyelectronics.lk/products/',
+                productData,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // Add authorization header if required
+                        // 'Authorization': 'Bearer your_token_here'
+                    }
+                }
+            );
+
+            setMessage('Product added successfully!');
+            console.log('Product added:', response.data);
+        } catch (error) {
+            setError(error.response?.data?.message || 'Failed to add product');
+            console.error('Error:', error.response?.data || error.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
-        <div className="max-w-3xl ml-3 p-6 mt-10">
-            <h2 className="text-2xl font-semibold mb-4">View Products</h2>
-            {/* Replace with actual product data */}
-            <ul className="space-y-2">
-                <li className="border p-4 rounded">Product 1</li>
-                <li className="border p-4 rounded">Product 2</li>
-            </ul>
+        <div className="product-add-container">
+            <button
+                onClick={handleAddProduct}
+                disabled={isLoading}
+                className="add-product-button"
+            >
+                {isLoading ? 'Adding...' : 'Add Dell Inspiron'}
+            </button>
+
+            {message && <p className="success-message">{message}</p>}
+            {error && <p className="error-message">{error}</p>}
         </div>
     );
-};
-
-export default ViewProducts;
+}

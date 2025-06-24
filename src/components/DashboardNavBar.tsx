@@ -1,6 +1,7 @@
 import React, {Dispatch, SetStateAction} from "react";
 import {ViewType} from "@/app/(pages)/dashboard/page";
 import { FiPlus, FiList, FiMenu } from "react-icons/fi";
+import { TbCategoryPlus } from "react-icons/tb";
 
 type SidebarProps = {
     active: string;
@@ -65,8 +66,8 @@ const Sidebar: React.FC<SidebarProps> = ({ active, setActive }) => {
                     active === "view" ? "bg-blue-500 text-white" : "hover:bg-gray-300"
                 }`}
             >
-                <FiList size={20} />
-                {!isCollapsed && <span className="ml-3">View Products</span>}
+                <TbCategoryPlus  size={20} />
+                {!isCollapsed && <span className="ml-3">Category</span>}
             </button>
         </div>
     );
