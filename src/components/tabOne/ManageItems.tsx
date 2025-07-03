@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react';
+import React, {use, useEffect, useState} from 'react';
 import dynamic from 'next/dynamic';
 import { apiClient } from '@/../src/libs/network';
 
@@ -17,6 +17,7 @@ interface Category {
 }
 
 interface FormData {
+    id?: number;
     name: string;
     sku: string;
     model_number: string;
@@ -28,9 +29,15 @@ interface FormData {
     description: string;
     category: string;
     subcategory: string;
+    image_url?: string;
 }
 
-const AddItemPage = () => {
+interface ManageItemsProps {
+    productId?: number;
+    onProductUpdated?: () => void;
+}
+
+const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
     const [formData, setFormData] = useState<FormData>({
         name: '',
         sku: '',
@@ -52,6 +59,7 @@ const AddItemPage = () => {
     const [allCategories, setAllCategories] = useState<Category[]>([]);
     const [mainCategories, setMainCategories] = useState<Category[]>([]);
     const [availableSubcategories, setAvailableSubcategories] = useState<Category[]>([]);
+    const [isEditing, setIsEditing] = useState<boolean>(false);
 
     // ReactQuill modules configuration
     const modules = {
@@ -93,6 +101,46 @@ const AddItemPage = () => {
         fetchCategories();
     }, []);
 
+    // Fetch product data when productId changes
+    useEffect(() => {
+        if (!productId) {
+            resetForm();
+            return;
+        }
+
+        const fetchProduct = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const product = await apiClient.get(`products/${productId}/`);
+
+                setFormData({
+                    id: product.id,
+                    name: product.name,
+                    sku: product.sku,
+                    model_number: product.model_number || '',
+                    price: product.price.toString(),
+                    old_price: product.old_price ? product.old_price.toString() : '',
+                    quantity: product.quantity.toString(),
+                    warranty: product.warranty ? product.warranty.toString() : '',
+                    delivery_available: product.delivery_available || false,
+                    description: product.description || '',
+                    category: product.category || '',
+                    subcategory: product.subcategory || '',
+                    image_url: product.image_url
+                });
+
+                setIsEditing(true);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to load product');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProduct();
+    }, [productId]);
+
     // Filter subcategories when main category is selected
     useEffect(() => {
         if (formData.category) {
@@ -107,6 +155,25 @@ const AddItemPage = () => {
             }
         }
     }, [formData.category, allCategories]);
+
+    const resetForm = () => {
+        setFormData({
+            name: '',
+            sku: '',
+            model_number: '',
+            price: '',
+            old_price: '',
+            quantity: '',
+            warranty: '',
+            delivery_available: false,
+            description: '',
+            category: '',
+            subcategory: ''
+        });
+        setIsEditing(false);
+        setError(null);
+        setSuccess(false);
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -152,29 +219,25 @@ const AddItemPage = () => {
                 category: formData.subcategory || formData.category
             };
 
-            await apiClient.post('products/', itemData);
-            setSuccess(true);
-            // Reset form after successful submission
-            setFormData({
-                name: '',
-                sku: '',
-                model_number: '',
-                price: '',
-                old_price: '',
-                quantity: '',
-                warranty: '',
-                delivery_available: false,
-                description: '',
-                category: '',
-                subcategory: ''
-            });
+            if (isEditing && formData.id) {
+                await apiClient.put(`products/${formData.id}/`, itemData);
+                setSuccess(true);
+                if (onProductUpdated) onProductUpdated();
+            } else {
+                await apiClient.post('products/', itemData);
+                setSuccess(true);
+                resetForm();
+            }
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to add item');
+            setError(err instanceof Error ? err.message : isEditing ? 'Failed to update item' : 'Failed to add item');
         } finally {
             setSubmitting(false);
         }
     };
 
+    useEffect(() => {
+        console.log(mainCategories)
+    }, [mainCategories]);
     const renderCategoryDropdown = () => (
         <div className="mb-4">
             <label className="block text-gray-700 font-bold mb-2" htmlFor="category">
@@ -191,7 +254,7 @@ const AddItemPage = () => {
             >
                 <option value="">Select a category</option>
                 {mainCategories.map(category => (
-                    <option key={category.id.toString()} value={category.id.toString()}>
+                    <option key={category.id.toString()} value={category.id.toString()} selected={category.id==1}>
                         {category.name}
                     </option>
                 ))}
@@ -217,7 +280,7 @@ const AddItemPage = () => {
                 >
                     <option value="">Select a subcategory</option>
                     {availableSubcategories.map(subcategory => (
-                        <option key={subcategory.id.toString()} value={subcategory.id.toString()}>
+                        <option key={subcategory.id.toString()} value={subcategory.id.toString()} selected={subcategory.id==1}>
                             {subcategory.name}
                         </option>
                     ))}
@@ -236,7 +299,10 @@ const AddItemPage = () => {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-6">Add New Product</h1>
+            <h1 className="text-3xl font-bold mb-6">
+                {isEditing ? 'Edit Product' : 'Add New Product'}
+                {isEditing && formData.id && <span className="text-gray-500 ml-2">(ID: {formData.id})</span>}
+            </h1>
 
             {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -246,7 +312,7 @@ const AddItemPage = () => {
 
             {success && (
                 <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                    Product added successfully!
+                    {isEditing ? 'Product updated successfully!' : 'Product added successfully!'}
                 </div>
             )}
 
@@ -418,10 +484,20 @@ const AddItemPage = () => {
                 </div>
 
                 {/* Submit Button */}
-                <div className="flex justify-end mt-6">
+                <div className="flex justify-between mt-6">
+                    {isEditing && (
+                        <button
+                            type="button"
+                            onClick={resetForm}
+                            className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50"
+                            disabled={submitting}
+                        >
+                            Cancel
+                        </button>
+                    )}
                     <button
                         type="submit"
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ml-auto"
                         disabled={submitting || loading}
                     >
                         {submitting ? (
@@ -430,9 +506,9 @@ const AddItemPage = () => {
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
-                                Adding...
+                                {isEditing ? 'Updating...' : 'Adding...'}
                             </span>
-                        ) : 'Add Product'}
+                        ) : isEditing ? 'Update Product' : 'Add Product'}
                     </button>
                 </div>
             </form>
@@ -440,4 +516,4 @@ const AddItemPage = () => {
     );
 };
 
-export default AddItemPage;
+export default ManageItems;

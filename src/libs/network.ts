@@ -75,6 +75,32 @@ export const apiClient = {
             throw new Error('Unknown error occurred');
         }
     },
+
+
+    put: async <T>(endpoint: string, data: any): Promise<T> => {
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            });
+
+            if (!response.ok) {
+                const errorData = await parseErrorResponse(response);
+                throw createApiError(response.status, errorData);
+            }
+
+            return await response.json() as T;
+        } catch (error) {
+            if (error instanceof Error) {
+                throw enhanceError(error);
+            }
+            throw new Error('Unknown error occurred');
+        }
+    },
+
 };
 
 

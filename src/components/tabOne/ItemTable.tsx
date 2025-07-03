@@ -5,9 +5,12 @@ interface Product {
     id: number;
     name: string;
     sku: string;
+    model_number?: string;
     price: number;
     old_price?: number;
     quantity: number;
+    warranty?: number;
+    delivery_available: boolean;
     category: string;
     subcategory?: string;
     image_url?: string;
@@ -20,7 +23,12 @@ interface Category {
     parent?: string | number;
 }
 
-export default function ItemTable() {
+interface ItemTableProps {
+    onEditProduct: (productId: number) => void;
+    refreshKey: number;
+}
+
+export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps) {
     const [products, setProducts] = useState<Product[]>([]);
     const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
@@ -68,7 +76,9 @@ export default function ItemTable() {
                         : undefined,
                     quantity: product.quantity || 0,
                     category: product.category || 'Uncategorized',
-                    subcategory: product.subcategory || undefined
+                    subcategory: product.subcategory || undefined,
+                    delivery_available: product.delivery_available || false,
+                    warranty: product.warranty || undefined
                 }));
 
                 setProducts(processedProducts);
@@ -83,7 +93,7 @@ export default function ItemTable() {
         };
 
         fetchData();
-    }, []);
+    }, [refreshKey]);
 
     // Close action menu when clicking outside
     useEffect(() => {
@@ -124,7 +134,8 @@ export default function ItemTable() {
             const term = searchTerm.toLowerCase();
             results = results.filter(product =>
                 product.name.toLowerCase().includes(term) ||
-                product.sku.toLowerCase().includes(term)
+                product.sku.toLowerCase().includes(term) ||
+                (product.model_number && product.model_number.toLowerCase().includes(term))
             );
         }
 
@@ -173,9 +184,8 @@ export default function ItemTable() {
         }).format(price);
     };
 
-    const handleEdit = (product: Product) => {
-        console.log('Edit product:', product);
-        alert(`Editing: ${product.name}`);
+    const handleEdit = (productId: number) => {
+        onEditProduct(productId);
         setActiveActionMenu(null);
     };
 
@@ -183,7 +193,7 @@ export default function ItemTable() {
         if (!confirm(`Are you sure you want to delete ${product.name}?`)) return;
 
         try {
-            await apiClient.delete(`products/${product.id}`);
+            await apiClient.delete(`products/${product.id}/`);
             setProducts(products.filter(p => p.id !== product.id));
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to delete product');
@@ -234,7 +244,7 @@ export default function ItemTable() {
                         ref={searchInputRef}
                         type="text"
                         className="block w-full pl-10 pr-12 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        placeholder="Search by name or SKU (Press F2 to focus)"
+                        placeholder="Search by name, SKU or model (Press F2 to focus)"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -309,6 +319,9 @@ export default function ItemTable() {
                             SKU
                         </th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Model
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Price
                         </th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -352,11 +365,14 @@ export default function ItemTable() {
                                     {product.sku}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {product.model_number || '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {formatPrice(product.price)}
                                     {product.old_price && product.old_price > product.price && (
                                         <span className="ml-2 text-xs text-gray-400 line-through">
-                                                {formatPrice(product.old_price)}
-                                            </span>
+                                            {formatPrice(product.old_price)}
+                                        </span>
                                     )}
                                 </td>
                                 <td className={`px-6 py-4 whitespace-nowrap text-sm ${
@@ -369,8 +385,8 @@ export default function ItemTable() {
                                     {product.category}
                                     {product.subcategory && (
                                         <span className="block text-xs text-gray-400">
-                                                {product.subcategory}
-                                            </span>
+                                            {product.subcategory}
+                                        </span>
                                     )}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 relative">
@@ -388,7 +404,7 @@ export default function ItemTable() {
                                         >
                                             <div className="py-1">
                                                 <button
-                                                    onClick={() => handleEdit(product)}
+                                                    onClick={() => handleEdit(product.id)}
                                                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                                 >
                                                     Edit
@@ -407,7 +423,7 @@ export default function ItemTable() {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
+                            <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500">
                                 No products found matching your criteria
                             </td>
                         </tr>
