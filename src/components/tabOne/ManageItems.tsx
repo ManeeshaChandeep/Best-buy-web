@@ -1,6 +1,7 @@
 'use client'
-import React, {use, useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import Select from 'react-select';
 import { apiClient } from '@/../src/libs/network';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), {
@@ -37,6 +38,11 @@ interface ManageItemsProps {
     onProductUpdated?: () => void;
 }
 
+interface SelectOption {
+    value: string;
+    label: string;
+}
+
 const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
     const [formData, setFormData] = useState<FormData>({
         name: '',
@@ -57,8 +63,8 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<boolean>(false);
     const [allCategories, setAllCategories] = useState<Category[]>([]);
-    const [mainCategories, setMainCategories] = useState<Category[]>([]);
-    const [availableSubcategories, setAvailableSubcategories] = useState<Category[]>([]);
+    const [mainCategories, setMainCategories] = useState<SelectOption[]>([]);
+    const [availableSubcategories, setAvailableSubcategories] = useState<SelectOption[]>([]);
     const [isEditing, setIsEditing] = useState<boolean>(false);
 
     // ReactQuill modules configuration
@@ -78,7 +84,18 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
     const organizeCategories = (categories: Category[]) => {
         const mains = categories.filter(cat => !cat.parent);
         const subs = categories.filter(cat => cat.parent !== undefined);
-        return { mains, subs };
+
+        const mainOptions = mains.map(cat => ({
+            value: cat.id.toString(),
+            label: cat.name
+        }));
+
+        const subOptions = subs.map(cat => ({
+            value: cat.id.toString(),
+            label: cat.name
+        }));
+
+        return { mainOptions, subOptions };
     };
 
     // Fetch all categories
@@ -88,9 +105,9 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                 setLoading(true);
                 const data: Category[] = await apiClient.get('categories/');
                 setAllCategories(data);
-                const { mains, subs } = organizeCategories(data);
-                setMainCategories(mains);
-                setAvailableSubcategories(subs);
+                const { mainOptions, subOptions } = organizeCategories(data);
+                setMainCategories(mainOptions);
+                setAvailableSubcategories(subOptions);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to load categories');
             } finally {
@@ -144,13 +161,17 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
     // Filter subcategories when main category is selected
     useEffect(() => {
         if (formData.category) {
-            const filteredSubs = allCategories.filter(
-                sub => sub.parent?.toString() === formData.category.toString()
-            );
+            const filteredSubs = allCategories
+                .filter(sub => sub.parent?.toString() === formData.category.toString())
+                .map(cat => ({
+                    value: cat.id.toString(),
+                    label: cat.name
+                }));
+
             setAvailableSubcategories(filteredSubs);
 
             // Reset subcategory if the selected one is no longer valid
-            if (formData.subcategory && !filteredSubs.some(sub => sub.id.toString() === formData.subcategory.toString())) {
+            if (formData.subcategory && !filteredSubs.some(sub => sub.value === formData.subcategory.toString())) {
                 setFormData(prev => ({ ...prev, subcategory: '' }));
             }
         }
@@ -185,14 +206,23 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
         }));
     };
 
-    const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value,
-            // Reset subcategory when main category changes
-            ...(name === 'category' && { subcategory: '' })
-        }));
+    const handleCategoryChange = (selectedOption: SelectOption | null) => {
+        if (selectedOption) {
+            setFormData(prev => ({
+                ...prev,
+                category: selectedOption.value,
+                subcategory: '' // Reset subcategory when main category changes
+            }));
+        }
+    };
+
+    const handleSubcategoryChange = (selectedOption: SelectOption | null) => {
+        if (selectedOption) {
+            setFormData(prev => ({
+                ...prev,
+                subcategory: selectedOption.value
+            }));
+        }
     };
 
     const handleDescriptionChange = (value: string) => {
@@ -235,58 +265,12 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
         }
     };
 
-    useEffect(() => {
-        console.log(mainCategories)
-    }, [mainCategories]);
-    const renderCategoryDropdown = () => (
-        <div className="mb-4">
-            <label className="block text-gray-700 font-bold mb-2" htmlFor="category">
-                Category*
-            </label>
-            <select
-                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleCategoryChange}
-                required
-                disabled={loading}
-            >
-                <option value="">Select a category</option>
-                {mainCategories.map(category => (
-                    <option key={category.id.toString()} value={category.id.toString()} selected={category.id==1}>
-                        {category.name}
-                    </option>
-                ))}
-            </select>
-        </div>
-    );
+    const getCurrentCategory = () => {
+        return mainCategories.find(cat => cat.value === formData.category.toString()) || null;
+    };
 
-    const renderSubcategoryDropdown = () => {
-        if (!formData.category || availableSubcategories.length === 0) return null;
-
-        return (
-            <div className="mb-4">
-                <label className="block text-gray-700 font-bold mb-2" htmlFor="subcategory">
-                    Subcategory
-                </label>
-                <select
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    id="subcategory"
-                    name="subcategory"
-                    value={formData.subcategory}
-                    onChange={handleCategoryChange}
-                    disabled={loading}
-                >
-                    <option value="">Select a subcategory</option>
-                    {availableSubcategories.map(subcategory => (
-                        <option key={subcategory.id.toString()} value={subcategory.id.toString()} selected={subcategory.id==1}>
-                            {subcategory.name}
-                        </option>
-                    ))}
-                </select>
-            </div>
-        );
+    const getCurrentSubcategory = () => {
+        return availableSubcategories.find(sub => sub.value === formData.subcategory.toString()) || null;
     };
 
     if (loading && allCategories.length === 0) {
@@ -461,9 +445,40 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                             </label>
                         </div>
 
-                        {/* Category Dropdowns */}
-                        {renderCategoryDropdown()}
-                        {renderSubcategoryDropdown()}
+                        {/* Category Dropdown */}
+                        <div className="mb-4">
+                            <label className="block text-gray-700 font-bold mb-2">
+                                Category*
+                            </label>
+                            <Select
+                                options={mainCategories}
+                                value={getCurrentCategory()}
+                                onChange={handleCategoryChange}
+                                isDisabled={submitting || loading}
+                                placeholder="Select a category"
+                                className="react-select-container"
+                                classNamePrefix="react-select"
+                                required
+                            />
+                        </div>
+
+                        {/* Subcategory Dropdown */}
+                        {formData.category && availableSubcategories.length > 0 && (
+                            <div className="mb-4">
+                                <label className="block text-gray-700 font-bold mb-2">
+                                    Subcategory
+                                </label>
+                                <Select
+                                    options={availableSubcategories}
+                                    value={getCurrentSubcategory()}
+                                    onChange={handleSubcategoryChange}
+                                    isDisabled={submitting || loading}
+                                    placeholder="Select a subcategory"
+                                    className="react-select-container"
+                                    classNamePrefix="react-select"
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -512,6 +527,30 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                     </button>
                 </div>
             </form>
+
+            <style jsx global>{`
+                .react-select-container .react-select__control {
+                    border: 1px solid #d1d5db;
+                    min-height: 42px;
+                    box-shadow: none;
+                }
+                .react-select-container .react-select__control:hover {
+                    border-color: #d1d5db;
+                }
+                .react-select-container .react-select__control--is-focused {
+                    border-color: #3b82f6;
+                    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+                }
+                .react-select-container .react-select__menu {
+                    z-index: 10;
+                }
+                .react-select-container .react-select__option--is-focused {
+                    background-color: #e5e7eb;
+                }
+                .react-select-container .react-select__option--is-selected {
+                    background-color: #3b82f6;
+                }
+            `}</style>
         </div>
     );
 };

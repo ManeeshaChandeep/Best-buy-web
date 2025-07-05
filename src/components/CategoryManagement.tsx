@@ -2,8 +2,16 @@
 import { useState, useEffect } from 'react';
 import { apiClient } from '@/../src/libs/network';
 
+
+interface Category {
+    id: string;
+    name: string;
+    image: string;
+    parent?: string;
+}
+
 const CategoryManagement = () => {
-    const [categories, setCategories] = useState([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState(null);
@@ -17,7 +25,7 @@ const CategoryManagement = () => {
     const fetchCategories = async () => {
         try {
             setLoading(true);
-            const data = await apiClient.get('categories/');
+            const data = (await apiClient.get('categories/')) as Category[];
             setCategories(data);
             setLoading(false);
         } catch (err) {
