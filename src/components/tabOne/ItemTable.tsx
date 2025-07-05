@@ -41,13 +41,21 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
     const searchInputRef = useRef<HTMLInputElement>(null);
     const actionMenuRef = useRef<HTMLDivElement>(null);
 
-    // Type guard for API response
+    // Type guard for Product array
     function isProductArray(data: any): data is Product[] {
         return Array.isArray(data) && data.every(item =>
             typeof item.id === 'number' &&
             typeof item.name === 'string' &&
             typeof item.sku === 'string' &&
             (typeof item.price === 'number' || typeof item.price === 'string')
+        );
+    }
+
+    // Type guard for Category array
+    function isCategoryArray(data: any): data is Category[] {
+        return Array.isArray(data) && data.every(item =>
+            (typeof item.id === 'string' || typeof item.id === 'number') &&
+            typeof item.name === 'string'
         );
     }
 
@@ -67,6 +75,10 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
                     throw new Error('Invalid product data format from API');
                 }
 
+                if (!isCategoryArray(categoriesResponse)) {
+                    throw new Error('Invalid category data format from API');
+                }
+
                 // Convert all prices to numbers and handle potential missing data
                 const processedProducts = productsResponse.map(product => ({
                     ...product,
@@ -82,7 +94,7 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
                 }));
 
                 setProducts(processedProducts);
-                setCategories(categoriesResponse || []);
+                setCategories(categoriesResponse);
                 setFilteredProducts(processedProducts);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to load data');

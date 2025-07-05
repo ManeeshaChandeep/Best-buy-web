@@ -17,6 +17,22 @@ interface Category {
     image?: string;
 }
 
+interface Product {
+    id: number;
+    name: string;
+    sku: string;
+    model_number?: string;
+    price: number | string;
+    old_price?: number | string;
+    quantity: number | string;
+    warranty?: number | string;
+    delivery_available: boolean;
+    description: string;
+    category: string;
+    subcategory?: string;
+    image_url?: string;
+}
+
 interface FormData {
     id?: number;
     name: string;
@@ -103,7 +119,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
         const fetchCategories = async () => {
             try {
                 setLoading(true);
-                const data: Category[] = await apiClient.get('categories/');
+                const data = await apiClient.get<Category[]>('categories/');
                 setAllCategories(data);
                 const { mainOptions, subOptions } = organizeCategories(data);
                 setMainCategories(mainOptions);
@@ -129,7 +145,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
             try {
                 setLoading(true);
                 setError(null);
-                const product = await apiClient.get(`products/${productId}/`);
+                const product = await apiClient.get<Product>(`products/${productId}/`);
 
                 setFormData({
                     id: product.id,
