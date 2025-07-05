@@ -1,7 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import Select from 'react-select';
 import { apiClient } from '@/../src/libs/network';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), {
@@ -15,22 +14,6 @@ interface Category {
     name: string;
     parent?: string | number;
     image?: string;
-}
-
-interface Product {
-    id: number;
-    name: string;
-    sku: string;
-    model_number?: string;
-    price: number | string;
-    old_price?: number | string;
-    quantity: number | string;
-    warranty?: number | string;
-    delivery_available: boolean;
-    description: string;
-    category: string;
-    subcategory?: string;
-    image_url?: string;
 }
 
 interface FormData {
@@ -49,14 +32,33 @@ interface FormData {
     image_url?: string;
 }
 
+
+interface Product {
+    id: number;
+    name: string;
+    sku: string;
+    model_number?: string;
+    price: number;
+    old_price?: number;
+    quantity: number;
+    warranty?: number;
+    delivery_available: boolean;
+    description: string;
+    category?: string;
+    subcategory?: string;
+    image_url?: string;
+    images?: string[];
+}
+
+interface ImagePreview {
+    id: string;
+    url: string;
+    file: File | null;
+}
+
 interface ManageItemsProps {
     productId?: number;
     onProductUpdated?: () => void;
-}
-
-interface SelectOption {
-    value: string;
-    label: string;
 }
 
 const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
@@ -70,8 +72,8 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
         warranty: '',
         delivery_available: false,
         description: '',
-        category: '',
-        subcategory: ''
+        category: '1',
+        subcategory: '2'
     });
 
     const [loading, setLoading] = useState<boolean>(true);
@@ -79,9 +81,22 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<boolean>(false);
     const [allCategories, setAllCategories] = useState<Category[]>([]);
-    const [mainCategories, setMainCategories] = useState<SelectOption[]>([]);
-    const [availableSubcategories, setAvailableSubcategories] = useState<SelectOption[]>([]);
+    const [mainCategories, setMainCategories] = useState<Category[]>([]);
+    const [availableSubcategories, setAvailableSubcategories] = useState<Category[]>([]);
     const [isEditing, setIsEditing] = useState<boolean>(false);
+    const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
+
+    // Initialize with 5 empty image slots (first one is main)
+    useEffect(() => {
+        if (imagePreviews.length === 0) {
+            const initialImages = Array(5).fill(null).map((_, index) => ({
+                id: `img-${Date.now()}-${index}`,
+                url: '',
+                file: null
+            }));
+            setImagePreviews(initialImages);
+        }
+    }, []);
 
     // ReactQuill modules configuration
     const modules = {
@@ -100,18 +115,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
     const organizeCategories = (categories: Category[]) => {
         const mains = categories.filter(cat => !cat.parent);
         const subs = categories.filter(cat => cat.parent !== undefined);
-
-        const mainOptions = mains.map(cat => ({
-            value: cat.id.toString(),
-            label: cat.name
-        }));
-
-        const subOptions = subs.map(cat => ({
-            value: cat.id.toString(),
-            label: cat.name
-        }));
-
-        return { mainOptions, subOptions };
+        return { mains, subs };
     };
 
     // Fetch all categories
@@ -119,11 +123,11 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
         const fetchCategories = async () => {
             try {
                 setLoading(true);
-                const data = await apiClient.get<Category[]>('categories/');
+                const data: Category[] = await apiClient.get('categories/');
                 setAllCategories(data);
-                const { mainOptions, subOptions } = organizeCategories(data);
-                setMainCategories(mainOptions);
-                setAvailableSubcategories(subOptions);
+                const { mains, subs } = organizeCategories(data);
+                setMainCategories(mains);
+                setAvailableSubcategories(subs);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to load categories');
             } finally {
@@ -135,6 +139,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
     }, []);
 
     // Fetch product data when productId changes
+    // Fetch product data when productId changes
     useEffect(() => {
         if (!productId) {
             resetForm();
@@ -145,7 +150,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
             try {
                 setLoading(true);
                 setError(null);
-                const product = await apiClient.get<Product>(`products/${productId}/`);
+                const product: Product = await apiClient.get(`products/${productId}/`);
 
                 setFormData({
                     id: product.id,
@@ -163,6 +168,20 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                     image_url: product.image_url
                 });
 
+                // If editing and product has images, populate image previews
+                if (product.images && product.images.length > 0) {
+                    const newImagePreviews = [...imagePreviews];
+                    product.images.forEach((img: string, index: number) => {
+                        if (index < 5) {
+                            newImagePreviews[index] = {
+                                ...newImagePreviews[index],
+                                url: img
+                            };
+                        }
+                    });
+                    setImagePreviews(newImagePreviews);
+                }
+
                 setIsEditing(true);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to load product');
@@ -177,17 +196,13 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
     // Filter subcategories when main category is selected
     useEffect(() => {
         if (formData.category) {
-            const filteredSubs = allCategories
-                .filter(sub => sub.parent?.toString() === formData.category.toString())
-                .map(cat => ({
-                    value: cat.id.toString(),
-                    label: cat.name
-                }));
-
+            const filteredSubs = allCategories.filter(
+                sub => sub.parent?.toString() === formData.category.toString()
+            );
             setAvailableSubcategories(filteredSubs);
 
             // Reset subcategory if the selected one is no longer valid
-            if (formData.subcategory && !filteredSubs.some(sub => sub.value === formData.subcategory.toString())) {
+            if (formData.subcategory && !filteredSubs.some(sub => sub.id.toString() === formData.subcategory.toString())) {
                 setFormData(prev => ({ ...prev, subcategory: '' }));
             }
         }
@@ -207,6 +222,11 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
             category: '',
             subcategory: ''
         });
+        setImagePreviews(Array(5).fill(null).map((_, index) => ({
+            id: `img-${Date.now()}-${index}`,
+            url: '',
+            file: null
+        })));
         setIsEditing(false);
         setError(null);
         setSuccess(false);
@@ -222,23 +242,14 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
         }));
     };
 
-    const handleCategoryChange = (selectedOption: SelectOption | null) => {
-        if (selectedOption) {
-            setFormData(prev => ({
-                ...prev,
-                category: selectedOption.value,
-                subcategory: '' // Reset subcategory when main category changes
-            }));
-        }
-    };
-
-    const handleSubcategoryChange = (selectedOption: SelectOption | null) => {
-        if (selectedOption) {
-            setFormData(prev => ({
-                ...prev,
-                subcategory: selectedOption.value
-            }));
-        }
+    const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value,
+            // Reset subcategory when main category changes
+            ...(name === 'category' && { subcategory: '' })
+        }));
     };
 
     const handleDescriptionChange = (value: string) => {
@@ -246,6 +257,35 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
             ...prev,
             description: value
         }));
+    };
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+
+            reader.onloadend = () => {
+                const newImagePreviews = [...imagePreviews];
+                newImagePreviews[index] = {
+                    ...newImagePreviews[index],
+                    url: reader.result as string,
+                    file: file
+                };
+                setImagePreviews(newImagePreviews);
+            };
+
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRemoveImage = (index: number) => {
+        const newImagePreviews = [...imagePreviews];
+        newImagePreviews[index] = {
+            id: `img-${Date.now()}-${index}`,
+            url: '',
+            file: null
+        };
+        setImagePreviews(newImagePreviews);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -281,13 +321,109 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
         }
     };
 
-    const getCurrentCategory = () => {
-        return mainCategories.find(cat => cat.value === formData.category.toString()) || null;
+    const renderCategoryDropdown = () => (
+        <div className="mb-4">
+            <label className="block text-gray-700 font-bold mb-2" htmlFor="category">
+                Category*
+            </label>
+            <select
+                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                id="category"
+                name="category"
+                value={formData.category}
+                onChange={handleCategoryChange}
+                required
+                disabled={loading}
+            >
+                <option value="">Select a category</option>
+                {mainCategories.map(category => (
+                    <option key={category.id.toString()} value={category.id.toString()}>
+                        {category.name}
+                    </option>
+                ))}
+            </select>
+        </div>
+    );
+
+    const renderSubcategoryDropdown = () => {
+        if (!formData.category || availableSubcategories.length === 0) return null;
+
+        return (
+            <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2" htmlFor="subcategory">
+                    Subcategory
+                </label>
+                <select
+                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    id="subcategory"
+                    name="subcategory"
+                    value={formData.subcategory}
+                    onChange={handleCategoryChange}
+                    disabled={loading}
+                >
+                    <option value="">Select a subcategory</option>
+                    {availableSubcategories.map(subcategory => (
+                        <option key={subcategory.id.toString()} value={subcategory.id.toString()}>
+                            {subcategory.name}
+                        </option>
+                    ))}
+                </select>
+            </div>
+        );
     };
 
-    const getCurrentSubcategory = () => {
-        return availableSubcategories.find(sub => sub.value === formData.subcategory.toString()) || null;
-    };
+    const renderImageUploads = () => (
+        <div className="mt-8">
+            <h2 className="text-xl font-bold mb-4">Product Images</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {imagePreviews.map((image, index) => (
+                    <div key={image.id} className={`relative border-2 rounded-lg p-2 ${index === 0 ? 'border-blue-500' : 'border-gray-300'}`}>
+                        {image.url ? (
+                            <>
+                                <img
+                                    src={image.url}
+                                    alt={`Preview ${index + 1}`}
+                                    className="w-full h-32 object-contain mb-2"
+                                />
+                                {index === 0 && (
+                                    <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                                        Main
+                                    </div>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveImage(index)}
+                                    className="w-full text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
+                                >
+                                    Remove
+                                </button>
+                            </>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-32 bg-gray-100 rounded">
+                                <span className="text-gray-500 text-sm mb-2">
+                                    {index === 0 ? 'Main Image*' : `Image ${index + 1}`}
+                                </span>
+                                <label className="cursor-pointer bg-white border border-blue-500 text-blue-500 hover:bg-blue-50 px-3 py-1 rounded text-xs">
+                                    Upload
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => handleImageChange(e, index)}
+                                        disabled={submitting}
+                                        required={index === 0 && !image.url}
+                                    />
+                                </label>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+            <p className="text-sm text-gray-500 mt-2">
+                First image will be used as the main product image. Main image is required.
+            </p>
+        </div>
+    );
 
     if (loading && allCategories.length === 0) {
         return (
@@ -461,40 +597,9 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                             </label>
                         </div>
 
-                        {/* Category Dropdown */}
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">
-                                Category*
-                            </label>
-                            <Select
-                                options={mainCategories}
-                                value={getCurrentCategory()}
-                                onChange={handleCategoryChange}
-                                isDisabled={submitting || loading}
-                                placeholder="Select a category"
-                                className="react-select-container"
-                                classNamePrefix="react-select"
-                                required
-                            />
-                        </div>
-
-                        {/* Subcategory Dropdown */}
-                        {formData.category && availableSubcategories.length > 0 && (
-                            <div className="mb-4">
-                                <label className="block text-gray-700 font-bold mb-2">
-                                    Subcategory
-                                </label>
-                                <Select
-                                    options={availableSubcategories}
-                                    value={getCurrentSubcategory()}
-                                    onChange={handleSubcategoryChange}
-                                    isDisabled={submitting || loading}
-                                    placeholder="Select a subcategory"
-                                    className="react-select-container"
-                                    classNamePrefix="react-select"
-                                />
-                            </div>
-                        )}
+                        {/* Category Dropdowns */}
+                        {renderCategoryDropdown()}
+                        {renderSubcategoryDropdown()}
                     </div>
                 </div>
 
@@ -514,6 +619,9 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                     />
                 </div>
 
+                {/* Image Uploads */}
+                {renderImageUploads()}
+
                 {/* Submit Button */}
                 <div className="flex justify-between mt-6">
                     {isEditing && (
@@ -529,7 +637,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                     <button
                         type="submit"
                         className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ml-auto"
-                        disabled={submitting || loading}
+                        disabled={submitting || loading || !imagePreviews[0]?.url}
                     >
                         {submitting ? (
                             <span className="flex items-center">
@@ -543,30 +651,6 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                     </button>
                 </div>
             </form>
-
-            <style jsx global>{`
-                .react-select-container .react-select__control {
-                    border: 1px solid #d1d5db;
-                    min-height: 42px;
-                    box-shadow: none;
-                }
-                .react-select-container .react-select__control:hover {
-                    border-color: #d1d5db;
-                }
-                .react-select-container .react-select__control--is-focused {
-                    border-color: #3b82f6;
-                    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-                }
-                .react-select-container .react-select__menu {
-                    z-index: 10;
-                }
-                .react-select-container .react-select__option--is-focused {
-                    background-color: #e5e7eb;
-                }
-                .react-select-container .react-select__option--is-selected {
-                    background-color: #3b82f6;
-                }
-            `}</style>
         </div>
     );
 };

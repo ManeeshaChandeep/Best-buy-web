@@ -2,6 +2,7 @@ import React, {Dispatch, SetStateAction} from "react";
 import {ViewType} from "@/app/(pages)/dashboard/page";
 import { FiPlus, FiList, FiMenu } from "react-icons/fi";
 import { TbCategoryPlus } from "react-icons/tb";
+import { FaRegImage } from "react-icons/fa6";
 
 type SidebarProps = {
     active: string;
@@ -69,6 +70,17 @@ const Sidebar: React.FC<SidebarProps> = ({ active, setActive }) => {
                 <TbCategoryPlus  size={20} />
                 {!isCollapsed && <span className="ml-3">Category</span>}
             </button>
+
+            <button
+                onClick={() => setActive("image")}
+                className={`flex items-center w-full text-left p-2 rounded ${
+                    active === "image" ? "bg-blue-500 text-white" : "hover:bg-gray-300"
+                }`}
+            >
+                <FaRegImage  size={20} />
+                {!isCollapsed && <span className="ml-3">Manage Images</span>}
+            </button>
+
         </div>
     );
 };
