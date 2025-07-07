@@ -30,6 +30,12 @@ interface FormData {
     category: string;
     subcategory: string;
     image_url?: string;
+    images?: string[];
+}
+
+interface UploadResponse {
+    filename: string;
+    status?: string;
 }
 
 
@@ -73,7 +79,8 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
         delivery_available: false,
         description: '',
         category: '1',
-        subcategory: '2'
+        subcategory: '2',
+        images: []
     });
 
     const [loading, setLoading] = useState<boolean>(true);
@@ -220,7 +227,8 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
             delivery_available: false,
             description: '',
             category: '',
-            subcategory: ''
+            subcategory: '',
+            images: []
         });
         setImagePreviews(Array(5).fill(null).map((_, index) => ({
             id: `img-${Date.now()}-${index}`,
@@ -259,33 +267,67 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
         }));
     };
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             const reader = new FileReader();
+            const timestamp = Date.now();
+            let imageName = "";
+
+            const formPayload = new FormData();
+            formPayload.append("file", file);
+            formPayload.append("image_name", `image_${timestamp}`);
+            formPayload.append("type", "products"); // if this is a category image set this as 'categories'
+
+            try {
+                console.log(file)
+
+                await apiClient.post("upload/", formPayload).then((res: UploadResponse ) => {
+                    if (res?.filename) {
+                        imageName = res?.filename;
+                        setFormData(prev => ({
+                            ...prev,
+                            images: [...prev?.images, res.filename]
+                        }));
+                    }
+                })
+            } catch (e) {
+                setError("Error Uploading Image, Try again")
+                return
+            }
 
             reader.onloadend = () => {
                 const newImagePreviews = [...imagePreviews];
                 newImagePreviews[index] = {
                     ...newImagePreviews[index],
                     url: reader.result as string,
-                    file: file
+                    file: file,
+                    id:imageName
                 };
                 setImagePreviews(newImagePreviews);
             };
 
             reader.readAsDataURL(file);
+
         }
     };
 
     const handleRemoveImage = (index: number) => {
         const newImagePreviews = [...imagePreviews];
+        const previousId = imagePreviews[index]?.id;
+
         newImagePreviews[index] = {
             id: `img-${Date.now()}-${index}`,
             url: '',
             file: null
         };
         setImagePreviews(newImagePreviews);
+
+        setFormData(prev => ({
+            ...prev,
+            images: prev.images.filter(imgName => imgName !== previousId)
+        }));
+
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -310,6 +352,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                 setSuccess(true);
                 if (onProductUpdated) onProductUpdated();
             } else {
+                console.log(itemData)
                 await apiClient.post('products/', itemData);
                 setSuccess(true);
                 resetForm();

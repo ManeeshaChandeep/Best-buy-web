@@ -15,6 +15,7 @@ interface Product {
     subcategory?: string;
     image_url?: string;
     description?: string;
+    images?: string[];
 }
 
 interface Category {
@@ -352,9 +353,9 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
                         filteredProducts.map(product => (
                             <tr key={product.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    {product.image_url ? (
+                                    {product.images?.length > 0 ? (
                                         <img
-                                            src={product.image_url}
+                                            src={`http://api.bestbuyelectronics.lk${product.images[0]}`}
                                             alt={product.name}
                                             className="h-10 w-10 rounded-md object-cover"
                                             onError={(e) => {

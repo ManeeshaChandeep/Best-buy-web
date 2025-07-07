@@ -24,14 +24,19 @@ export const apiClient = {
         }
     },
 
-    post: async <T>(endpoint: string, data: any): Promise<T> => {
+    post: async <T>(endpoint: string, data: any, headers?: Record<string, string>): Promise<T> => {
         try {
+            const isFormData = data instanceof FormData;
+
             const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(data),
+                headers: isFormData
+                    ? headers // let the browser set the boundary for FormData
+                    : {
+                        "Content-Type": "application/json",
+                        ...(headers || {})
+                    },
+                body: isFormData ? data : JSON.stringify(data),
             });
 
             if (!response.ok) {
