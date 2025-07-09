@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { apiClient } from '@/../src/libs/network';
+import { apiClient } from '@/libs/network';
 
 
 interface Category {

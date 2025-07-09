@@ -3,6 +3,7 @@ import {ViewType} from "@/app/(pages)/dashboard/page";
 import { FiPlus, FiList, FiMenu } from "react-icons/fi";
 import { TbCategoryPlus } from "react-icons/tb";
 import { FaRegImage } from "react-icons/fa6";
+import { MdLocalOffer } from "react-icons/md";
 
 type SidebarProps = {
     active: string;
@@ -79,6 +80,16 @@ const Sidebar: React.FC<SidebarProps> = ({ active, setActive }) => {
             >
                 <FaRegImage  size={20} />
                 {!isCollapsed && <span className="ml-3">Manage Images</span>}
+            </button>
+
+            <button
+                onClick={() => setActive("banner")}
+                className={`flex items-center w-full text-left p-2 rounded ${
+                    active === "banner" ? "bg-blue-500 text-white" : "hover:bg-gray-300"
+                }`}
+            >
+                <MdLocalOffer   size={20} />
+                {!isCollapsed && <span className="ml-3">Manage Banners</span>}
             </button>
 
         </div>

@@ -1,4 +1,4 @@
-import ImageUpload from "@/components/tabManageImages/UploadImages";
+import ImageUpload from "@/components/ManageImages/UploadImages";
 
 export default function ManageImages() {
     const handleImageUpload = (file: File) => {

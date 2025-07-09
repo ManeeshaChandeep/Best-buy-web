@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import ManageItems from "@/components/tabItems/ManageItems";
-import ItemTable from "@/components/tabItems/ItemTable";
+import ManageItems from "@/components/ManageItems/ManageItems";
+import ItemTable from "@/components/ManageItems/ItemTable";
 
 export default function AddItemSection() {
     const [editingProductId, setEditingProductId] = useState<number | undefined>();

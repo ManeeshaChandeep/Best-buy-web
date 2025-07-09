@@ -1,12 +1,13 @@
 'use client'
 import { useState } from "react";
 import Sidebar from "@/components/DashboardNavBar";
-import AddItemSection from "@/components/tabItems/AddItemSection";
-import CategoryManagement from "@/components/CategoryManagement";
-import ManageImages from "@/components/tabManageImages/ManageImages";
+import AddItemSection from "@/components/ManageItems/AddItemSection";
+import CategoryManagement from "@/components/ManageCategory/CategoryManagement";
+import ManageImages from "@/components/ManageImages/ManageImages";
+import ManageBanners from "@/components/ManageBanners/ManageBanner";
 
 
-export type ViewType = "add" | "view" | "image";
+export type ViewType = "add" | "view" | "image" | "banner";
 
 const Dashboard = () => {
     const [activeView, setActiveView] = useState<ViewType>("add");
@@ -18,6 +19,7 @@ const Dashboard = () => {
                 {activeView === "add" && <AddItemSection />}
                 {activeView === "view" && <CategoryManagement />}
                 {activeView === "image" && <ManageImages />}
+                {activeView === "banner" && <ManageBanners />}
             </main>
         </div>
     );

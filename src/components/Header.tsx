@@ -3,6 +3,41 @@ import { useState, useEffect } from "react";
 import { HiMenu, HiX, HiUserCircle, HiOutlineViewGrid } from "react-icons/hi";
 import { FiSearch } from "react-icons/fi";
 import { GrCart } from "react-icons/gr";
+import { apiClient } from "@/libs/network";
+
+interface ApiCategory {
+    id: string;
+    name: string;
+    parent: string | null;
+}
+
+interface Category {
+    id: string;
+    name: string;
+    subcategories: Subcategory[];
+}
+
+interface Subcategory {
+    id: string;
+    name: string;
+}
+
+interface ApiCategory {
+    id: string;
+    name: string;
+    parent: string | null;
+}
+
+interface Category {
+    id: string;
+    name: string;
+    subcategories: Subcategory[];
+}
+
+interface Subcategory {
+    id: string;
+    name: string;
+}
 
 export default function Navbar() {
     const [menuOpen, setMenuOpen] = useState(false);
@@ -11,6 +46,9 @@ export default function Navbar() {
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
     const [showMobileCategories, setShowMobileCategories] = useState(false);
     const [showMobileSearch, setShowMobileSearch] = useState(false);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -20,11 +58,32 @@ export default function Navbar() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    const categories = [
-        { name: "Electronics", subcategories: ["Phones", "Laptops", "Cameras"] },
-        { name: "Home Appliances", subcategories: ["TVs", "Refrigerators", "Washing Machines"] },
-        { name: "Audio", subcategories: ["Headphones", "Speakers", "Earbuds"] }
-    ];
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                setLoading(true);
+                const response = await apiClient.get<ApiCategory[]>('categories/');
+                const mainCategories = response.filter((cat) => !cat.parent);
+                const categoriesWithSubs = mainCategories.map((category) => ({
+                    id: category.id,
+                    name: category.name,
+                    subcategories: response
+                        .filter((sub) => sub.parent === category.id)
+                        .map((sub) => ({
+                            id: sub.id,
+                            name: sub.name
+                        }))
+                }));
+                setCategories(categoriesWithSubs);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to load categories');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCategories();
+    }, []);
 
     const toggleSearch = () => {
         setShowMobileSearch(!showMobileSearch);
@@ -33,48 +92,51 @@ export default function Navbar() {
         }
     };
 
+    if (error) {
+        console.error("Error loading categories:", error);
+        // You might want to render an error state or fallback UI here
+    }
+
     return (
         <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? "bg-white shadow-lg backdrop-blur-sm bg-opacity-90" : "bg-white"}`}>
             <div className="container mx-auto px-4">
                 {/* Main Navbar */}
                 <div className="flex justify-between items-center py-4 relative">
-                    {/* Mobile Category Button (hidden on desktop) */}
+                    {/* Mobile Category Button */}
                     <div className="lg:hidden flex items-center">
-                        <button 
-                            onClick={() => setShowMobileCategories(!showMobileCategories)} 
+                        <button
+                            onClick={() => setShowMobileCategories(!showMobileCategories)}
                             className="text-gray-700 hover:text-red-600 mr-2"
+                            disabled={loading}
                         >
                             <HiOutlineViewGrid size={24} />
                         </button>
                     </div>
 
-                    {/* Logo - Adjusted for mobile */}
+                    {/* Logo */}
                     <a href="#" className="text-2xl font-bold text-red-600 flex items-center">
                         BestBuy
                     </a>
 
-                    {/* Right side icons (cart and mobile menu) */}
+                    {/* Right side icons */}
                     <div className="flex items-center space-x-4">
-                        {/* Cart Icon */}
-                      
-
                         {/* Mobile Search Button */}
-                        <button 
-                            onClick={toggleSearch} 
+                        <button
+                            onClick={toggleSearch}
                             className="lg:hidden text-gray-700 hover:text-red-600"
                         >
                             <FiSearch size={24} />
                         </button>
 
-                          <button className="text-gray-700 hover:text-red-600 relative">
+                        <button className="text-gray-700 hover:text-red-600 relative">
                             <GrCart size={24} />
                             <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                                3
-                            </span>
+                3
+              </span>
                         </button>
                     </div>
 
-                    {/* Mobile Search Bar (appears when search icon is clicked) */}
+                    {/* Mobile Search Bar */}
                     <div className={`lg:hidden absolute top-full left-0 right-0 bg-transparent px-4 py-3 transition-all duration-300 ease-in-out ${showMobileSearch ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0 pointer-events-none'}`}>
                         <div className="relative">
                             <input
@@ -99,52 +161,54 @@ export default function Navbar() {
 
                 {/* Desktop Search Bar and Categories */}
                 <div className="hidden lg:flex items-center pb-4">
-                    {/* Desktop Categories - Left aligned */}
-                    <div className="relative group mr-4">
-                        <button 
-                            className="flex items-center px-4 py-2.5 bg-gray-300 rounded-lg hover:bg-gray-400 transition-colors"
-                            onMouseEnter={() => setActiveCategory('all')}
-                        >
-                            <HiOutlineViewGrid className="mr-2" size={20} />
-                            <span className="font-medium">All Categories</span>
-                        </button>
-                        
-                        {/* Categories Dropdown */}
-                        {activeCategory && (
-                            <div 
-                                className="absolute left-0 mt-1 w-56 bg-white rounded-lg shadow-lg z-50 border border-gray-200"
-                                onMouseLeave={() => setActiveCategory(null)}
+                    {/* Desktop Categories */}
+                    {!loading && (
+                        <div className="relative group mr-4">
+                            <button
+                                className="flex items-center px-4 py-2.5 bg-gray-300 rounded-lg hover:bg-gray-400 transition-colors"
+                                onMouseEnter={() => categories.length > 0 && setActiveCategory('all')}
                             >
-                                <div className="py-1">
-                                    {categories.map((category) => (
-                                        <div key={category.name} className="px-4 py-2 group">
-                                            <button 
-                                                className="w-full text-left py-1 font-medium text-gray-800 hover:text-red-600 flex justify-between items-center"
-                                                onMouseEnter={() => setActiveCategory(category.name)}
-                                            >
-                                                <span>{category.name}</span>
-                                                <span>›</span>
-                                            </button>
-                                            {/* Subcategories Panel */}
-                                            {activeCategory === category.name && (
-                                                <div className="absolute left-full top-0 ml-1 w-56 bg-white rounded-r-lg shadow-lg border-l-0 border border-gray-200 py-1">
-                                                    {category.subcategories.map((sub) => (
-                                                        <a
-                                                            key={sub}
-                                                            href="#"
-                                                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600"
-                                                        >
-                                                            {sub}
-                                                        </a>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
+                                <HiOutlineViewGrid className="mr-2" size={20} />
+                                <span className="font-medium">All Categories</span>
+                            </button>
+
+                            {/* Categories Dropdown */}
+                            {activeCategory && categories.length > 0 && (
+                                <div
+                                    className="absolute left-0 mt-1 w-56 bg-white rounded-lg shadow-lg z-50 border border-gray-200"
+                                    onMouseLeave={() => setActiveCategory(null)}
+                                >
+                                    <div className="py-1">
+                                        {categories.map((category) => (
+                                            <div key={category.id} className="px-4 py-2 group">
+                                                <button
+                                                    className="w-full text-left py-1 font-medium text-gray-800 hover:text-red-600 flex justify-between items-center"
+                                                    onMouseEnter={() => setActiveCategory(category.id)}
+                                                >
+                                                    <span>{category.name}</span>
+                                                    <span>›</span>
+                                                </button>
+                                                {/* Subcategories Panel */}
+                                                {activeCategory === category.id && category.subcategories.length > 0 && (
+                                                    <div className="absolute left-full top-0 ml-1 w-56 bg-white rounded-r-lg shadow-lg border-l-0 border border-gray-200 py-1">
+                                                        {category.subcategories.map((sub) => (
+                                                            <a
+                                                                key={sub.id}
+                                                                href={`/category/${category.id}/subcategory/${sub.id}`}
+                                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600"
+                                                            >
+                                                                {sub.name}
+                                                            </a>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Centered Search Bar */}
                     <div className="flex-1 flex justify-center">
@@ -171,32 +235,38 @@ export default function Navbar() {
                     </div>
                 </div>
 
-                {/* Mobile Categories Panel (appears when category icon is clicked) */}
+                {/* Mobile Categories Panel */}
                 {showMobileCategories && (
                     <div className="lg:hidden bg-white border border-gray-200 rounded-lg shadow-sm mb-3 transition-all duration-300 ease-in-out">
                         <div className="px-4 py-3 font-medium text-gray-700 border-b border-gray-200">
                             All Categories
                         </div>
-                        <div className="divide-y divide-gray-100">
-                            {categories.map((category) => (
-                                <div key={category.name} className="px-4 py-2">
-                                    <button className="w-full text-left py-2 font-medium">
-                                        {category.name}
-                                    </button>
-                                    <div className="pl-4 space-y-1 mt-1">
-                                        {category.subcategories.map((sub) => (
-                                            <a
-                                                key={sub}
-                                                href="#"
-                                                className="block py-1.5 text-sm text-gray-600 hover:text-red-600 transition-colors duration-200"
-                                            >
-                                                {sub}
-                                            </a>
-                                        ))}
+                        {loading ? (
+                            <div className="px-4 py-6 text-center text-gray-500">Loading categories...</div>
+                        ) : (
+                            <div className="divide-y divide-gray-100">
+                                {categories.map((category) => (
+                                    <div key={category.id} className="px-4 py-2">
+                                        <button className="w-full text-left py-2 font-medium">
+                                            {category.name}
+                                        </button>
+                                        {category.subcategories.length > 0 && (
+                                            <div className="pl-4 space-y-1 mt-1">
+                                                {category.subcategories.map((sub) => (
+                                                    <a
+                                                        key={sub.id}
+                                                        href={`/category/${category.id}/subcategory/${sub.id}`}
+                                                        className="block py-1.5 text-sm text-gray-600 hover:text-red-600 transition-colors duration-200"
+                                                    >
+                                                        {sub.name}
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
