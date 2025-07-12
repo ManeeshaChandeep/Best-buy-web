@@ -4,13 +4,14 @@ import {images} from "next/dist/build/webpack/config/blocks/images";
 
 interface ProductCardProps {
     imageSrc: StaticImageData;
+    imageUrl?: string;
     title: string;
     oldPrice: number | string;
     newPrice: number | string;
     inStock: boolean;
 }
 
-const ProductCard = ({ imageSrc, title, oldPrice, newPrice, inStock }: ProductCardProps) => {
+const ProductCard = ({imageUrl, imageSrc, title, oldPrice, newPrice, inStock }: ProductCardProps) => {
     return (
         <div className="flex flex-col items-center p-4 bg-white rounded-lg hover:shadow-lg transition-shadow">
             <div className="relative w-full">
@@ -22,7 +23,7 @@ const ProductCard = ({ imageSrc, title, oldPrice, newPrice, inStock }: ProductCa
                 )}
                 
                 <Image
-                    src={imageSrc}
+                    src={imageUrl}
                     alt={title}
                     className="rounded w-40 object-cover"
                     width={128}

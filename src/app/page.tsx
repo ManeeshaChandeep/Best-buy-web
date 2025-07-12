@@ -1,5 +1,8 @@
+'use client';
 import Image from "next/image";
-import React from "react";
+import React, {useEffect, useState} from "react";
+
+const BE_URL = "https://api.bestbuyelectronics.lk";
 
 // images
 import categoryOne from "@/../public/images/tv.png"
@@ -54,9 +57,110 @@ import HeroSection from "@/components/HeroSection";
 import ItemCard from "@/components/ItemCard";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import {apiClient} from "@/libs/network";
+
+interface Category {
+    id: string | number;
+    name: string;
+    image: string;
+    parent?: string | number;
+}
+
+interface Product {
+    id: number;
+    name: string;
+    sku: string;
+    model_number?: string;
+    price: number;
+    old_price?: number;
+    quantity: number;
+    warranty?: number;
+    delivery_available: boolean;
+    category: string;
+    subcategory?: string;
+    image_url?: string;
+    description?: string;
+    images?: string[];
+}
+
+interface ProductListResponse {
+    count: number;
+    total_pages: number;
+    current_page: number;
+    limit: number;
+    results: Product[];
+}
+
+type CategoryKey = 'category1' | 'category2' | 'category3' | 'category4' | 'category5' | 'category6';
+
+const loadProducts = (params: { category?: number; subcategory?: number }) => {
+    const query = new URLSearchParams();
+
+    if (params.category) query.append('category', params.category.toString());
+    if (params.subcategory) query.append('subcategory', params.subcategory.toString());
+
+    return apiClient.get<ProductListResponse>(`products/?${query.toString()}`);
+};
 
 
 export default function Home() {
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [newProducts, setNewProducts] = useState<Product[]>([]);
+
+    const [productsByCategory, setProductsByCategory] = useState<Record<CategoryKey, Product[]>>({
+        category1: [],
+        category2: [],
+        category3: [],
+        category4: [],
+        category5: [],
+        category6: [],
+    });
+
+    const loadProductsByCategory = async (categoryKey: CategoryKey, category: number) => {
+        try {
+            const res = await loadProducts({ category: category });
+            setProductsByCategory(prev => ({
+                ...prev,
+                [categoryKey]: res.results,
+            }));
+        } catch (error) {
+            console.error(`Failed to load products for ${categoryKey}:`, error);
+        }
+    };
+
+
+    useEffect(() => {
+
+        loadProducts({}).then(res => {
+            console.log("New Products",res.results);
+            setNewProducts(res.results);
+        })
+
+
+        apiClient.get<Category[]>('categories/').then(async res => {
+
+            // Filter categories with no parent (null or undefined or empty)
+            const rootCategories = res.filter(
+                category => category.parent === null || category.parent === undefined || category.parent === ''
+            );
+
+            setCategories(rootCategories);
+            console.log(rootCategories);
+
+            // Dynamically load products for each root category
+            for (let i = 0; i < rootCategories.length && i < 6; i++) {
+                const categoryKey = `category${i + 1}` as CategoryKey;
+                const categoryId = Number(rootCategories[i].id);
+
+                console.log("Loading products for category:", categoryKey, "with ID:", categoryId);
+
+                await loadProductsByCategory(categoryKey, categoryId);
+            }
+
+        });
+    }, []);
+
+
     return (
         <div>
 
@@ -87,105 +191,17 @@ export default function Home() {
 
             <section className='flex justify-center  flex-wrap'>
                 <div className='grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6'>
-                    <ItemCard
-                        imageSrc={categoryOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemTvOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemTvTwo}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemTvThree}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemMicrowaveOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemWashingMashingOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                </div>
-
-                <div className='w-3/4 mx-auto mt-5'>
-                    <div>
-                        <div className="border-b border-gray-300 pb-1 mb-2 ">
-                            <div className="flex justify-between items-center">
-                                <h1 className=" text-gray-800 text-xs md:text-sm font-medium">Top Selling</h1>
-                                <a href="#" className="text-blue-600 hover:text-blue-800 text-xs md:text-sm">VIEW
-                                    ALL</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className='grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6'>
-                    <ItemCard
-                        imageSrc={itemMicrowaveThree}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemMicrowaveTwo}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemTvFour}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemFanOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemFanTwo}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={blenderFour}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
+                    {newProducts.map((product) => (
+                        <ItemCard
+                            key={product.id}
+                            imageUrl={`${BE_URL}${product.images[0]}`}
+                            imageSrc={categoryOne}
+                            title={product.name}
+                            oldPrice={product.old_price}
+                            newPrice={product.price}
+                            inStock={product.quantity > 0}
+                        />
+                    ))}
                 </div>
 
                 <div className='flex gap-5 my-14 justify-center w-4/5 '>
@@ -197,362 +213,43 @@ export default function Home() {
                     </div>
                 </div>
 
+                {categories.map((category, index) => {
+                    const categoryKey = `category${index + 1}` as CategoryKey;
+                    const products = productsByCategory[categoryKey] || [];
 
-                <div className='w-3/4 mx-auto mt-5'>
-                    <div>
-                        <div className="border-b border-gray-300 pb-1 mb-2 ">
-                            <div className="flex justify-between items-center">
-                                <h1 className=" text-gray-800 text-xs md:text-sm font-medium">Smart Phone</h1>
-                                <a href="#" className="text-blue-600 hover:text-blue-800 text-xs md:text-sm">VIEW
-                                    ALL</a>
+                    return (
+                        <div key={category.id} className="w-3/4 mx-auto mt-10">
+                            {/* Category Header */}
+                            <div className="border-b border-gray-300 pb-1 mb-2">
+                                <div className="flex justify-between items-center">
+                                    <h1 className="text-gray-800 text-xs md:text-sm font-medium">{category.name}</h1>
+                                    <a href="#" className="text-blue-600 hover:text-blue-800 text-xs md:text-sm">VIEW ALL</a>
+                                </div>
+                            </div>
+
+                            {/* Product Grid */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+                                {products.map(product => (
+                                    <ItemCard
+                                        key={product.id}
+                                        imageUrl={`${BE_URL}${product.images[0]}`}
+                                        imageSrc={categoryOne}
+                                        title={product.name}
+                                        oldPrice={product.old_price}
+                                        newPrice={product.price}
+                                        inStock={product.quantity > 0}
+                                    />
+                                ))}
+
+                                {/* Optional: Show fallback if no products */}
+                                {products.length === 0 && (
+                                    <p className="text-xs text-gray-500 col-span-full">No products available.</p>
+                                )}
                             </div>
                         </div>
-                    </div>
-                </div>
+                    );
+                })}
 
-
-                <div className='grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6'>
-                    <ItemCard
-                        imageSrc={mobileOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={mobileTwo}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={mobileThree}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={mobileFour}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={mobileFive}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={mobileSix}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                </div>
-
-
-                <div className='w-3/4 mx-auto mt-5'>
-                    <div>
-                        <div className="border-b border-gray-300 pb-1 mb-2 ">
-                            <div className="flex justify-between items-center">
-                                <h1 className=" text-gray-800 text-xs md:text-sm font-medium">Air Conditioners</h1>
-                                <a href="#" className="text-blue-600 hover:text-blue-800 text-xs md:text-sm">VIEW
-                                    ALL</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div className='grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6'>
-                    <ItemCard
-                        imageSrc={acOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={acOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={acOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={acOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={acOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={acOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                </div>
-
-
-                <div className='w-3/4 mx-auto mt-5'>
-                    <div>
-                        <div className="border-b border-gray-300 pb-1 mb-2 ">
-                            <div className="flex justify-between items-center">
-                                <h1 className=" text-gray-800 text-xs md:text-sm font-medium">Air Conditioners</h1>
-                                <a href="#" className="text-blue-600 hover:text-blue-800 text-xs md:text-sm">VIEW
-                                    ALL</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div className='grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6'>
-                    <ItemCard
-                        imageSrc={itemTvOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemTvTwo}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemTvThree}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemTvFour}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemTvFive}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemTvSix}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                </div>
-
-
-                <div className='w-3/4 mx-auto mt-5'>
-                    <div>
-                        <div className="border-b border-gray-300 pb-1 mb-2 ">
-                            <div className="flex justify-between items-center">
-                                <h1 className=" text-gray-800 text-xs md:text-sm font-medium">washing Machine</h1>
-                                <a href="#" className="text-blue-600 hover:text-blue-800 text-xs md:text-sm">VIEW
-                                    ALL</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div className='grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6'>
-                    <ItemCard
-                        imageSrc={washingMachineSeven}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={washingMachineTwo}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={washingMachineThree}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={washingMachineFour}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={washingMachineFive}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={washingMachineSix}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                </div>
-
-
-
-                <div className='w-3/4 mx-auto mt-5'>
-                    <div>
-                        <div className="border-b border-gray-300 pb-1 mb-2 ">
-                            <div className="flex justify-between items-center">
-                                <h1 className=" text-gray-800 text-xs md:text-sm font-medium">Air Conditioners</h1>
-                                <a href="#" className="text-blue-600 hover:text-blue-800 text-xs md:text-sm">VIEW
-                                    ALL</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div className='grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6'>
-                    <ItemCard
-                        imageSrc={acOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={acOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={acOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={acOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={acOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={acOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                </div>
-
-
-
-                <div className='w-3/4 mx-auto mt-5'>
-                    <div>
-                        <div className="border-b border-gray-300 pb-1 mb-2 ">
-                            <div className="flex justify-between items-center">
-                                <h1 className=" text-gray-800 text-xs md:text-sm font-medium">Air Conditioners</h1>
-                                <a href="#" className="text-blue-600 hover:text-blue-800 text-xs md:text-sm">VIEW
-                                    ALL</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-
-                <div className='grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6'>
-                    <ItemCard
-                        imageSrc={categoryOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemTvOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemTvTwo}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemTvThree}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemMicrowaveOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                    <ItemCard
-                        imageSrc={itemWashingMashingOne}
-                        title="Smart Ultra HD LED TV"
-                        oldPrice="240000"
-                        newPrice="240000"
-                        inStock={true}/>
-
-                </div>
 
                 <div>
                     <Image src={postThree} alt={""} className='rounded-md'/>
