@@ -59,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({ active, setActive }) => {
                 }`}
             >
                 <FiPlus size={20} />
-                {!isCollapsed && <span className="ml-3">Add Product</span>}
+                {!isCollapsed && <span className="ml-3">Manage Product</span>}
             </button>
 
             <button
@@ -69,7 +69,7 @@ const Sidebar: React.FC<SidebarProps> = ({ active, setActive }) => {
                 }`}
             >
                 <TbCategoryPlus  size={20} />
-                {!isCollapsed && <span className="ml-3">Category</span>}
+                {!isCollapsed && <span className="ml-3">Manage Category</span>}
             </button>
 
             <button
