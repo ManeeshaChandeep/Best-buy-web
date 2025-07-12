@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://api.bestbuyelectronics.lk/";
+const API_BASE_URL = "https://api.bestbuyelectronics.lk/";
 
 interface ApiError extends Error {
     status?: number;
