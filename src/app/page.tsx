@@ -213,7 +213,7 @@ export default function Home() {
                     </div>
                 </div>
 
-                {categories.map((category, index) => {
+                {categories.slice(0, 6).map((category, index) => {
                     const categoryKey = `category${index + 1}` as CategoryKey;
                     const products = productsByCategory[categoryKey] || [];
 
