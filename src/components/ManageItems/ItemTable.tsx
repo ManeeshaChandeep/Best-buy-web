@@ -18,6 +18,14 @@ interface Product {
     images?: string[];
 }
 
+interface ProductListResponse {
+    count: number;
+    total_pages: number;
+    current_page: number;
+    limit: number;
+    results: Product[];
+}
+
 interface Category {
     id: string | number;
     name: string;
@@ -68,11 +76,11 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
                 setError(null);
 
                 const [productsResponse, categoriesResponse] = await Promise.all([
-                    apiClient.get('products/'),
-                    apiClient.get('categories/')
+                    apiClient.get<ProductListResponse>('products/'),
+                    apiClient.get<Category[]>('categories/')
                 ]);
 
-                if (!isProductArray(productsResponse)) {
+                if (!isProductArray(productsResponse.results)) {
                     throw new Error('Invalid product data format from API');
                 }
 
@@ -81,7 +89,7 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
                 }
 
                 // Convert all prices to numbers and handle potential missing data
-                const processedProducts = productsResponse.map(product => ({
+                const processedProducts = productsResponse.results.map(product => ({
                     ...product,
                     price: typeof product.price === 'string' ? parseFloat(product.price) : product.price,
                     old_price: product.old_price
@@ -355,7 +363,7 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     {product.images?.length > 0 ? (
                                         <img
-                                            src={`http://api.bestbuyelectronics.lk${product.images[0]}`}
+                                            src={`https://api.bestbuyelectronics.lk${product.images[0]}`}
                                             alt={product.name}
                                             className="h-10 w-10 rounded-md object-cover"
                                             onError={(e) => {

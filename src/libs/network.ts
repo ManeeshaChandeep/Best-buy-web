@@ -53,13 +53,14 @@ export const apiClient = {
         }
     },
 
-    delete: async <T>(endpoint: string): Promise<T> => {
+    delete: async <T>(endpoint: string, data?: any, headers?: Record<string, string>): Promise<T> => {
         try {
             const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
                 },
+                body: JSON.stringify(data),
             });
 
             if (!response.ok) {

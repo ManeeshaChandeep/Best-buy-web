@@ -116,7 +116,8 @@ const CategoryManagement = () => {
     const handleUpdateCategory = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await apiClient.put(`categories/${editingCategory?.id}`, {
+            await apiClient.put(`categories/?id=${editingCategory?.id}`, {
+                id:editingCategory?.id,
                 name: editingCategory?.name,
                 image: editingCategory?.image
             });
@@ -130,7 +131,9 @@ const CategoryManagement = () => {
     const handleDeleteCategory = async (categoryId: string) => {
         if (window.confirm('Are you sure you want to delete this category and all its subcategories?')) {
             try {
-                await apiClient.delete(`categories/${categoryId}`);
+                await apiClient.delete(`categories/?id=${categoryId}`, {
+                    id:categoryId
+                });
                 fetchCategories();
                 if (selectedCategory?.id === categoryId) {
                     setSelectedCategory(null);
@@ -479,7 +482,7 @@ const CategoryManagement = () => {
                                                     >
                                                         {category.image && (
                                                             <img
-                                                                src={category.image}
+                                                                src={`https://api.bestbuyelectronics.lk${category.image}`}
                                                                 alt={category.name}
                                                                 className="h-10 w-10 object-cover rounded"
                                                             />
@@ -530,7 +533,7 @@ const CategoryManagement = () => {
                                                         <div className="flex items-center gap-3">
                                                             {subCategory.image && (
                                                                 <img
-                                                                    src={subCategory.image}
+                                                                    src={`https://api.bestbuyelectronics.lk${subCategory.image}`}
                                                                     alt={subCategory.name}
                                                                     className="h-8 w-8 object-cover rounded"
                                                                 />
