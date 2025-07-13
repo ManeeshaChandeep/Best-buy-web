@@ -194,6 +194,7 @@ export default function Home() {
                     {newProducts.map((product) => (
                         <ItemCard
                             key={product.id}
+                            id={product.id}
                             imageUrl={`${BE_URL}${product.images[0]}`}
                             imageSrc={categoryOne}
                             title={product.name}
@@ -232,6 +233,7 @@ export default function Home() {
                                 {products.map(product => (
                                     <ItemCard
                                         key={product.id}
+                                        id={product.id}
                                         imageUrl={`${BE_URL}${product.images[0]}`}
                                         imageSrc={categoryOne}
                                         title={product.name}
