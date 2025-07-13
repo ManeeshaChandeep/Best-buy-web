@@ -5,11 +5,13 @@ interface Category {
     id: string;
     name: string;
     image: string;
-    parent?: string;
+    parent?: string | null;
+    subcategories?: Category[];
 }
 
 interface EditingCategory extends Category {
     imageFile?: File;
+    parentName?: string;
 }
 
 interface UploadResponse {
@@ -21,19 +23,15 @@ const CategoryManagement = () => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
     const [editingCategory, setEditingCategory] = useState<EditingCategory | null>(null);
     const [categoryFormData, setCategoryFormData] = useState({
         name: '',
         image: '',
-        imagePreview: ''
-    });
-    const [subCategoryFormData, setSubCategoryFormData] = useState({
-        name: '',
-        image: '',
-        imagePreview: ''
+        imagePreview: '',
+        parent: ''
     });
     const [uploading, setUploading] = useState(false);
+    const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
         fetchCategories();
@@ -42,9 +40,6 @@ const CategoryManagement = () => {
             // Clean up object URLs
             if (categoryFormData.imagePreview) {
                 URL.revokeObjectURL(categoryFormData.imagePreview);
-            }
-            if (subCategoryFormData.imagePreview) {
-                URL.revokeObjectURL(subCategoryFormData.imagePreview);
             }
             if (editingCategory?.imageFile) {
                 URL.revokeObjectURL(URL.createObjectURL(editingCategory.imageFile));
@@ -55,7 +50,7 @@ const CategoryManagement = () => {
     const fetchCategories = async () => {
         try {
             setLoading(true);
-            const data = (await apiClient.get('categories/')) as Category[];
+            const data = (await apiClient.get('categories/v2/')) as Category[];
             setCategories(data);
             setLoading(false);
         } catch (err) {
@@ -87,29 +82,15 @@ const CategoryManagement = () => {
     const handleAddCategory = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await apiClient.post('categories/', {
+            await apiClient.post('categories/v2/', {
                 name: categoryFormData.name,
-                image: categoryFormData.image
+                image: categoryFormData.image,
+                parent: categoryFormData.parent || null
             });
-            setCategoryFormData({ name: '', image: '', imagePreview: '' });
+            setCategoryFormData({ name: '', image: '', imagePreview: '', parent: '' });
             fetchCategories();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to add category');
-        }
-    };
-
-    const handleAddSubCategory = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            await apiClient.post('categories/', {
-                name: subCategoryFormData.name,
-                image: subCategoryFormData.image,
-                parent: selectedCategory?.id
-            });
-            setSubCategoryFormData({ name: '', image: '', imagePreview: '' });
-            fetchCategories();
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to add subcategory');
         }
     };
 
@@ -117,9 +98,10 @@ const CategoryManagement = () => {
         e.preventDefault();
         try {
             await apiClient.put(`categories/?id=${editingCategory?.id}`, {
-                id:editingCategory?.id,
+                id: editingCategory?.id,
                 name: editingCategory?.name,
-                image: editingCategory?.image
+                image: editingCategory?.image,
+                parent: editingCategory?.parent
             });
             setEditingCategory(null);
             fetchCategories();
@@ -132,12 +114,9 @@ const CategoryManagement = () => {
         if (window.confirm('Are you sure you want to delete this category and all its subcategories?')) {
             try {
                 await apiClient.delete(`categories/?id=${categoryId}`, {
-                    id:categoryId
+                    id: categoryId
                 });
                 fetchCategories();
-                if (selectedCategory?.id === categoryId) {
-                    setSelectedCategory(null);
-                }
                 if (editingCategory?.id === categoryId) {
                     setEditingCategory(null);
                 }
@@ -147,17 +126,12 @@ const CategoryManagement = () => {
         }
     };
 
-    const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setCategoryFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setSubCategoryFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setEditingCategory(prev => (prev ? { ...prev, [name]: value } : null));
     };
@@ -184,12 +158,6 @@ const CategoryManagement = () => {
                     image: previewUrl,
                     imageFile: file
                 });
-            } else if (selectedCategory) {
-                setSubCategoryFormData({
-                    ...subCategoryFormData,
-                    imagePreview: previewUrl,
-                    image: ''
-                });
             } else {
                 setCategoryFormData({
                     ...categoryFormData,
@@ -207,13 +175,6 @@ const CategoryManagement = () => {
                         imageFile: undefined
                     });
                     URL.revokeObjectURL(previewUrl);
-                } else if (selectedCategory) {
-                    setSubCategoryFormData({
-                        ...subCategoryFormData,
-                        image: filename,
-                        imagePreview: ''
-                    });
-                    URL.revokeObjectURL(previewUrl);
                 } else {
                     setCategoryFormData({
                         ...categoryFormData,
@@ -227,12 +188,22 @@ const CategoryManagement = () => {
     };
 
     const startEditing = (category: Category) => {
-        setEditingCategory({ ...category });
-        setSelectedCategory(null);
+        const parentCategory = category.parent
+            ? categories.find(cat => cat.id === category.parent)
+            : null;
+
+        setEditingCategory({
+            ...category,
+            parentName: parentCategory?.name || 'None'
+        });
     };
 
-    const mainCategories = categories.filter(cat => !cat.parent);
-    const subCategories = categories.filter(cat => cat.parent);
+    const toggleExpand = (categoryId: string) => {
+        setExpandedCategories(prev => ({
+            ...prev,
+            [categoryId]: !prev[categoryId]
+        }));
+    };
 
     const renderImageUpload = (
         currentImage: string,
@@ -271,12 +242,6 @@ const CategoryManagement = () => {
                                         image: '',
                                         imageFile: undefined
                                     });
-                                } else if (selectedCategory) {
-                                    setSubCategoryFormData({
-                                        ...subCategoryFormData,
-                                        image: '',
-                                        imagePreview: ''
-                                    });
                                 } else {
                                     setCategoryFormData({
                                         ...categoryFormData,
@@ -309,6 +274,102 @@ const CategoryManagement = () => {
         </div>
     );
 
+    const renderParentSelect = (currentParent: string | null | undefined) => {
+        const flattenCategories = (cats: Category[], level = 0): {id: string, name: string, level: number}[] => {
+            return cats.reduce((acc, cat) => {
+                acc.push({id: cat.id, name: '- '.repeat(level) + cat.name, level});
+                if (cat.subcategories && cat.subcategories.length > 0) {
+                    acc.push(...flattenCategories(cat.subcategories, level + 1));
+                }
+                return acc;
+            }, [] as {id: string, name: string, level: number}[]);
+        };
+
+        const options = flattenCategories(categories);
+
+        return (
+            <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="parent">
+                    Parent Category
+                </label>
+                <select
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="parent"
+                    name="parent"
+                    value={currentParent || ''}
+                    onChange={editingCategory ? handleEditChange : handleCategoryChange}
+                >
+                    <option value="">None (Top Level)</option>
+                    {options.map(option => (
+                        <option
+                            key={option.id}
+                            value={option.id}
+                            disabled={editingCategory && option.id === editingCategory.id}
+                        >
+                            {option.name}
+                        </option>
+                    ))}
+                </select>
+            </div>
+        );
+    };
+
+    const renderCategoryTree = (categories: Category[], level = 0) => {
+        return categories.map(category => (
+            <div key={category.id} className="ml-4">
+                <div
+                    className={`p-2 rounded flex items-center justify-between ${level > 0 ? 'bg-gray-50' : 'bg-white'}`}
+                >
+                    <div
+                        className="flex items-center gap-2 cursor-pointer"
+                        onClick={() => toggleExpand(category.id)}
+                    >
+                        {category.subcategories && category.subcategories.length > 0 ? (
+                            <span className="text-gray-500">
+                                {expandedCategories[category.id] ? '▼' : '►'}
+                            </span>
+                        ) : (
+                            <span className="w-4"></span>
+                        )}
+                        {category.image && (
+                            <img
+                                src={`https://api.bestbuyelectronics.lk${category.image}`}
+                                alt={category.name}
+                                className="h-8 w-8 object-cover rounded"
+                            />
+                        )}
+                        <span>{category.name}</span>
+                    </div>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                startEditing(category);
+                            }}
+                            className="text-blue-500 hover:text-blue-700 text-sm"
+                        >
+                            Edit
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteCategory(category.id);
+                            }}
+                            className="text-red-500 hover:text-red-700 text-sm"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+                {expandedCategories[category.id] && category.subcategories && category.subcategories.length > 0 && (
+                    <div className="border-l-2 border-gray-200 pl-2">
+                        {renderCategoryTree(category.subcategories, level + 1)}
+                    </div>
+                )}
+            </div>
+        ));
+    };
+
     return (
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl font-bold mb-8 text-gray-800">Category Management</h1>
@@ -327,44 +388,46 @@ const CategoryManagement = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    {/* Main Category Form */}
+                    {/* Category Form */}
                     <div className="bg-white p-6 rounded-lg shadow-md mb-6">
                         <h2 className="text-xl font-semibold mb-4 text-gray-700">
-                            {editingCategory ? 'Edit Category' : 'Add Main Category'}
+                            {editingCategory ? `Edit Category (${editingCategory.parentName || 'Top Level'})` : 'Add Category'}
                         </h2>
 
-                        {editingCategory ? (
-                            <form onSubmit={handleUpdateCategory}>
-                                <div className="mb-4">
-                                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
-                                        Category Name
-                                    </label>
-                                    <input
-                                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                        id="name"
-                                        type="text"
-                                        name="name"
-                                        value={editingCategory.name}
-                                        onChange={handleEditChange}
-                                        required
-                                    />
-                                </div>
+                        <form onSubmit={editingCategory ? handleUpdateCategory : handleAddCategory}>
+                            <div className="mb-4">
+                                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+                                    Category Name
+                                </label>
+                                <input
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                    id="name"
+                                    type="text"
+                                    name="name"
+                                    value={editingCategory ? editingCategory.name : categoryFormData.name}
+                                    onChange={editingCategory ? handleEditChange : handleCategoryChange}
+                                    required
+                                />
+                            </div>
 
-                                {renderImageUpload(
-                                    editingCategory.image,
-                                    editingCategory.imageFile ? URL.createObjectURL(editingCategory.imageFile) : '',
-                                    (e) => handleImageChange(e, true),
-                                    true
-                                )}
+                            {renderParentSelect(editingCategory ? editingCategory.parent : categoryFormData.parent)}
 
-                                <div className="flex gap-2">
-                                    <button
-                                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
-                                        type="submit"
-                                        disabled={uploading}
-                                    >
-                                        Update Category
-                                    </button>
+                            {renderImageUpload(
+                                editingCategory ? editingCategory.image : categoryFormData.image,
+                                editingCategory?.imageFile ? URL.createObjectURL(editingCategory.imageFile) : categoryFormData.imagePreview,
+                                (e) => handleImageChange(e, !!editingCategory),
+                                !!editingCategory
+                            )}
+
+                            <div className="flex gap-2">
+                                <button
+                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
+                                    type="submit"
+                                    disabled={uploading || (!editingCategory && !categoryFormData.image)}
+                                >
+                                    {editingCategory ? 'Update Category' : 'Add Category'}
+                                </button>
+                                {editingCategory && (
                                     <button
                                         className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                                         type="button"
@@ -372,88 +435,10 @@ const CategoryManagement = () => {
                                     >
                                         Cancel
                                     </button>
-                                </div>
-                            </form>
-                        ) : (
-                            <form onSubmit={handleAddCategory}>
-                                <div className="mb-4">
-                                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
-                                        Category Name
-                                    </label>
-                                    <input
-                                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                        id="name"
-                                        type="text"
-                                        name="name"
-                                        value={categoryFormData.name}
-                                        onChange={handleCategoryChange}
-                                        required
-                                    />
-                                </div>
-
-                                {renderImageUpload(
-                                    categoryFormData.image,
-                                    categoryFormData.imagePreview,
-                                    handleImageChange
                                 )}
-
-                                <button
-                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
-                                    type="submit"
-                                    disabled={uploading || !categoryFormData.image}
-                                >
-                                    Add Category
-                                </button>
-                            </form>
-                        )}
+                            </div>
+                        </form>
                     </div>
-
-                    {/* Sub Category Form */}
-                    {selectedCategory && (
-                        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-                            <h2 className="text-xl font-semibold mb-2 text-gray-700">Add Sub Category</h2>
-                            <p className="text-sm text-gray-600 mb-4">Parent: {selectedCategory.name}</p>
-                            <form onSubmit={handleAddSubCategory}>
-                                <div className="mb-4">
-                                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
-                                        Sub Category Name
-                                    </label>
-                                    <input
-                                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                        id="name"
-                                        type="text"
-                                        name="name"
-                                        value={subCategoryFormData.name}
-                                        onChange={handleSubCategoryChange}
-                                        required
-                                    />
-                                </div>
-
-                                {renderImageUpload(
-                                    subCategoryFormData.image,
-                                    subCategoryFormData.imagePreview,
-                                    handleImageChange
-                                )}
-
-                                <div className="flex gap-2">
-                                    <button
-                                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
-                                        type="submit"
-                                        disabled={uploading || !subCategoryFormData.image}
-                                    >
-                                        Add Sub Category
-                                    </button>
-                                    <button
-                                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                                        type="button"
-                                        onClick={() => setSelectedCategory(null)}
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    )}
                 </div>
 
                 <div>
@@ -466,100 +451,9 @@ const CategoryManagement = () => {
                                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
                             </div>
                         ) : (
-                            <>
-                                <div className="mb-6">
-                                    <h3 className="text-lg font-medium mb-2 text-gray-700">Main Categories</h3>
-                                    <ul className="space-y-2">
-                                        {mainCategories.map(category => (
-                                            <li
-                                                key={category.id}
-                                                className={`p-3 rounded ${selectedCategory?.id === category.id ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
-                                            >
-                                                <div className="flex justify-between items-center">
-                                                    <div
-                                                        className="cursor-pointer flex-grow flex items-center gap-3"
-                                                        onClick={() => setSelectedCategory(category)}
-                                                    >
-                                                        {category.image && (
-                                                            <img
-                                                                src={`https://api.bestbuyelectronics.lk${category.image}`}
-                                                                alt={category.name}
-                                                                className="h-10 w-10 object-cover rounded"
-                                                            />
-                                                        )}
-                                                        <span>{category.name}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
-                                                            {subCategories.filter(sub => sub.parent === category.id).length} sub
-                                                        </span>
-                                                        <button
-                                                            onClick={() => startEditing(category)}
-                                                            className="text-blue-500 hover:text-blue-700"
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteCategory(category.id)}
-                                                            className="text-red-500 hover:text-red-700"
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                {selectedCategory && (
-                                    <div>
-                                        <div className="flex justify-between items-center mb-2">
-                                            <h3 className="text-lg font-medium text-gray-700">
-                                                Subcategories of {selectedCategory.name}
-                                            </h3>
-                                            <button
-                                                onClick={() => setSelectedCategory(null)}
-                                                className="text-gray-500 hover:text-gray-700 text-sm"
-                                            >
-                                                Close
-                                            </button>
-                                        </div>
-                                        <ul className="space-y-2 pl-4">
-                                            {subCategories
-                                                .filter(sub => sub.parent === selectedCategory.id)
-                                                .map(subCategory => (
-                                                    <li key={subCategory.id} className="p-2 rounded hover:bg-gray-50 flex justify-between items-center">
-                                                        <div className="flex items-center gap-3">
-                                                            {subCategory.image && (
-                                                                <img
-                                                                    src={`https://api.bestbuyelectronics.lk${subCategory.image}`}
-                                                                    alt={subCategory.name}
-                                                                    className="h-8 w-8 object-cover rounded"
-                                                                />
-                                                            )}
-                                                            <span>{subCategory.name}</span>
-                                                        </div>
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={() => startEditing(subCategory)}
-                                                                className="text-blue-500 hover:text-blue-700 text-sm"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteCategory(subCategory.id)}
-                                                                className="text-red-500 hover:text-red-700 text-sm"
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        </div>
-                                                    </li>
-                                                ))}
-                                        </ul>
-                                    </div>
-                                )}
-                            </>
+                            <div className="space-y-1">
+                                {renderCategoryTree(categories.filter(cat => !cat.parent))}
+                            </div>
                         )}
                     </div>
                 </div>
