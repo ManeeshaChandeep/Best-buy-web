@@ -1,7 +1,5 @@
-import Image, {StaticImageData} from 'next/image';
-import Link from 'next/link';
-import { ReactNode } from 'react';
-import {images} from "next/dist/build/webpack/config/blocks/images";
+import Image, { StaticImageData } from "next/image";
+import Link from "next/link";
 
 interface ProductCardProps {
     id: number;
@@ -13,37 +11,41 @@ interface ProductCardProps {
     inStock: boolean;
 }
 
-const ProductCard = ({id, imageUrl, imageSrc, title, oldPrice, newPrice, inStock }: ProductCardProps) => {
+const ProductCard = ({
+                         id,
+                         imageSrc,
+                         imageUrl,
+                         title,
+                         oldPrice,
+                         newPrice,
+                         inStock,
+                     }: ProductCardProps) => {
     return (
-        <Link href={`/${id}`} key={id}>
-            <div className="flex flex-col items-center p-4 bg-white rounded-lg hover:shadow-lg transition-shadow">
-                <div className="relative w-full">
-
+        <Link href={`/${id}`} className="no-underline text-inherit">
+            <div className="w-[160px] h-[220px] bg-white border border-gray-200 rounded-md flex flex-col overflow-hidden p-2 hover:border-red-500 transition-all">
+                {/* Image Box */}
+                <div className="relative w-full h-[110px] flex justify-center items-center bg-white">
                     {inStock && (
-                        <span className="absolute top-2 left-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                        IN STOCK
-                    </span>
+                        <span className="absolute top-1 left-1 bg-green-600 text-white text-[10px] px-2 py-0.5 rounded-full z-10">
+              In Stock
+            </span>
                     )}
-
                     <Image
-                        src={imageUrl}
+                        src={imageUrl || imageSrc}
                         alt={title}
-                        className="rounded w-40 object-cover"
-                        width={128}
-                        height={128}
+                        width={80}
+                        height={80}
+                        className="object-contain"
                         unoptimized
                     />
+                </div>
 
-                    <p className="text-xs sm:text-sm font-semibold text-gray-700 mt-1 card-description">
-                        {title}
-                    </p>
-                    <div className="flex items-center mt-1">
-                    <span className="text-gray-400 line-through text-xs mr-2">
-                        Rs. {oldPrice}
-                    </span>
-                        <span className="text-red-500 font-bold text-xs sm:text-sm">
-                        Rs. {newPrice}
-                    </span>
+                {/* Info */}
+                <div className="flex flex-col justify-between flex-grow text-center mt-2 px-1">
+                    <p className="text-[11px] text-gray-800 line-clamp-2 h-[30px]">{title}</p>
+                    <div className="flex items-center justify-center gap-1 mt-1">
+                        <span className="text-[10px] text-gray-400 line-through">Rs. {oldPrice}</span>
+                        <span className="text-[11px] text-red-600 font-semibold">Rs. {newPrice}</span>
                     </div>
                 </div>
             </div>
@@ -52,6 +54,3 @@ const ProductCard = ({id, imageUrl, imageSrc, title, oldPrice, newPrice, inStock
 };
 
 export default ProductCard;
-
-
-
