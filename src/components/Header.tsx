@@ -160,115 +160,146 @@ export default function Navbar() {
                 </div>
 
                 {/* Desktop Search Bar and Categories */}
-                <div className="hidden lg:flex items-center pb-4">
-                    {/* Desktop Categories */}
-                    {!loading && (
-                        <div className="relative group mr-4">
-                            <button
-                                className="flex items-center px-4 py-2.5 bg-gray-300 rounded-lg hover:bg-gray-400 transition-colors"
-                                onMouseEnter={() => categories.length > 0 && setActiveCategory('all')}
-                            >
-                                <HiOutlineViewGrid className="mr-2" size={20} />
-                                <span className="font-medium">All Categories</span>
-                            </button>
 
-                            {/* Categories Dropdown */}
-                            {activeCategory && categories.length > 0 && (
-                                <div
-                                    className="absolute left-0 mt-1 w-56 bg-white rounded-lg shadow-lg z-50 border border-gray-200"
-                                    onMouseLeave={() => setActiveCategory(null)}
+                <div>
+                    {/* Desktop Categories - lg and up */}
+                    <div className="hidden lg:flex items-center pb-4 relative">
+                        {!loading && (
+                            <div
+                                className="relative group mr-4"
+                                onMouseLeave={() => setActiveCategory(null)}
+                            >
+                                <button
+                                    className="flex items-center px-5 py-3 bg-gray-300 rounded-lg hover:bg-gray-400 transition-colors text-lg font-semibold"
+                                    onMouseEnter={() => categories.length > 0 && setActiveCategory('all')}
                                 >
-                                    <div className="py-1">
-                                        {categories.map((category) => (
-                                            <div key={category.id} className="px-4 py-2 group">
+                                    <HiOutlineViewGrid className="mr-3" size={24} />
+                                    <span>All Categories</span>
+                                </button>
+
+                                {activeCategory && categories.length > 0 && (
+                                    <div className="absolute left-0 mt-2 flex z-50">
+                                        {/* Main Categories Panel */}
+                                        <div className="w-72 bg-white rounded-l-lg shadow-lg border border-gray-200 py-3">
+                                            {categories.map((category) => (
                                                 <button
-                                                    className="w-full text-left py-1 font-medium text-gray-800 hover:text-red-600 flex justify-between items-center"
+                                                    key={category.id}
+                                                    className={`w-full text-left px-6 py-3 text-gray-800 hover:text-red-600 hover:bg-gray-50 flex justify-between items-center transition-colors duration-200 ${
+                                                        activeCategory === category.id ? 'bg-gray-100 text-red-600 font-semibold' : ''
+                                                    }`}
                                                     onMouseEnter={() => setActiveCategory(category.id)}
                                                 >
                                                     <span>{category.name}</span>
-                                                    <span>›</span>
+                                                    {category.subcategories.length > 0 && (
+                                                        <span className="text-xl font-bold">›</span>
+                                                    )}
                                                 </button>
-                                                {/* Subcategories Panel */}
-                                                {activeCategory === category.id && category.subcategories.length > 0 && (
-                                                    <div className="absolute left-full top-0 ml-1 w-56 bg-white rounded-r-lg shadow-lg border-l-0 border border-gray-200 py-1">
-                                                        {category.subcategories.map((sub) => (
-                                                            <a
-                                                                key={sub.id}
-                                                                href={`/category/${category.id}/subcategory/${sub.id}`}
-                                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600"
-                                                            >
-                                                                {sub.name}
-                                                            </a>
-                                                        ))}
+                                            ))}
+                                        </div>
+
+                                        {/* Subcategories Panel with main category heading */}
+                                        {activeCategory !== 'all' &&
+                                            (() => {
+                                                const activeCat = categories.find((cat) => cat.id === activeCategory);
+                                                if (!activeCat || activeCat.subcategories.length === 0) return null;
+                                                return (
+                                                    <div className="w-72 bg-white rounded-r-lg shadow-lg border border-gray-200 ml-2 py-3 flex flex-col">
+                                                        {/* Main category clickable heading */}
+                                                        <a
+                                                            href={`/category/${activeCat.id}`}
+                                                            className="px-6 py-3 font-semibold text-gray-800 hover:text-red-600 border-b border-gray-200 transition-colors duration-200"
+                                                        >
+                                                            {activeCat.name}
+                                                        </a>
+
+                                                        {/* Subcategories list */}
+                                                        <div className="mt-2 flex flex-col">
+                                                            {activeCat.subcategories.map((sub) => (
+                                                                <a
+                                                                    key={sub.id}
+                                                                    href={`/category/${activeCat.id}/subcategory/${sub.id}`}
+                                                                    className="block px-6 py-3 text-gray-700 hover:bg-gray-50 hover:text-red-600 text-base transition-colors duration-200"
+                                                                >
+                                                                    {sub.name}
+                                                                </a>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                )}
-                                            </div>
-                                        ))}
+                                                );
+                                            })()}
                                     </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Centered Search Bar */}
+                        <div className="flex-1 flex justify-center">
+                            <div className="relative w-full max-w-3xl">
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Search for premium electronics..."
+                                    className="w-full px-6 py-3 border text-gray-700 border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent shadow-sm transition-all duration-200 text-lg"
+                                />
+                                <button className="absolute right-5 top-3 text-gray-500 hover:text-red-600 transition-colors duration-200" aria-label="Search">
+                                    <FiSearch size={24} />
+                                </button>
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute right-16 top-3 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                                        aria-label="Clear search"
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Mobile Categories Panel - below lg */}
+                    {showMobileCategories && (
+                        <div className="lg:hidden bg-white border border-gray-200 rounded-lg shadow-sm mb-4 transition-all duration-300 ease-in-out">
+                            <div className="px-5 py-4 font-semibold text-gray-700 border-b border-gray-200 text-lg">
+                                All Categories
+                            </div>
+                            {loading ? (
+                                <div className="px-5 py-8 text-center text-gray-500 text-base">Loading categories...</div>
+                            ) : (
+                                <div className="divide-y divide-gray-100">
+                                    {categories.map((category) => (
+                                        <div key={category.id} className="px-5 py-4">
+                                            {/* Main category clickable link */}
+                                            <a
+                                                href={`/category/${category.id}`}
+                                                className="block text-gray-800 font-semibold text-base hover:text-red-600 transition-colors duration-200 mb-2"
+                                            >
+                                                {category.name}
+                                            </a>
+
+                                            {/* Subcategories */}
+                                            {category.subcategories.length > 0 && (
+                                                <div className="pl-6 space-y-2">
+                                                    {category.subcategories.map((sub) => (
+                                                        <a
+                                                            key={sub.id}
+                                                            href={`/category/${category.id}/subcategory/${sub.id}`}
+                                                            className="block py-2 text-sm text-gray-600 hover:text-red-600 transition-colors duration-200"
+                                                        >
+                                                            {sub.name}
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
                     )}
-
-                    {/* Centered Search Bar */}
-                    <div className="flex-1 flex justify-center">
-                        <div className="relative w-full max-w-2xl">
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search for premium electronics..."
-                                className="w-full px-5 py-2.5 border text-gray-700 border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent shadow-sm transition-all duration-200"
-                            />
-                            <button className="absolute right-4 top-2.5 text-gray-500 hover:text-red-600 transition-colors duration-200">
-                                <FiSearch size={20} />
-                            </button>
-                            {searchQuery && (
-                                <button
-                                    onClick={() => setSearchQuery("")}
-                                    className="absolute right-12 top-2.5 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                                >
-                                    ✕
-                                </button>
-                            )}
-                        </div>
-                    </div>
                 </div>
 
-                {/* Mobile Categories Panel */}
-                {showMobileCategories && (
-                    <div className="lg:hidden bg-white border border-gray-200 rounded-lg shadow-sm mb-3 transition-all duration-300 ease-in-out">
-                        <div className="px-4 py-3 font-medium text-gray-700 border-b border-gray-200">
-                            All Categories
-                        </div>
-                        {loading ? (
-                            <div className="px-4 py-6 text-center text-gray-500">Loading categories...</div>
-                        ) : (
-                            <div className="divide-y divide-gray-100">
-                                {categories.map((category) => (
-                                    <div key={category.id} className="px-4 py-2">
-                                        <button className="w-full text-left py-2 font-medium">
-                                            {category.name}
-                                        </button>
-                                        {category.subcategories.length > 0 && (
-                                            <div className="pl-4 space-y-1 mt-1">
-                                                {category.subcategories.map((sub) => (
-                                                    <a
-                                                        key={sub.id}
-                                                        href={`/category/${category.id}/subcategory/${sub.id}`}
-                                                        className="block py-1.5 text-sm text-gray-600 hover:text-red-600 transition-colors duration-200"
-                                                    >
-                                                        {sub.name}
-                                                    </a>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
             </div>
         </nav>
     );
