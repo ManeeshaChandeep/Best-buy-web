@@ -81,7 +81,6 @@ const ItemView: React.FC = () => {
 
     return (
         <div>
-            <Header/>
             <div className="max-w-6xl mx-auto p-6  rounded-md">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     {/* Image Viewer */}
@@ -153,7 +152,6 @@ const ItemView: React.FC = () => {
                     </div>
                 </div>
             </div>
-            <Footer/>
         </div>
     );
 };
