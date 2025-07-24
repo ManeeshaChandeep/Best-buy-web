@@ -21,7 +21,7 @@ const ProductCard = ({
                          inStock,
                      }: ProductCardProps) => {
     return (
-        <Link href={`/${id}`} className="no-underline text-inherit">
+        <Link href={`/details/${id}`} className="no-underline text-inherit">
             <div
                 className="bg-white rounded-md transition-all duration-200 flex flex-col items-center justify-between
                 p-2 hover:scale-[1.03] hover:shadow-md group w-full min-w-[150px] max-w-[170px] sm:max-w-[190px]

@@ -2,9 +2,9 @@
 import React, {useEffect, useState} from 'react';
 import Image, {StaticImageData} from 'next/image';
 import {ShieldCheckIcon} from '@heroicons/react/24/solid';
-import itemTvThree from '@/../public/images/tvThree.png';
-import itemTvOne from "@/../public/images/tvOne.png"
-import itemTvTwo from "@/../public/images/tvTwo.png"
+import itemTvThree from '../../../../../public/images/tvThree.png';
+import itemTvOne from "../../../../../public/images/tvOne.png"
+import itemTvTwo from "../../../../../public/images/tvTwo.png"
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import {useParams} from "next/navigation";
