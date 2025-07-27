@@ -1,20 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-    Search,
-    ShoppingCart,
-    User,
-    Phone,
-    MapPin,
-    Globe,
-    ChevronDown,
-    ChevronUp,
-    Menu,
-    X,
-} from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ChevronDown, ChevronUp, Menu, X } from "lucide-react";
 
-// ProductCard Component
+// Types for product
 interface ProductCardProps {
     id: number;
     image: string;
@@ -25,6 +14,7 @@ interface ProductCardProps {
     isNew?: boolean;
 }
 
+// Product Card component
 const ProductCard: React.FC<ProductCardProps> = ({
                                                      image,
                                                      title,
@@ -36,7 +26,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     const formatPrice = (price: number) => `Rs. ${price.toLocaleString()}`;
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 group">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 group relative">
             <div className="relative">
                 <img
                     src={image}
@@ -44,16 +34,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute top-3 left-3">
-          <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-            {discount}%
-          </span>
+                    <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                        {discount}%
+                    </span>
                     <div className="text-xs text-white bg-red-500 px-1 rounded-b">OFF</div>
                 </div>
                 {isNew && (
                     <div className="absolute top-3 right-3">
-            <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold">
-              NEW
-            </span>
+                        <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold">
+                            NEW
+                        </span>
                     </div>
                 )}
             </div>
@@ -63,58 +53,69 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     {title}
                 </h3>
                 <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs text-gray-500 line-through">
-            {formatPrice(originalPrice)}
-          </span>
+                    <span className="text-xs text-gray-500 line-through">
+                        {formatPrice(originalPrice)}
+                    </span>
                     <span className="text-lg font-bold text-red-600">
-            {formatPrice(salePrice)}
-          </span>
+                        {formatPrice(salePrice)}
+                    </span>
                 </div>
             </div>
         </div>
     );
 };
 
-// Sidebar Component
-const Sidebar = ({
-                     isOpen,
-                     onClose,
-                 }: {
+// Sidebar component
+interface SidebarProps {
     isOpen: boolean;
     onClose: () => void;
-}) => {
+}
+
+const categories = [
+    "LED TV",
+    "Smart LED TV",
+    "OLED TV",
+    "UHD TV",
+    "JVC TV Special Offer",
+    "TV Accessories",
+];
+
+const brands = ["LG", "Toshiba", "Haier", "JVC", "Abans"];
+
+function Sidebar({ isOpen, onClose }: SidebarProps) {
     const [categoriesOpen, setCategoriesOpen] = useState(true);
     const [brandsOpen, setBrandsOpen] = useState(true);
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
 
-    const categories = [
-        "LED TV",
-        "Smart LED TV",
-        "OLED TV",
-        "UHD TV",
-        "JVC TV Special Offer",
-        "TV Accessories",
-    ];
+    const toggleCategory = (category: string) => {
+        setSelectedCategories((prev) =>
+            prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
+        );
+    };
 
-    const brands = ["LG", "Toshiba", "Haier", "JVC", "Abans"];
+    const toggleBrand = (brand: string) => {
+        setSelectedBrands((prev) =>
+            prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
+        );
+    };
 
     return (
         <>
-            {/* Overlay for mobile */}
+            {/* Overlay mobile */}
             <div
                 onClick={onClose}
-                className={`fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300 ${
-                    isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-                } md:hidden`}
-            ></div>
+                className={`fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"} md:hidden`}
+            />
 
-            {/* Drawer Sidebar */}
+            {/* Sidebar drawer */}
             <aside
-                className={`fixed top-0 left-0 bottom-0 w-64 bg-white border-r border-gray-200 p-6 z-50 transform transition-transform duration-300
-          ${
+                className={`fixed top-0 left-0 bottom-0 w-72 bg-white border-r border-gray-200 p-6 z-50 transform transition-transform duration-300 ${
                     isOpen ? "translate-x-0" : "-translate-x-full"
-                } md:static md:translate-x-0 md:w-80 flex flex-col h-screen`}
+                } md:translate-x-0 md:static md:w-64 flex flex-col`}
+                style={{ height: "100vh" }}
             >
-                {/* Close button on mobile */}
+                {/* Close mobile button */}
                 <div className="flex justify-end mb-4 md:hidden">
                     <button
                         onClick={onClose}
@@ -125,147 +126,120 @@ const Sidebar = ({
                     </button>
                 </div>
 
-                {/* Sticky Filter Title */}
-                <h3 className="text-lg font-semibold text-gray-800 mb-6 flex-shrink-0 sticky top-0 bg-white z-10 py-2">
-                    Filter Products by
+                <h3 className="text-xl font-semibold mb-6 sticky top-0 bg-white z-10 py-2 border-b border-gray-300">
+                    Filter Products
                 </h3>
 
-                {/* Scrollable filter area */}
-                <div className="overflow-y-auto flex-1 max-h-[calc(100vh-4.5rem)]">
+                <div className="flex-grow overflow-y-auto" style={{ paddingBottom: "3rem" }}>
                     {/* Categories */}
-                    <div className="mb-8">
+                    <section className="mb-8">
                         <button
                             onClick={() => setCategoriesOpen(!categoriesOpen)}
-                            className="flex items-center justify-between w-full text-left font-medium text-gray-800 mb-4"
+                            className="flex items-center justify-between w-full font-semibold text-gray-800 mb-3"
                         >
                             <span>Categories</span>
-                            {categoriesOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            {categoriesOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                         </button>
-                        {categoriesOpen &&
-                            categories.map((category) => (
-                                <label
-                                    key={category}
-                                    className="flex items-center cursor-pointer hover:text-purple-600 mb-2"
-                                >
-                                    <input type="checkbox" className="mr-3 h-4 w-4 text-purple-600" />
-                                    <span className="text-sm text-gray-700">{category}</span>
-                                </label>
-                            ))}
-                    </div>
+                        {categoriesOpen && (
+                            <div className="flex flex-col space-y-2">
+                                {categories.map((cat) => (
+                                    <label
+                                        key={cat}
+                                        className="inline-flex items-center cursor-pointer text-gray-700 hover:text-purple-600"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            className="mr-3 w-4 h-4 text-purple-600"
+                                            checked={selectedCategories.includes(cat)}
+                                            onChange={() => toggleCategory(cat)}
+                                        />
+                                        {cat}
+                                    </label>
+                                ))}
+                            </div>
+                        )}
+                    </section>
 
                     {/* Brands */}
-                    <div>
+                    <section>
                         <button
                             onClick={() => setBrandsOpen(!brandsOpen)}
-                            className="flex items-center justify-between w-full text-left font-medium text-gray-800 mb-4"
+                            className="flex items-center justify-between w-full font-semibold text-gray-800 mb-3"
                         >
-                            <span>Brand</span>
-                            {brandsOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            <span>Brands</span>
+                            {brandsOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                         </button>
-                        {brandsOpen &&
-                            brands.map((brand) => (
-                                <label
-                                    key={brand}
-                                    className="flex items-center cursor-pointer hover:text-purple-600 mb-2"
-                                >
-                                    <input type="checkbox" className="mr-3 h-4 w-4 text-purple-600" />
-                                    <span className="text-sm text-gray-700">{brand}</span>
-                                </label>
-                            ))}
-                    </div>
+                        {brandsOpen && (
+                            <div className="flex flex-col space-y-2">
+                                {brands.map((brand) => (
+                                    <label
+                                        key={brand}
+                                        className="inline-flex items-center cursor-pointer text-gray-700 hover:text-purple-600"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            className="mr-3 w-4 h-4 text-purple-600"
+                                            checked={selectedBrands.includes(brand)}
+                                            onChange={() => toggleBrand(brand)}
+                                        />
+                                        {brand}
+                                    </label>
+                                ))}
+                            </div>
+                        )}
+                    </section>
                 </div>
             </aside>
         </>
     );
-};
+}
 
-// ProductGrid Component with Pagination
-const ProductGrid = () => {
-    const allProducts: ProductCardProps[] = [
-        {
-            id: 1,
-            image:
-                "https://images.pexels.com/photos/6292382/pexels-photo-6292382.jpeg",
-            title: "Toshiba 43 Inch Smart TV",
-            originalPrice: 149999,
-            salePrice: 129999,
-            discount: 13,
-        },
-        {
-            id: 2,
-            image:
-                "https://images.pexels.com/photos/6292370/pexels-photo-6292370.jpeg",
-            title: "LG 43 Inch UHD 4K Smart TV",
-            originalPrice: 279999,
-            salePrice: 199999,
-            discount: 28,
-        },
-        {
-            id: 3,
-            image:
-                "https://images.pexels.com/photos/6280847/pexels-photo-6280847.jpeg",
-            title: "Samsung 50 Inch QLED TV",
-            originalPrice: 249999,
-            salePrice: 219999,
-            discount: 12,
-        },
-        {
-            id: 4,
-            image:
-                "https://images.pexels.com/photos/277394/pexels-photo-277394.jpeg",
-            title: "Sony Bravia 55 Inch 4K UHD",
-            originalPrice: 319999,
-            salePrice: 279999,
-            discount: 13,
-        },
-        {
-            id: 5,
-            image:
-                "https://images.pexels.com/photos/276452/pexels-photo-276452.jpeg",
-            title: "Panasonic 40 Inch HD Ready TV",
-            originalPrice: 99999,
-            salePrice: 84999,
-            discount: 15,
-        },
-        {
-            id: 6,
-            image:
-                "https://images.pexels.com/photos/271639/pexels-photo-271639.jpeg",
-            title: "Philips 42 Inch Smart LED TV",
-            originalPrice: 139999,
-            salePrice: 119999,
-            discount: 14,
-        },
-        {
-            id: 7,
-            image:
-                "https://images.pexels.com/photos/271627/pexels-photo-271627.jpeg",
-            title: "Hisense 43 Inch LED TV",
-            originalPrice: 109999,
-            salePrice: 94999,
-            discount: 14,
-        },
-        {
-            id: 8,
-            image:
-                "https://images.pexels.com/photos/271634/pexels-photo-271634.jpeg",
-            title: "TCL 50 Inch 4K TV",
-            originalPrice: 159999,
-            salePrice: 139999,
-            discount: 12,
-        },
-    ];
+// Product grid with pagination + API fetch
+function ProductGrid() {
+    const productsPerPage = 7;
 
-    const productsPerPage = 4;
+    const [products, setProducts] = useState<ProductCardProps[]>([]);
     const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loading, setLoading] = useState(false);
 
-    // Calculate paginated products
-    const paginatedProducts = allProducts.slice(
+    async function fetchProducts(pageNum: number) {
+        setLoading(true);
+        try {
+            const res = await fetch(
+                `https://api.bestbuyelectronics.lk/products/?page=${pageNum}&limit=50`
+            );
+            const data = await res.json();
+
+            const apiProducts = data.results || [];
+
+            const formatted: ProductCardProps[] = apiProducts.map((p: any) => ({
+                id: p.id,
+                image: p.image || p.images?.[0] || "",
+                title: p.title || p.name || "Unknown Product",
+                originalPrice: Number(p.oldPrice || p.originalPrice || 0),
+                salePrice: Number(p.newPrice || p.salePrice || 0),
+                discount: p.discount || 0,
+                isNew: p.isNew || false,
+            }));
+
+            setProducts(formatted);
+            setTotalPages(Math.ceil((data.total || formatted.length) / productsPerPage));
+        } catch (error) {
+            console.error("Failed to fetch products", error);
+        }
+        setLoading(false);
+    }
+
+    useEffect(() => {
+        fetchProducts(page);
+    }, [page]);
+
+    // Pagination slice on fetched products
+    const paginatedProducts = products.slice(
         (page - 1) * productsPerPage,
         page * productsPerPage
     );
-
-    const totalPages = Math.ceil(allProducts.length / productsPerPage);
 
     return (
         <div className="flex-1 p-6">
@@ -288,60 +262,67 @@ const ProductGrid = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {paginatedProducts.map((product) => (
-                    <ProductCard key={product.id} {...product} />
-                ))}
-            </div>
+            {loading ? (
+                <div className="text-center py-20 text-purple-600 font-medium">
+                    Loading products...
+                </div>
+            ) : (
+                <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {paginatedProducts.map((product) => (
+                            <ProductCard key={product.id} {...product} />
+                        ))}
+                    </div>
 
-            {/* Pagination Controls */}
-            <div className="flex justify-center gap-4 mt-8">
-                <button
-                    onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                    disabled={page === 1}
-                    className={`px-4 py-2 rounded-lg ${
-                        page === 1
-                            ? "bg-gray-300 cursor-not-allowed"
-                            : "bg-purple-600 text-white hover:bg-purple-700"
-                    }`}
-                >
-                    Prev
-                </button>
-
-                {Array.from({ length: totalPages }).map((_, idx) => {
-                    const pageNum = idx + 1;
-                    return (
+                    {/* Pagination */}
+                    <div className="flex justify-center gap-4 mt-8">
                         <button
-                            key={pageNum}
-                            onClick={() => setPage(pageNum)}
+                            onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                            disabled={page === 1}
                             className={`px-4 py-2 rounded-lg ${
-                                page === pageNum
-                                    ? "bg-purple-700 text-white"
-                                    : "bg-purple-200 text-purple-800 hover:bg-purple-300"
+                                page === 1
+                                    ? "bg-gray-300 cursor-not-allowed"
+                                    : "bg-purple-600 text-white hover:bg-purple-700"
                             }`}
                         >
-                            {pageNum}
+                            Prev
                         </button>
-                    );
-                })}
 
-                <button
-                    onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                    disabled={page === totalPages}
-                    className={`px-4 py-2 rounded-lg ${
-                        page === totalPages
-                            ? "bg-gray-300 cursor-not-allowed"
-                            : "bg-purple-600 text-white hover:bg-purple-700"
-                    }`}
-                >
-                    Next
-                </button>
-            </div>
+                        {Array.from({ length: totalPages }).map((_, idx) => {
+                            const pageNum = idx + 1;
+                            return (
+                                <button
+                                    key={pageNum}
+                                    onClick={() => setPage(pageNum)}
+                                    className={`px-4 py-2 rounded-lg ${
+                                        page === pageNum
+                                            ? "bg-purple-700 text-white"
+                                            : "bg-purple-200 text-purple-800 hover:bg-purple-300"
+                                    }`}
+                                >
+                                    {pageNum}
+                                </button>
+                            );
+                        })}
+
+                        <button
+                            onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                            disabled={page === totalPages}
+                            className={`px-4 py-2 rounded-lg ${
+                                page === totalPages
+                                    ? "bg-gray-300 cursor-not-allowed"
+                                    : "bg-purple-600 text-white hover:bg-purple-700"
+                            }`}
+                        >
+                            Next
+                        </button>
+                    </div>
+                </>
+            )}
         </div>
     );
-};
+}
 
-// Main Page Component
 export default function Page() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
