@@ -1,71 +1,29 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useParams } from 'next/navigation';
 import { ChevronDown, ChevronUp, Menu, X } from "lucide-react";
+import categoryOne from "../../../../../public/images/tv.png";
+import ItemCard from "@/components/ItemCard";
+const BE_URL = "https://api.bestbuyelectronics.lk";
 
-interface ProductCardProps {
+
+interface Product {
     id: number;
-    image: string;
-    title: string;
-    originalPrice: number;
-    salePrice: number;
-    discount: number;
-    isNew?: boolean;
+    name: string;
+    sku: string;
+    model_number?: string;
+    price: number;
+    old_price?: number;
+    quantity: number;
+    warranty?: number;
+    delivery_available: boolean;
+    category: string;
+    subcategory?: string;
+    image_url?: string;
+    description?: string;
+    images?: string[];
 }
-
-const ProductCard: React.FC<ProductCardProps> = ({
-                                                     image,
-                                                     title,
-                                                     originalPrice,
-                                                     salePrice,
-                                                     discount,
-                                                     isNew,
-                                                 }) => {
-    const formatPrice = (price: number) => `Rs. ${price.toLocaleString()}`;
-
-    return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 group relative">
-            <div className="relative">
-                <img
-                    src={image}
-                    alt={title}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                {discount > 0 && (
-                    <div className="absolute top-3 left-3">
-                        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                            {discount}%
-                        </span>
-                        <div className="text-xs text-white bg-red-500 px-1 rounded-b">OFF</div>
-                    </div>
-                )}
-                {isNew && (
-                    <div className="absolute top-3 right-3">
-                        <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold">
-                            NEW
-                        </span>
-                    </div>
-                )}
-            </div>
-
-            <div className="p-4">
-                <h3 className="text-sm font-medium text-gray-800 mb-2 line-clamp-2 hover:text-purple-600 transition-colors">
-                    {title}
-                </h3>
-                <div className="flex items-center gap-2 mb-2">
-                    {originalPrice > salePrice && (
-                        <span className="text-xs text-gray-500 line-through">
-                            {formatPrice(originalPrice)}
-                        </span>
-                    )}
-                    <span className="text-lg font-bold text-red-600">
-                        {formatPrice(salePrice)}
-                    </span>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 interface SidebarProps {
     isOpen: boolean;
@@ -105,13 +63,13 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
         <>
             <div
                 onClick={onClose}
-                className={`fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300 ${
+                className={`fixed inset-0 bg-black bg-opacity-40 z-20 transition-opacity duration-300 ${
                     isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
                 } md:hidden`}
             />
 
             <aside
-                className={`fixed top-0 left-0 bottom-0 w-72 bg-white border-r border-gray-200 p-6 z-50 transform transition-transform duration-300 ${
+                className={`fixed top-0 left-0 bottom-0 w-72 bg-white border-r border-gray-200 p-6 z-20 transform transition-transform duration-300 ${
                     isOpen ? "translate-x-0" : "-translate-x-full"
                 } md:translate-x-0 md:static md:w-64 flex flex-col`}
             >
@@ -139,10 +97,10 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
                         {categoriesOpen && (
                             <div className="flex flex-col space-y-2">
                                 {categories.map((cat) => (
-                                    <label key={cat} className="inline-flex items-center cursor-pointer text-gray-700 hover:text-purple-600">
+                                    <label key={cat} className="inline-flex items-center cursor-pointer text-gray-700 hover:text-red-500">
                                         <input
                                             type="checkbox"
-                                            className="mr-3 w-4 h-4 text-purple-600"
+                                            className="mr-3 w-4 h-4 text-red-500 accent-red-500"
                                             checked={selectedCategories.includes(cat)}
                                             onChange={() => toggleCategory(cat)}
                                         />
@@ -164,10 +122,10 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
                         {brandsOpen && (
                             <div className="flex flex-col space-y-2">
                                 {brands.map((brand) => (
-                                    <label key={brand} className="inline-flex items-center cursor-pointer text-gray-700 hover:text-purple-600">
+                                    <label key={brand} className="inline-flex items-center cursor-pointer text-gray-700 hover:text-red-500">
                                         <input
                                             type="checkbox"
-                                            className="mr-3 w-4 h-4 text-purple-600"
+                                            className="mr-3 w-4 h-4 text-red-500 accent-red-500"
                                             checked={selectedBrands.includes(brand)}
                                             onChange={() => toggleBrand(brand)}
                                         />
@@ -183,9 +141,9 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
     );
 }
 
-function ProductGrid() {
+function ProductGrid({id}:{id?:any}) {
     const productsPerPage = 7;
-    const [products, setProducts] = useState<ProductCardProps[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -195,24 +153,13 @@ function ProductGrid() {
             setLoading(true);
             try {
                 const res = await fetch(
-                    `https://api.bestbuyelectronics.lk/products/?page=${pageNum}&limit=50`,
+                    `https://api.bestbuyelectronics.lk/products/?page=${pageNum}&limit=30&category=${id}`,
                     { cache: "no-store" }
                 );
                 const data = await res.json();
                 const apiProducts = data.results || [];
 
-                const formatted: ProductCardProps[] = apiProducts.map((p: any) => ({
-                    id: p.id,
-                    image: p.image || p.images?.[0] || "",
-                    title: p.title || p.name || "Unknown Product",
-                    originalPrice: Number(p.oldPrice || p.originalPrice || 0),
-                    salePrice: Number(p.newPrice || p.salePrice || 0),
-                    discount: p.discount || 0,
-                    isNew: p.isNew || false,
-                }));
-
-                setProducts(formatted);
-                setTotalPages(Math.ceil((data.total || formatted.length) / productsPerPage));
+                setProducts(apiProducts);
             } catch (error) {
                 console.error("Failed to fetch products", error);
             }
@@ -222,10 +169,7 @@ function ProductGrid() {
         fetchProducts(page);
     }, [page]);
 
-    const paginatedProducts = products.slice(
-        (page - 1) * productsPerPage,
-        page * productsPerPage
-    );
+
 
     return (
         <div className="flex-1 p-6">
@@ -252,8 +196,17 @@ function ProductGrid() {
             ) : (
                 <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {paginatedProducts.map((product) => (
-                            <ProductCard key={product.id} {...product} />
+                        {products.map((product) => (
+                            <ItemCard
+                                id={product.id}
+                                key={product.id}
+                                imageUrl={`${BE_URL}${product.images?.[0] || ''}`}
+                                imageSrc={categoryOne}
+                                title={product.name}
+                                oldPrice={product.old_price}
+                                newPrice={product.price}
+                                inStock={product.quantity > 0}
+                            />
                         ))}
                     </div>
 
@@ -264,7 +217,7 @@ function ProductGrid() {
                             className={`px-4 py-2 rounded-lg ${
                                 page === 1
                                     ? "bg-gray-300 cursor-not-allowed"
-                                    : "bg-purple-600 text-white hover:bg-purple-700"
+                                    : "bg-red-500 text-white hover:bg-red-600"
                             }`}
                         >
                             Prev
@@ -278,8 +231,8 @@ function ProductGrid() {
                                     onClick={() => setPage(pageNum)}
                                     className={`px-4 py-2 rounded-lg ${
                                         page === pageNum
-                                            ? "bg-purple-700 text-white"
-                                            : "bg-purple-200 text-purple-800 hover:bg-purple-300"
+                                            ? "bg-red-600 text-white"
+                                            : "bg-red-200 text-red-700 hover:bg-red-300"
                                     }`}
                                 >
                                     {pageNum}
@@ -293,7 +246,7 @@ function ProductGrid() {
                             className={`px-4 py-2 rounded-lg ${
                                 page === totalPages
                                     ? "bg-gray-300 cursor-not-allowed"
-                                    : "bg-purple-600 text-white hover:bg-purple-700"
+                                    : "bg-red-500 text-white hover:bg-red-600"
                             }`}
                         >
                             Next
@@ -307,10 +260,13 @@ function ProductGrid() {
 
 export default function Page() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const params = useParams();
+    const id = params?.id;
+
 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
-            <div className="max-w-7xl mx-auto mt-6 gap-6 flex flex-1">
+            <div className="mx-auto mt-6 gap-6 flex flex-1">
                 <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
                 <div className="flex-1 flex flex-col">
@@ -324,7 +280,7 @@ export default function Page() {
                         </button>
                     </div>
 
-                    <ProductGrid />
+                    <ProductGrid id={id} />
                 </div>
             </div>
         </div>

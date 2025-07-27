@@ -1,8 +1,9 @@
-// components/ProductCard.tsx
 "use client";
 
 import Image from "next/image";
 import Link from "next/link";
+import {useEffect, useState} from "react";
+import {useSearchParams} from "next/navigation";
 
 interface ProductCardProps {
     id: number;
@@ -40,7 +41,8 @@ const ProductCard = ({
                     <p className="text-green-600 text-sm">Save {discount}%</p>
                 )}
                 {isNew && (
-                    <span className="inline-block bg-blue-100 text-blue-600 text-xs font-semibold px-2 py-1 mt-2 rounded">
+                    <span
+                        className="inline-block bg-blue-100 text-blue-600 text-xs font-semibold px-2 py-1 mt-2 rounded">
             New
           </span>
                 )}
@@ -49,13 +51,7 @@ const ProductCard = ({
     );
 };
 
-export default ProductCard;
 
-// components/ProductGrid.tsx
-"use client";
-
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 interface Product {
     id: number;
     image: string;
@@ -83,17 +79,7 @@ const ProductGrid = () => {
                 }
                 const res = await fetch(url);
                 const data = await res.json();
-
-                const formatted = data.results.map((p: any) => ({
-                    id: p.id,
-                    image: p.image || p.images?.[0] || "/noimage.jpg",
-                    title: p.title || p.name,
-                    originalPrice: Number(p.oldPrice || p.originalPrice || 0),
-                    salePrice: Number(p.newPrice || p.salePrice || 0),
-                    discount: p.discount || 0,
-                    isNew: p.isNew || false,
-                }));
-                setResults(formatted);
+                setResults(data.results);
             } catch (err) {
                 console.error("Error fetching search results:", err);
             } finally {
@@ -124,11 +110,7 @@ const ProductGrid = () => {
     );
 };
 
-export default ProductGrid;
-
-// app/search/page.tsx
-
 
 export default function SearchPage() {
-    return <ProductGrid />;
+    return <ProductGrid/>;
 }
