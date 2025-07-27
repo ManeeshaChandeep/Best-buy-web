@@ -1,65 +1,27 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useSearchParams} from "next/navigation";
-
-interface ProductCardProps {
-    id: number;
-    image: string;
-    title: string;
-    originalPrice: number;
-    salePrice: number;
-    discount: number;
-    isNew: boolean;
-}
-
-const ProductCard = ({
-                         id,
-                         image,
-                         title,
-                         originalPrice,
-                         salePrice,
-                         discount,
-                         isNew,
-                     }: ProductCardProps) => {
-    return (
-        <Link href={`/product/${id}`}>
-            <div className="bg-white p-4 rounded-lg shadow hover:shadow-lg transition-all">
-                <Image
-                    src={image}
-                    alt={title}
-                    width={300}
-                    height={300}
-                    className="w-full h-60 object-contain mb-4"
-                />
-                <h2 className="text-lg font-medium mb-1 line-clamp-2">{title}</h2>
-                <div className="text-sm text-gray-500 line-through">Rs {originalPrice}</div>
-                <div className="text-lg font-bold text-red-600">Rs {salePrice}</div>
-                {discount > 0 && (
-                    <p className="text-green-600 text-sm">Save {discount}%</p>
-                )}
-                {isNew && (
-                    <span
-                        className="inline-block bg-blue-100 text-blue-600 text-xs font-semibold px-2 py-1 mt-2 rounded">
-            New
-          </span>
-                )}
-            </div>
-        </Link>
-    );
-};
+import categoryOne from "../../../../public/images/tv.png";
+import ItemCard from "@/components/ItemCard";
+const BE_URL = "https://api.bestbuyelectronics.lk";
 
 
 interface Product {
     id: number;
-    image: string;
-    title: string;
-    originalPrice: number;
-    salePrice: number;
-    discount: number;
-    isNew: boolean;
+    name: string;
+    sku: string;
+    model_number?: string;
+    price: number;
+    old_price?: number;
+    quantity: number;
+    warranty?: number;
+    delivery_available: boolean;
+    category: string;
+    subcategory?: string;
+    image_url?: string;
+    description?: string;
+    images?: string[];
 }
 
 const ProductGrid = () => {
@@ -100,9 +62,18 @@ const ProductGrid = () => {
             ) : results.length === 0 ? (
                 <p className="text-gray-500">No products found.</p>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="flex flex-wrap gap-4">
                     {results.map((product) => (
-                        <ProductCard key={product.id} {...product} />
+                        <ItemCard
+                            id={product.id}
+                            key={product.id}
+                            imageUrl={`${BE_URL}${product.images?.[0] || ''}`}
+                            imageSrc={categoryOne}
+                            title={product.name}
+                            oldPrice={product.old_price}
+                            newPrice={product.price}
+                            inStock={product.quantity > 0}
+                        />
                     ))}
                 </div>
             )}

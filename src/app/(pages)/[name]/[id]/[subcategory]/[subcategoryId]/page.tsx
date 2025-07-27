@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from 'next/navigation';
 import { ChevronDown, ChevronUp, Menu, X } from "lucide-react";
-import categoryOne from "../../../../../public/images/tv.png";
+import categoryOne from "../../../../../../../public/images/tv.png";
 import ItemCard from "@/components/ItemCard";
 const BE_URL = "https://api.bestbuyelectronics.lk";
 
@@ -195,7 +195,7 @@ function ProductGrid({id}:{id?:any}) {
                 </div>
             ) : (
                 <>
-                    <div className="flex flex-wrap gap-4">
+                    <div className="flex flex-wrap gap-2">
                         {products.map((product) => (
                             <ItemCard
                                 id={product.id}
@@ -261,7 +261,7 @@ function ProductGrid({id}:{id?:any}) {
 export default function Page() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const params = useParams();
-    const id = params?.id;
+    const id = params?.subcategoryId;
 
 
     return (
