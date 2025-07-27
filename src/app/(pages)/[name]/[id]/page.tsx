@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp, Menu, X } from "lucide-react";
 
-// Types for product
 interface ProductCardProps {
     id: number;
     image: string;
@@ -14,7 +13,6 @@ interface ProductCardProps {
     isNew?: boolean;
 }
 
-// Product Card component
 const ProductCard: React.FC<ProductCardProps> = ({
                                                      image,
                                                      title,
@@ -33,12 +31,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     alt={title}
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute top-3 left-3">
-                    <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                        {discount}%
-                    </span>
-                    <div className="text-xs text-white bg-red-500 px-1 rounded-b">OFF</div>
-                </div>
+                {discount > 0 && (
+                    <div className="absolute top-3 left-3">
+                        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                            {discount}%
+                        </span>
+                        <div className="text-xs text-white bg-red-500 px-1 rounded-b">OFF</div>
+                    </div>
+                )}
                 {isNew && (
                     <div className="absolute top-3 right-3">
                         <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold">
@@ -53,9 +53,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     {title}
                 </h3>
                 <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs text-gray-500 line-through">
-                        {formatPrice(originalPrice)}
-                    </span>
+                    {originalPrice > salePrice && (
+                        <span className="text-xs text-gray-500 line-through">
+                            {formatPrice(originalPrice)}
+                        </span>
+                    )}
                     <span className="text-lg font-bold text-red-600">
                         {formatPrice(salePrice)}
                     </span>
@@ -65,7 +67,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
     );
 };
 
-// Sidebar component
 interface SidebarProps {
     isOpen: boolean;
     onClose: () => void;
@@ -102,20 +103,18 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     return (
         <>
-            {/* Overlay mobile */}
             <div
                 onClick={onClose}
-                className={`fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"} md:hidden`}
+                className={`fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300 ${
+                    isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+                } md:hidden`}
             />
 
-            {/* Sidebar drawer */}
             <aside
                 className={`fixed top-0 left-0 bottom-0 w-72 bg-white border-r border-gray-200 p-6 z-50 transform transition-transform duration-300 ${
                     isOpen ? "translate-x-0" : "-translate-x-full"
                 } md:translate-x-0 md:static md:w-64 flex flex-col`}
-                style={{ height: "100vh" }}
             >
-                {/* Close mobile button */}
                 <div className="flex justify-end mb-4 md:hidden">
                     <button
                         onClick={onClose}
@@ -126,12 +125,9 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
                     </button>
                 </div>
 
-                <h3 className="text-xl font-semibold mb-6 sticky top-0 bg-white z-10 py-2 border-b border-gray-300">
-                    Filter Products
-                </h3>
+                <h3 className="text-xl font-semibold mb-6">Filter Products</h3>
 
-                <div className="flex-grow overflow-y-auto" style={{ paddingBottom: "3rem" }}>
-                    {/* Categories */}
+                <div className="flex-grow overflow-y-auto">
                     <section className="mb-8">
                         <button
                             onClick={() => setCategoriesOpen(!categoriesOpen)}
@@ -143,10 +139,7 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
                         {categoriesOpen && (
                             <div className="flex flex-col space-y-2">
                                 {categories.map((cat) => (
-                                    <label
-                                        key={cat}
-                                        className="inline-flex items-center cursor-pointer text-gray-700 hover:text-purple-600"
-                                    >
+                                    <label key={cat} className="inline-flex items-center cursor-pointer text-gray-700 hover:text-purple-600">
                                         <input
                                             type="checkbox"
                                             className="mr-3 w-4 h-4 text-purple-600"
@@ -160,7 +153,6 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
                         )}
                     </section>
 
-                    {/* Brands */}
                     <section>
                         <button
                             onClick={() => setBrandsOpen(!brandsOpen)}
@@ -172,10 +164,7 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
                         {brandsOpen && (
                             <div className="flex flex-col space-y-2">
                                 {brands.map((brand) => (
-                                    <label
-                                        key={brand}
-                                        className="inline-flex items-center cursor-pointer text-gray-700 hover:text-purple-600"
-                                    >
+                                    <label key={brand} className="inline-flex items-center cursor-pointer text-gray-700 hover:text-purple-600">
                                         <input
                                             type="checkbox"
                                             className="mr-3 w-4 h-4 text-purple-600"
@@ -194,48 +183,45 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
     );
 }
 
-// Product grid with pagination + API fetch
 function ProductGrid() {
     const productsPerPage = 7;
-
     const [products, setProducts] = useState<ProductCardProps[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
 
-    async function fetchProducts(pageNum: number) {
-        setLoading(true);
-        try {
-            const res = await fetch(
-                `https://api.bestbuyelectronics.lk/products/?page=${pageNum}&limit=50`
-            );
-            const data = await res.json();
-
-            const apiProducts = data.results || [];
-
-            const formatted: ProductCardProps[] = apiProducts.map((p: any) => ({
-                id: p.id,
-                image: p.image || p.images?.[0] || "",
-                title: p.title || p.name || "Unknown Product",
-                originalPrice: Number(p.oldPrice || p.originalPrice || 0),
-                salePrice: Number(p.newPrice || p.salePrice || 0),
-                discount: p.discount || 0,
-                isNew: p.isNew || false,
-            }));
-
-            setProducts(formatted);
-            setTotalPages(Math.ceil((data.total || formatted.length) / productsPerPage));
-        } catch (error) {
-            console.error("Failed to fetch products", error);
-        }
-        setLoading(false);
-    }
-
     useEffect(() => {
+        async function fetchProducts(pageNum: number) {
+            setLoading(true);
+            try {
+                const res = await fetch(
+                    `https://api.bestbuyelectronics.lk/products/?page=${pageNum}&limit=50`,
+                    { cache: "no-store" }
+                );
+                const data = await res.json();
+                const apiProducts = data.results || [];
+
+                const formatted: ProductCardProps[] = apiProducts.map((p: any) => ({
+                    id: p.id,
+                    image: p.image || p.images?.[0] || "",
+                    title: p.title || p.name || "Unknown Product",
+                    originalPrice: Number(p.oldPrice || p.originalPrice || 0),
+                    salePrice: Number(p.newPrice || p.salePrice || 0),
+                    discount: p.discount || 0,
+                    isNew: p.isNew || false,
+                }));
+
+                setProducts(formatted);
+                setTotalPages(Math.ceil((data.total || formatted.length) / productsPerPage));
+            } catch (error) {
+                console.error("Failed to fetch products", error);
+            }
+            setLoading(false);
+        }
+
         fetchProducts(page);
     }, [page]);
 
-    // Pagination slice on fetched products
     const paginatedProducts = products.slice(
         (page - 1) * productsPerPage,
         page * productsPerPage
@@ -254,10 +240,7 @@ function ProductGrid() {
                             <option>Price: High to Low</option>
                             <option>Discount</option>
                         </select>
-                        <ChevronDown
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
-                            size={16}
-                        />
+                        <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                     </div>
                 </div>
             </div>
@@ -274,7 +257,6 @@ function ProductGrid() {
                         ))}
                     </div>
 
-                    {/* Pagination */}
                     <div className="flex justify-center gap-4 mt-8">
                         <button
                             onClick={() => setPage((p) => Math.max(p - 1, 1))}
@@ -329,12 +311,9 @@ export default function Page() {
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
             <div className="max-w-7xl mx-auto mt-6 gap-6 flex flex-1">
-                {/* Sidebar Drawer on mobile, always visible on desktop */}
                 <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-                {/* Main content area */}
                 <div className="flex-1 flex flex-col">
-                    {/* Mobile menu button */}
                     <div className="md:hidden p-4">
                         <button
                             onClick={() => setSidebarOpen(true)}
@@ -345,7 +324,6 @@ export default function Page() {
                         </button>
                     </div>
 
-                    {/* Product Grid */}
                     <ProductGrid />
                 </div>
             </div>
