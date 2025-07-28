@@ -1,12 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams } from 'next/navigation';
+import { useParams } from "next/navigation";
 import { ChevronDown, ChevronUp, Menu, X } from "lucide-react";
+import Stack from "@mui/material/Stack";
+import Pagination from "@mui/material/Pagination";
+
 import categoryOne from "../../../../../public/images/tv.png";
 import ItemCard from "@/components/ItemCard";
-const BE_URL = "https://api.bestbuyelectronics.lk";
 
+const BE_URL = "https://api.bestbuyelectronics.lk";
 
 interface Product {
     id: number;
@@ -49,7 +52,9 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     const toggleCategory = (category: string) => {
         setSelectedCategories((prev) =>
-            prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
+            prev.includes(category)
+                ? prev.filter((c) => c !== category)
+                : [...prev, category]
         );
     };
 
@@ -97,7 +102,10 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
                         {categoriesOpen && (
                             <div className="flex flex-col space-y-2">
                                 {categories.map((cat) => (
-                                    <label key={cat} className="inline-flex items-center cursor-pointer text-gray-700 hover:text-red-500">
+                                    <label
+                                        key={cat}
+                                        className="inline-flex items-center cursor-pointer text-gray-700 hover:text-red-500"
+                                    >
                                         <input
                                             type="checkbox"
                                             className="mr-3 w-4 h-4 text-red-500 accent-red-500"
@@ -122,7 +130,10 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
                         {brandsOpen && (
                             <div className="flex flex-col space-y-2">
                                 {brands.map((brand) => (
-                                    <label key={brand} className="inline-flex items-center cursor-pointer text-gray-700 hover:text-red-500">
+                                    <label
+                                        key={brand}
+                                        className="inline-flex items-center cursor-pointer text-gray-700 hover:text-red-500"
+                                    >
                                         <input
                                             type="checkbox"
                                             className="mr-3 w-4 h-4 text-red-500 accent-red-500"
@@ -141,7 +152,7 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
     );
 }
 
-function ProductGrid({id}:{id?:any}) {
+function ProductGrid({ id }: { id?: any }) {
     const productsPerPage = 7;
     const [products, setProducts] = useState<Product[]>([]);
     const [page, setPage] = useState(1);
@@ -153,13 +164,18 @@ function ProductGrid({id}:{id?:any}) {
             setLoading(true);
             try {
                 const res = await fetch(
-                    `https://api.bestbuyelectronics.lk/products/?page=${pageNum}&limit=30&category=${id}`,
+                    `https://api.bestbuyelectronics.lk/products/?page=${pageNum}&limit=${productsPerPage}&category=${id}`,
                     { cache: "no-store" }
                 );
                 const data = await res.json();
                 const apiProducts = data.results || [];
 
                 setProducts(apiProducts);
+
+                // Calculate total pages based on total count
+                if (data.count) {
+                    setTotalPages(Math.ceil(data.count / productsPerPage));
+                }
             } catch (error) {
                 console.error("Failed to fetch products", error);
             }
@@ -167,9 +183,11 @@ function ProductGrid({id}:{id?:any}) {
         }
 
         fetchProducts(page);
-    }, [page]);
+    }, [page, id]);
 
-
+    const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
+        setPage(value);
+    };
 
     return (
         <div className="flex-1 p-4">
@@ -184,13 +202,16 @@ function ProductGrid({id}:{id?:any}) {
                             <option>Price: High to Low</option>
                             <option>Discount</option>
                         </select>
-                        <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                        <ChevronDown
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
+                            size={16}
+                        />
                     </div>
                 </div>
             </div>
 
             {loading ? (
-                <div className="text-center py-20 text-purple-600 font-medium">
+                <div className="text-center py-20 text-red-600 font-medium">
                     Loading products...
                 </div>
             ) : (
@@ -200,7 +221,7 @@ function ProductGrid({id}:{id?:any}) {
                             <ItemCard
                                 id={product.id}
                                 key={product.id}
-                                imageUrl={`${BE_URL}${product.images?.[0] || ''}`}
+                                imageUrl={`${BE_URL}${product.images?.[0] || ""}`}
                                 imageSrc={categoryOne}
                                 title={product.name}
                                 oldPrice={product.old_price}
@@ -210,47 +231,27 @@ function ProductGrid({id}:{id?:any}) {
                         ))}
                     </div>
 
-                    <div className="flex justify-center gap-4 mt-8">
-                        <button
-                            onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                            disabled={page === 1}
-                            className={`px-4 py-2 rounded-lg ${
-                                page === 1
-                                    ? "bg-gray-300 cursor-not-allowed"
-                                    : "bg-red-500 text-white hover:bg-red-600"
-                            }`}
-                        >
-                            Prev
-                        </button>
-
-                        {Array.from({ length: totalPages }).map((_, idx) => {
-                            const pageNum = idx + 1;
-                            return (
-                                <button
-                                    key={pageNum}
-                                    onClick={() => setPage(pageNum)}
-                                    className={`px-4 py-2 rounded-lg ${
-                                        page === pageNum
-                                            ? "bg-red-600 text-white"
-                                            : "bg-red-200 text-red-700 hover:bg-red-300"
-                                    }`}
-                                >
-                                    {pageNum}
-                                </button>
-                            );
-                        })}
-
-                        <button
-                            onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                            disabled={page === totalPages}
-                            className={`px-4 py-2 rounded-lg ${
-                                page === totalPages
-                                    ? "bg-gray-300 cursor-not-allowed"
-                                    : "bg-red-500 text-white hover:bg-red-600"
-                            }`}
-                        >
-                            Next
-                        </button>
+                    <div className="flex justify-center mt-8">
+                        <Stack spacing={2}>
+                            <Pagination
+                                count={totalPages}
+                                page={page}
+                                onChange={handlePageChange}
+                                variant="outlined"
+                                shape="rounded"
+                                sx={{
+                                    "& .MuiPaginationItem-root": {
+                                        borderColor: "red",
+                                        color: "red",
+                                    },
+                                    "& .Mui-selected": {
+                                        backgroundColor: "red !important",
+                                        color: "white !important",
+                                        borderColor: "red !important",
+                                    },
+                                }}
+                            />
+                        </Stack>
                     </div>
                 </>
             )}
@@ -262,7 +263,6 @@ export default function Page() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const params = useParams();
     const id = params?.id;
-
 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
