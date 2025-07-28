@@ -157,35 +157,28 @@ export default function Navbar() {
     if (error) console.error("Error loading categories:", error);
 
     return (
-        <nav className={`sticky top-0 z-50 ${scrolled ? "bg-white shadow-lg" : "bg-white"}`}>
-            <div className="container mx-auto px-4">
+        <nav className={`sticky top-0 z-50 transition-all ${scrolled ? "bg-white shadow-md" : "bg-white"}`}>
+            <div className="max-w-screen-xl mx-auto px-4">
                 {/* MOBILE NAVBAR */}
-                <div className="flex justify-between items-center py-4 relative lg:hidden">
-                    {/* Left: Categories icon */}
+                <div className="flex justify-between items-center py-3 lg:hidden">
                     <button
                         onClick={() => setShowMobileCategories(!showMobileCategories)}
                         className="text-gray-700 hover:text-red-600"
-                        aria-label="Toggle categories"
                     >
-                        <HiOutlineViewGrid size={24} />
+                        <HiOutlineViewGrid size={22} />
                     </button>
-
-                    {/* Center: Logo */}
-                    <a href="#" className="text-2xl font-bold text-red-600">
+                    <a href="#" className="text-xl font-bold text-red-600">
                         BestBuy
                     </a>
-
-                    {/* Right: Search icon */}
                     <button
                         onClick={() => setShowMobileSearch(!showMobileSearch)}
                         className="text-gray-700 hover:text-red-600"
-                        aria-label="Toggle search"
                     >
-                        <FiSearch size={24} />
+                        <FiSearch size={22} />
                     </button>
                 </div>
 
-                {/* Mobile Search Input with your preferred style */}
+                {/* MOBILE SEARCH INPUT */}
                 <div
                     className={`lg:hidden absolute top-full left-0 right-0 px-4 py-3 transition-all duration-300 ${
                         showMobileSearch ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -205,7 +198,6 @@ export default function Navbar() {
                             <button
                                 onClick={() => setSearchQuery("")}
                                 className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                                aria-label="Clear search"
                             >
                                 ✕
                             </button>
@@ -214,47 +206,43 @@ export default function Navbar() {
                 </div>
 
                 {/* DESKTOP NAVBAR */}
-                <div className="hidden lg:flex items-center justify-between py-4 relative">
-                    {/* Category Icon */}
-                    <div>
+                <div className="hidden lg:flex items-center justify-between py-2 relative">
+                    {/* LEFT: Category icon and logo */}
+                    <div className="flex items-center space-x-3">
                         <button
-                            className="p-3 bg-gray-300 rounded-lg hover:bg-gray-400"
+                            className="p-2 bg-gray-100 rounded-md hover:bg-gray-200 transition"
                             onClick={() => setDesktopDropdownOpen(!desktopDropdownOpen)}
                             aria-label="All Categories"
                         >
-                            <HiOutlineViewGrid size={24} />
+                            <HiOutlineViewGrid size={20} />
                         </button>
-                    </div>
-
-                    {/* Logo */}
-                    <div>
-                        <a href="#" className="text-3xl font-bold text-red-600 whitespace-nowrap">
+                        <a href="#" className="text-2xl font-bold text-red-600 whitespace-nowrap">
                             BestBuy
                         </a>
                     </div>
 
-                    {/* Search Bar */}
-                    <div className="flex-1 max-w-xl">
-                        <div className="relative w-full">
+                    {/* CENTER: Search Bar */}
+                    <div className="flex-1 max-w-md">
+                        <div className="relative">
                             <input
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                                 placeholder="Search for premium electronics..."
-                                className="w-full px-6 py-3 border text-gray-700 border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500 text-lg"
+                                className="w-full px-5 py-2 text-sm border text-gray-700 border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500"
                             />
                             <button
-                                className="absolute right-5 top-3 text-gray-500 hover:text-red-600"
+                                className="absolute right-4 top-2 text-gray-500 hover:text-red-600"
                                 onClick={handleSearch}
                                 aria-label="Search"
                             >
-                                <FiSearch size={24} />
+                                <FiSearch size={20} />
                             </button>
                             {searchQuery && (
                                 <button
                                     onClick={() => setSearchQuery("")}
-                                    className="absolute right-16 top-3 text-gray-400 hover:text-gray-600"
+                                    className="absolute right-10 top-2 text-gray-400 hover:text-gray-600"
                                     aria-label="Clear search"
                                 >
                                     ✕
@@ -262,47 +250,47 @@ export default function Navbar() {
                             )}
                         </div>
                     </div>
-
-                    {/* Desktop category dropdown */}
-                    {desktopDropdownOpen && (
-                        <div className="absolute top-full left-0 mt-2 z-50 bg-white shadow-lg border border-gray-200 rounded-lg flex">
-                            <div className="w-72 rounded-l-lg border-r border-gray-200 py-3 bg-white">
-                                {categories.map((category) => (
-                                    <button
-                                        key={category.id}
-                                        className="w-full text-left px-6 py-3 text-gray-800 hover:text-red-600 hover:bg-gray-50"
-                                        onMouseEnter={() => setActiveCategory(category.id)}
-                                    >
-                                        {category.name}
-                                    </button>
-                                ))}
-                            </div>
-                            {activeCategory && (
-                                <div className="w-72 rounded-r-lg py-3 bg-white">
-                                    <a
-                                        href={`/category/${activeCategory}`}
-                                        className="block px-6 py-3 font-semibold text-gray-800 hover:text-red-600 border-b border-gray-200"
-                                    >
-                                        {categories.find((c) => c.id === activeCategory)?.name}
-                                    </a>
-                                    {categories
-                                        .find((c) => c.id === activeCategory)
-                                        ?.subcategories.map((sub) => (
-                                            <a
-                                                key={sub.id}
-                                                href={`/category/${activeCategory}/subcategory/${sub.id}`}
-                                                className="block px-6 py-3 text-gray-700 hover:bg-gray-50 hover:text-red-600"
-                                            >
-                                                {sub.name}
-                                            </a>
-                                        ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
                 </div>
 
-                {/* Mobile categories panel */}
+                {/* CATEGORY DROPDOWN */}
+                {desktopDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-2 z-50 bg-white shadow-lg border border-gray-200 rounded-lg flex">
+                        <div className="w-64 border-r border-gray-200 py-2">
+                            {categories.map((category) => (
+                                <button
+                                    key={category.id}
+                                    className="w-full text-left px-5 py-2 text-sm text-gray-800 hover:text-red-600 hover:bg-gray-50"
+                                    onMouseEnter={() => setActiveCategory(category.id)}
+                                >
+                                    {category.name}
+                                </button>
+                            ))}
+                        </div>
+                        {activeCategory && (
+                            <div className="w-64 py-2">
+                                <a
+                                    href={`/category/${activeCategory}`}
+                                    className="block px-5 py-2 font-medium text-gray-800 hover:text-red-600 border-b border-gray-200"
+                                >
+                                    {categories.find((c) => c.id === activeCategory)?.name}
+                                </a>
+                                {categories
+                                    .find((c) => c.id === activeCategory)
+                                    ?.subcategories.map((sub) => (
+                                        <a
+                                            key={sub.id}
+                                            href={`/category/${activeCategory}/subcategory/${sub.id}`}
+                                            className="block px-5 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600"
+                                        >
+                                            {sub.name}
+                                        </a>
+                                    ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* MOBILE CATEGORY PANEL */}
                 <MobileCategoryPanel
                     showMobileCategories={showMobileCategories}
                     setShowMobileCategories={setShowMobileCategories}
