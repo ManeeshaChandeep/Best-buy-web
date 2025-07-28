@@ -3,9 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { ChevronDown, ChevronUp, Menu, X } from "lucide-react";
-import { HiOutlineViewGrid } from "react-icons/hi";
-import { FiSearch } from "react-icons/fi";
-import { GrCart } from "react-icons/gr";
 import Stack from "@mui/material/Stack";
 import Pagination from "@mui/material/Pagination";
 import Drawer from "@mui/material/Drawer";
@@ -48,7 +45,7 @@ function ItemCard({
     newPrice: number;
 }) {
     return (
-        <div className="w-44 bg-white rounded shadow-sm p-3 hover:shadow-md transition">
+        <div className="bg-white rounded shadow-sm p-3 hover:shadow-md transition w-full sm:w-auto">
             <img
                 src={imageUrl}
                 alt={title}
@@ -86,14 +83,19 @@ function FilterContent({
                 <button
                     onClick={() => setCategoriesOpen(!categoriesOpen)}
                     className="flex justify-between w-full font-semibold text-gray-800 mb-3"
+                    aria-expanded={categoriesOpen}
+                    aria-controls="categories-list"
                 >
                     <span>Categories</span>
                     {categoriesOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                 </button>
                 {categoriesOpen && (
-                    <div className="flex flex-col space-y-2">
+                    <div id="categories-list" className="flex flex-col space-y-2">
                         {categories.map((cat) => (
-                            <label key={cat} className="inline-flex items-center cursor-pointer">
+                            <label
+                                key={cat}
+                                className="inline-flex items-center cursor-pointer"
+                            >
                                 <input
                                     type="checkbox"
                                     className="mr-3 w-4 h-4 text-red-500 accent-red-500"
@@ -110,14 +112,19 @@ function FilterContent({
                 <button
                     onClick={() => setBrandsOpen(!brandsOpen)}
                     className="flex justify-between w-full font-semibold text-gray-800 mb-3"
+                    aria-expanded={brandsOpen}
+                    aria-controls="brands-list"
                 >
                     <span>Brands</span>
                     {brandsOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                 </button>
                 {brandsOpen && (
-                    <div className="flex flex-col space-y-2">
+                    <div id="brands-list" className="flex flex-col space-y-2">
                         {brands.map((brand) => (
-                            <label key={brand} className="inline-flex items-center cursor-pointer">
+                            <label
+                                key={brand}
+                                className="inline-flex items-center cursor-pointer"
+                            >
                                 <input
                                     type="checkbox"
                                     className="mr-3 w-4 h-4 text-red-500 accent-red-500"
@@ -154,7 +161,8 @@ function Sidebar({
 
     return (
         <>
-            <aside className="hidden md:block w-64 border-r border-gray-200 bg-white">
+            {/* Desktop sidebar only at lg and above */}
+            <aside className="hidden lg:block w-64 border-r border-gray-200 bg-white sticky top-0 h-screen overflow-auto">
                 <FilterContent
                     selectedCategories={selectedCategories}
                     selectedBrands={selectedBrands}
@@ -167,12 +175,13 @@ function Sidebar({
                 />
             </aside>
 
+            {/* Mobile and tablet Drawer */}
             <Drawer
                 anchor="left"
                 open={isOpen}
                 onClose={onClose}
                 sx={{
-                    display: { xs: "block", md: "none" },
+                    display: { xs: "block", md: "block", lg: "none" },
                     "& .MuiDrawer-paper": {
                         width: "80%",
                         maxWidth: 320,
@@ -180,7 +189,7 @@ function Sidebar({
                 }}
             >
                 <div className="flex justify-end p-4 border-b">
-                    <button onClick={onClose}>
+                    <button onClick={onClose} aria-label="Close filters">
                         <X size={24} />
                     </button>
                 </div>
@@ -259,7 +268,7 @@ function ProductGrid({
     };
 
     return (
-        <div className="flex-1 px-4">
+        <div className="flex-1 px-0 sm:px-4 max-w-screen-xl mx-auto">
             <h2 className="text-xl font-semibold mb-4 mt-2 text-gray-800">TV (ALL)</h2>
             {loading ? (
                 <div className="text-center py-20 text-red-600 font-medium">
@@ -267,7 +276,8 @@ function ProductGrid({
                 </div>
             ) : (
                 <>
-                    <div className="flex flex-wrap gap-4">
+                    {/* 2 cols on mobile/tablet, 3 on md laptop, 4 on lg desktop */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {products.map((product) => (
                             <ItemCard
                                 id={product.id}
@@ -331,10 +341,8 @@ export default function Page() {
 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
-            {/* Removed top bar */}
-
             {/* Main Content */}
-            <div className="mx-auto mt-4 gap-6 flex flex-1">
+            <div className="mx-auto mt-4 gap-6 flex flex-1 max-w-screen-xl px-4 md:px-0">
                 <Sidebar
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
@@ -343,12 +351,14 @@ export default function Page() {
                     toggleCategory={toggleCategory}
                     toggleBrand={toggleBrand}
                 />
+
                 <div className="flex-1 flex flex-col">
-                    {/* Filter + Sort Row */}
-                    <div className="flex justify-between items-center px-4 mb-2 md:hidden">
+                    {/* Filter + Sort Row for Mobile & Tablet */}
+                    <div className="flex justify-between items-center px-4 mb-2 lg:hidden">
                         <button
                             onClick={() => setSidebarOpen(true)}
                             className="flex items-center gap-2 text-purple-700 font-semibold"
+                            aria-label="Open filters"
                         >
                             <Menu size={20} />
                             Filters
@@ -358,6 +368,7 @@ export default function Page() {
                             className="bg-white border border-gray-300 rounded px-4 py-2 text-sm text-gray-700"
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
+                            aria-label="Sort products"
                         >
                             <option value="new">New Arrivals</option>
                             <option value="low">Price: Low to High</option>
