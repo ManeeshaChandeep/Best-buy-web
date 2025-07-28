@@ -1,11 +1,9 @@
-// components/Navbar.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { HiOutlineViewGrid } from "react-icons/hi";
 import { FiSearch } from "react-icons/fi";
-import { GrCart } from "react-icons/gr";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
@@ -156,115 +154,88 @@ export default function Navbar() {
         }
     };
 
-    const toggleSearch = () => {
-        setShowMobileSearch(!showMobileSearch);
-    };
-
     if (error) console.error("Error loading categories:", error);
 
     return (
         <nav className={`sticky top-0 z-50 ${scrolled ? "bg-white shadow-lg" : "bg-white"}`}>
             <div className="container mx-auto px-4">
-                <div className="flex justify-between items-center py-4 relative">
-                    <div className="lg:hidden flex items-center">
+                {/* MOBILE NAVBAR */}
+                <div className="flex justify-between items-center py-4 relative lg:hidden">
+                    {/* Left: Categories icon */}
+                    <button
+                        onClick={() => setShowMobileCategories(!showMobileCategories)}
+                        className="text-gray-700 hover:text-red-600"
+                        aria-label="Toggle categories"
+                    >
+                        <HiOutlineViewGrid size={24} />
+                    </button>
+
+                    {/* Center: Logo */}
+                    <a href="#" className="text-2xl font-bold text-red-600">
+                        BestBuy
+                    </a>
+
+                    {/* Right: Search icon */}
+                    <button
+                        onClick={() => setShowMobileSearch(!showMobileSearch)}
+                        className="text-gray-700 hover:text-red-600"
+                        aria-label="Toggle search"
+                    >
+                        <FiSearch size={24} />
+                    </button>
+                </div>
+
+                {/* Mobile Search Input with your preferred style */}
+                <div
+                    className={`lg:hidden absolute top-full left-0 right-0 px-4 py-3 transition-all duration-300 ${
+                        showMobileSearch ? "opacity-100" : "opacity-0 pointer-events-none"
+                    }`}
+                >
+                    <div className="relative">
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                            placeholder="Search products..."
+                            className="w-full px-4 py-2 pl-10 bg-white border text-gray-700 border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500"
+                        />
+                        <FiSearch className="absolute left-3 top-3 text-gray-400" size={18} />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery("")}
+                                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                                aria-label="Clear search"
+                            >
+                                ✕
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* DESKTOP NAVBAR */}
+                <div className="hidden lg:flex items-center justify-between py-4 relative">
+                    {/* Category Icon */}
+                    <div>
                         <button
-                            onClick={() => setShowMobileCategories(!showMobileCategories)}
-                            className="text-gray-700 hover:text-red-600 mr-2"
-                            aria-label="Toggle categories"
+                            className="p-3 bg-gray-300 rounded-lg hover:bg-gray-400"
+                            onClick={() => setDesktopDropdownOpen(!desktopDropdownOpen)}
+                            aria-label="All Categories"
                         >
                             <HiOutlineViewGrid size={24} />
                         </button>
                     </div>
 
-                    <a href="#" className="text-2xl font-bold text-red-600">BestBuy</a>
-
-                    <div className="flex items-center space-x-4">
-                        <button onClick={toggleSearch} className="lg:hidden text-gray-700 hover:text-red-600">
-                            <FiSearch size={24} />
-                        </button>
-                        <button className="text-gray-700 hover:text-red-600 relative">
-                            <GrCart size={24} />
-                            <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                                3
-                            </span>
-                        </button>
+                    {/* Logo */}
+                    <div>
+                        <a href="#" className="text-3xl font-bold text-red-600 whitespace-nowrap">
+                            BestBuy
+                        </a>
                     </div>
 
-                    <div className={`lg:hidden absolute top-full left-0 right-0 px-4 py-3 transition-all duration-300 ${showMobileSearch ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                                placeholder="Search products..."
-                                className="w-full px-4 py-2 pl-10 bg-white border text-gray-700 border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500"
-                            />
-                            <FiSearch className="absolute left-3 top-3 text-gray-400" size={18} />
-                            {searchQuery && (
-                                <button
-                                    onClick={() => setSearchQuery("")}
-                                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                                    aria-label="Clear search"
-                                >
-                                    ✕
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="hidden lg:flex items-center pb-4 relative">
-                    {!loading && (
-                        <div className="relative mr-4">
-                            <button
-                                className="flex items-center px-5 py-3 bg-gray-300 rounded-lg hover:bg-gray-400 text-lg font-semibold"
-                                onClick={() => setDesktopDropdownOpen(!desktopDropdownOpen)}
-                            >
-                                <HiOutlineViewGrid className="mr-3" size={24} />
-                                <span>All Categories</span>
-                            </button>
-
-                            {desktopDropdownOpen && (
-                                <div className="absolute top-full left-0 flex z-50 mt-2">
-                                    <div className="w-72 bg-white rounded-l-lg shadow-lg border border-gray-200 py-3">
-                                        {categories.map((category) => (
-                                            <button
-                                                key={category.id}
-                                                className="w-full text-left px-6 py-3 text-gray-800 hover:text-red-600 hover:bg-gray-50"
-                                                onMouseEnter={() => setActiveCategory(category.id)}
-                                            >
-                                                <span>{category.name}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    {activeCategory && (
-                                        <div className="w-72 bg-white rounded-r-lg shadow-lg border border-gray-200 ml-2 py-3">
-                                            <a
-                                                href={`/category/${activeCategory}`}
-                                                className="px-6 py-3 font-semibold text-gray-800 hover:text-red-600 border-b border-gray-200"
-                                            >
-                                                {categories.find(c => c.id === activeCategory)?.name}
-                                            </a>
-                                            {categories.find(c => c.id === activeCategory)?.subcategories.map((sub) => (
-                                                <a
-                                                    key={sub.id}
-                                                    href={`/category/${activeCategory}/subcategory/${sub.id}`}
-                                                    className="block px-6 py-3 text-gray-700 hover:bg-gray-50 hover:text-red-600"
-                                                >
-                                                    {sub.name}
-                                                </a>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    <div className="flex-1 flex justify-center">
-                        <div className="relative w-full max-w-3xl">
+                    {/* Search Bar */}
+                    <div className="flex-1 max-w-xl">
+                        <div className="relative w-full">
                             <input
                                 type="text"
                                 value={searchQuery}
@@ -291,8 +262,47 @@ export default function Navbar() {
                             )}
                         </div>
                     </div>
+
+                    {/* Desktop category dropdown */}
+                    {desktopDropdownOpen && (
+                        <div className="absolute top-full left-0 mt-2 z-50 bg-white shadow-lg border border-gray-200 rounded-lg flex">
+                            <div className="w-72 rounded-l-lg border-r border-gray-200 py-3 bg-white">
+                                {categories.map((category) => (
+                                    <button
+                                        key={category.id}
+                                        className="w-full text-left px-6 py-3 text-gray-800 hover:text-red-600 hover:bg-gray-50"
+                                        onMouseEnter={() => setActiveCategory(category.id)}
+                                    >
+                                        {category.name}
+                                    </button>
+                                ))}
+                            </div>
+                            {activeCategory && (
+                                <div className="w-72 rounded-r-lg py-3 bg-white">
+                                    <a
+                                        href={`/category/${activeCategory}`}
+                                        className="block px-6 py-3 font-semibold text-gray-800 hover:text-red-600 border-b border-gray-200"
+                                    >
+                                        {categories.find((c) => c.id === activeCategory)?.name}
+                                    </a>
+                                    {categories
+                                        .find((c) => c.id === activeCategory)
+                                        ?.subcategories.map((sub) => (
+                                            <a
+                                                key={sub.id}
+                                                href={`/category/${activeCategory}/subcategory/${sub.id}`}
+                                                className="block px-6 py-3 text-gray-700 hover:bg-gray-50 hover:text-red-600"
+                                            >
+                                                {sub.name}
+                                            </a>
+                                        ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
+                {/* Mobile categories panel */}
                 <MobileCategoryPanel
                     showMobileCategories={showMobileCategories}
                     setShowMobileCategories={setShowMobileCategories}
