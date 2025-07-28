@@ -115,15 +115,6 @@ export default function Home() {
             <HeroSection />
             <div className="mx-4 sm:mx-6 md:mx-12">
 
-                <section className='flex justify-center overflow-x-auto no-scrollbar space-x-6'>
-                    <CategoryCard imageSrc={categoryOne} title="Tv & Home" />
-                    <CategoryCard imageSrc={categoryTwo} title="Smart Phones" />
-                    <CategoryCard imageSrc={categoryThree} title="soundSy Systems" />
-                    <CategoryCard imageSrc={categoryFour} title="Frigerators" />
-                    <CategoryCard imageSrc={categoryFour} title="Frigerators" />
-                    <CategoryCard imageSrc={categoryFive} title="Washing Machines" />
-                </section>
-
                 <div>
                     <div className="border-b border-gray-300 pb-1 mb-2 mt-4">
                         <div className="flex justify-between items-center">
