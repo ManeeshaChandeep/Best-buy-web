@@ -4,11 +4,9 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { HiOutlineViewGrid } from "react-icons/hi";
 import { FiSearch } from "react-icons/fi";
-import Accordion from "@mui/material/Accordion";
-import AccordionSummary from "@mui/material/AccordionSummary";
-import AccordionDetails from "@mui/material/AccordionDetails";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CloseIcon from "@mui/icons-material/Close";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import Drawer from "@mui/material/Drawer";
 import { apiClient } from "@/libs/network";
 
 interface ApiCategory {
@@ -41,17 +39,17 @@ function MobileCategoryPanel({
 }) {
     const [expanded, setExpanded] = useState<string | null>(null);
 
-    useEffect(() => {
-        document.body.style.overflow = showMobileCategories ? "hidden" : "";
-        return () => {
-            document.body.style.overflow = "";
-        };
-    }, [showMobileCategories]);
-
-    if (!showMobileCategories) return null;
+    const toggleExpanded = (id: string) => {
+        setExpanded(expanded === id ? null : id);
+    };
 
     return (
-        <div className="fixed top-0 left-0 h-full w-2/3 bg-white shadow-lg z-50 overflow-y-auto">
+        <Drawer
+            anchor="left"
+            open={showMobileCategories}
+            onClose={() => setShowMobileCategories(false)}
+            PaperProps={{ sx: { width: "75%", maxWidth: 300 } }}
+        >
             <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200">
                 <h2 className="font-semibold text-lg text-gray-800">All Categories</h2>
                 <button onClick={() => setShowMobileCategories(false)}>
@@ -59,26 +57,29 @@ function MobileCategoryPanel({
                 </button>
             </div>
 
-            <div className="p-4">
+            <div
+                className="p-4 overflow-y-auto"
+                style={{ maxHeight: "calc(100vh - 64px)" }}
+            >
                 {loading ? (
                     <p className="text-center text-gray-500">Loading...</p>
                 ) : (
                     categories.map((category) => (
-                        <Accordion
-                            key={category.id}
-                            expanded={expanded === category.id}
-                            onChange={() =>
-                                setExpanded(expanded === category.id ? null : category.id)
-                            }
-                            disableGutters
-                            square
-                            elevation={0}
-                        >
-                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                <span className="font-medium text-gray-800">{category.name}</span>
-                            </AccordionSummary>
-                            <AccordionDetails>
-                                <div className="flex flex-col space-y-2 ml-4">
+                        <div key={category.id} className="mb-4">
+                            <button
+                                onClick={() => toggleExpanded(category.id)}
+                                className="w-full flex justify-between items-center text-gray-800 font-medium text-lg hover:text-red-600"
+                            >
+                                {category.name}
+                                <ExpandMoreIcon
+                                    className={`transform transition-transform duration-300 ${
+                                        expanded === category.id ? "rotate-180" : "rotate-0"
+                                    }`}
+                                />
+                            </button>
+
+                            {expanded === category.id && (
+                                <div className="mt-2 ml-4 flex flex-col space-y-2">
                                     <a
                                         href={`/category/${category.id}`}
                                         className="text-sm font-medium text-gray-700 hover:text-red-600"
@@ -97,12 +98,12 @@ function MobileCategoryPanel({
                                         </a>
                                     ))}
                                 </div>
-                            </AccordionDetails>
-                        </Accordion>
+                            )}
+                        </div>
                     ))
                 )}
             </div>
-        </div>
+        </Drawer>
     );
 }
 
@@ -157,7 +158,11 @@ export default function Navbar() {
     if (error) console.error("Error loading categories:", error);
 
     return (
-        <nav className={`sticky top-0 z-50 transition-all ${scrolled ? "bg-white shadow-md" : "bg-white"}`}>
+        <nav
+            className={`sticky top-0 z-50 transition-all ${
+                scrolled ? "bg-white shadow-md" : "bg-white"
+            }`}
+        >
             <div className="max-w-screen-xl mx-auto px-4">
                 {/* MOBILE NAVBAR */}
                 <div className="flex justify-between items-center py-3 lg:hidden">
