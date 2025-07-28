@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { ChevronDown, ChevronUp, Menu, X } from "lucide-react";
+import { HiOutlineViewGrid } from "react-icons/hi";
+import { FiSearch } from "react-icons/fi";
+import { GrCart } from "react-icons/gr";
 import Stack from "@mui/material/Stack";
 import Pagination from "@mui/material/Pagination";
 import Drawer from "@mui/material/Drawer";
-
-import categoryOne from "../../../../../public/images/tv.png";
-import ItemCard from "@/components/ItemCard";
 
 const BE_URL = "https://api.bestbuyelectronics.lk";
 
@@ -34,6 +34,41 @@ const categories = [
 
 const brands = ["LG", "Toshiba", "Haier", "JVC", "Abans"];
 
+function ItemCard({
+                      id,
+                      imageUrl,
+                      title,
+                      oldPrice,
+                      newPrice,
+                  }: {
+    id: number;
+    imageUrl: string;
+    title: string;
+    oldPrice?: number;
+    newPrice: number;
+}) {
+    return (
+        <div className="w-44 bg-white rounded shadow-sm p-3 hover:shadow-md transition">
+            <img
+                src={imageUrl}
+                alt={title}
+                className="w-full h-32 object-contain mb-2"
+            />
+            <h3 className="text-sm font-medium text-gray-700 truncate">{title}</h3>
+            <div className="mt-1">
+                {oldPrice && (
+                    <p className="text-xs line-through text-gray-400 mb-0.5">
+                        Rs. {oldPrice.toLocaleString()}.00
+                    </p>
+                )}
+                <p className="text-sm text-red-600 font-semibold">
+                    Rs. {newPrice.toLocaleString()}.00
+                </p>
+            </div>
+        </div>
+    );
+}
+
 function FilterContent({
                            selectedCategories,
                            selectedBrands,
@@ -47,7 +82,6 @@ function FilterContent({
     return (
         <div className="p-6 w-full bg-white">
             <h3 className="text-xl font-semibold mb-6">Filter Products</h3>
-
             <div className="mb-8">
                 <button
                     onClick={() => setCategoriesOpen(!categoriesOpen)}
@@ -72,7 +106,6 @@ function FilterContent({
                     </div>
                 )}
             </div>
-
             <div>
                 <button
                     onClick={() => setBrandsOpen(!brandsOpen)}
@@ -101,27 +134,26 @@ function FilterContent({
     );
 }
 
-function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+function Sidebar({
+                     isOpen,
+                     onClose,
+                     selectedCategories,
+                     selectedBrands,
+                     toggleCategory,
+                     toggleBrand,
+                 }: {
+    isOpen: boolean;
+    onClose: () => void;
+    selectedCategories: string[];
+    selectedBrands: string[];
+    toggleCategory: (cat: string) => void;
+    toggleBrand: (brand: string) => void;
+}) {
     const [categoriesOpen, setCategoriesOpen] = useState(true);
     const [brandsOpen, setBrandsOpen] = useState(true);
-    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-    const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-
-    const toggleCategory = (category: string) => {
-        setSelectedCategories((prev) =>
-            prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
-        );
-    };
-
-    const toggleBrand = (brand: string) => {
-        setSelectedBrands((prev) =>
-            prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
-        );
-    };
 
     return (
         <>
-            {/* Desktop Sidebar */}
             <aside className="hidden md:block w-64 border-r border-gray-200 bg-white">
                 <FilterContent
                     selectedCategories={selectedCategories}
@@ -135,7 +167,6 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
                 />
             </aside>
 
-            {/* Mobile Drawer */}
             <Drawer
                 anchor="left"
                 open={isOpen}
@@ -168,7 +199,19 @@ function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) 
     );
 }
 
-function ProductGrid({ id }: { id?: any }) {
+function ProductGrid({
+                         id,
+                         selectedCategories,
+                         selectedBrands,
+                         sortBy,
+                         setSortBy,
+                     }: {
+    id?: any;
+    selectedCategories: string[];
+    selectedBrands: string[];
+    sortBy: string;
+    setSortBy: React.Dispatch<React.SetStateAction<string>>;
+}) {
     const productsPerPage = 7;
     const [products, setProducts] = useState<Product[]>([]);
     const [page, setPage] = useState(1);
@@ -179,10 +222,22 @@ function ProductGrid({ id }: { id?: any }) {
         async function fetchProducts(pageNum: number) {
             setLoading(true);
             try {
-                const res = await fetch(
-                    `https://api.bestbuyelectronics.lk/products/?page=${pageNum}&limit=${productsPerPage}&category=${id}`,
-                    { cache: "no-store" }
-                );
+                const queryParams = new URLSearchParams({
+                    page: pageNum.toString(),
+                    limit: productsPerPage.toString(),
+                    category: id || "",
+                    sort: sortBy,
+                });
+
+                if (selectedCategories.length > 0)
+                    queryParams.append("categoryFilter", selectedCategories.join(","));
+                if (selectedBrands.length > 0)
+                    queryParams.append("brandFilter", selectedBrands.join(","));
+
+                const res = await fetch(`${BE_URL}/products/?${queryParams.toString()}`, {
+                    cache: "no-store",
+                });
+
                 const data = await res.json();
                 const apiProducts = data.results || [];
 
@@ -197,29 +252,19 @@ function ProductGrid({ id }: { id?: any }) {
         }
 
         fetchProducts(page);
-    }, [page, id]);
+    }, [page, id, selectedCategories, selectedBrands, sortBy]);
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
         setPage(value);
     };
 
     return (
-        <div className="flex-1 p-4">
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">TV (ALL)</h2>
-                <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Sort Products By</span>
-                    <select className="bg-white border border-gray-300 rounded px-4 py-2">
-                        <option>New Arrivals</option>
-                        <option>Price: Low to High</option>
-                        <option>Price: High to Low</option>
-                        <option>Discount</option>
-                    </select>
-                </div>
-            </div>
-
+        <div className="flex-1 px-4">
+            <h2 className="text-xl font-semibold mb-4 mt-2 text-gray-800">TV (ALL)</h2>
             {loading ? (
-                <div className="text-center py-20 text-red-600 font-medium">Loading products...</div>
+                <div className="text-center py-20 text-red-600 font-medium">
+                    Loading products...
+                </div>
             ) : (
                 <>
                     <div className="flex flex-wrap gap-4">
@@ -228,16 +273,14 @@ function ProductGrid({ id }: { id?: any }) {
                                 id={product.id}
                                 key={product.id}
                                 imageUrl={`${BE_URL}${product.images?.[0] || ""}`}
-                                imageSrc={categoryOne}
                                 title={product.name}
                                 oldPrice={product.old_price}
                                 newPrice={product.price}
-                                inStock={product.quantity > 0}
                             />
                         ))}
                     </div>
 
-                    <div className="flex justify-center mt-8">
+                    <div className="flex justify-center mt-8 mb-6">
                         <Stack spacing={2}>
                             <Pagination
                                 count={totalPages}
@@ -267,27 +310,69 @@ function ProductGrid({ id }: { id?: any }) {
 
 export default function Page() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+    const [sortBy, setSortBy] = useState("new");
+
     const params = useParams();
     const id = params?.id;
 
+    const toggleCategory = (category: string) => {
+        setSelectedCategories((prev) =>
+            prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
+        );
+    };
+
+    const toggleBrand = (brand: string) => {
+        setSelectedBrands((prev) =>
+            prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
+        );
+    };
+
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
-            <div className="mx-auto mt-6 gap-6 flex flex-1">
-                <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            {/* Removed top bar */}
 
+            {/* Main Content */}
+            <div className="mx-auto mt-4 gap-6 flex flex-1">
+                <Sidebar
+                    isOpen={sidebarOpen}
+                    onClose={() => setSidebarOpen(false)}
+                    selectedCategories={selectedCategories}
+                    selectedBrands={selectedBrands}
+                    toggleCategory={toggleCategory}
+                    toggleBrand={toggleBrand}
+                />
                 <div className="flex-1 flex flex-col">
-                    {/* Mobile button to open filter drawer */}
-                    <div className="md:hidden p-4">
+                    {/* Filter + Sort Row */}
+                    <div className="flex justify-between items-center px-4 mb-2 md:hidden">
                         <button
                             onClick={() => setSidebarOpen(true)}
                             className="flex items-center gap-2 text-purple-700 font-semibold"
                         >
-                            <Menu size={24} />
+                            <Menu size={20} />
                             Filters
                         </button>
+
+                        <select
+                            className="bg-white border border-gray-300 rounded px-4 py-2 text-sm text-gray-700"
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                        >
+                            <option value="new">New Arrivals</option>
+                            <option value="low">Price: Low to High</option>
+                            <option value="high">Price: High to Low</option>
+                            <option value="discount">Discount</option>
+                        </select>
                     </div>
 
-                    <ProductGrid id={id} />
+                    <ProductGrid
+                        id={id}
+                        selectedCategories={selectedCategories}
+                        selectedBrands={selectedBrands}
+                        sortBy={sortBy}
+                        setSortBy={setSortBy}
+                    />
                 </div>
             </div>
         </div>
