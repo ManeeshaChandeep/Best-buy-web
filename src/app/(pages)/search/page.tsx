@@ -40,15 +40,25 @@ const ProductGrid = () => {
     const fetchResults = async (currentPage: number) => {
         try {
             setLoading(true);
+
+            // Block search if query has less than 2 characters
+            if (query.trim() !== "" && query.trim().length < 2) {
+                setResults([]);
+                setTotalPages(1);
+                setLoading(false);
+                return;
+            }
+
             let url = `${BE_URL}/products/?page=${currentPage}&limit=${limit}`;
             if (query.trim() !== "") {
                 url += `&search=${encodeURIComponent(query)}`;
             }
+
             const res = await fetch(url);
             const data = await res.json();
 
             setResults(data.results || []);
-            setTotalPages(Math.ceil(data.count / limit)); // Ensure count is returned from API
+            setTotalPages(Math.ceil(data.count / limit));
         } catch (err) {
             console.error("Error fetching search results:", err);
         } finally {
@@ -74,7 +84,9 @@ const ProductGrid = () => {
                 Results for: <span className="text-red-600">{query}</span>
             </h1>
 
-            {loading ? (
+            {query.trim() !== "" && query.trim().length < 2 ? (
+                <p className="text-yellow-600">Please enter at least 2 characters to search.</p>
+            ) : loading ? (
                 <p>Loading...</p>
             ) : results.length === 0 ? (
                 <p className="text-gray-500">No products found.</p>
@@ -95,7 +107,6 @@ const ProductGrid = () => {
                         ))}
                     </div>
 
-                    {/* Pagination with red styling and numbers only */}
                     <div className="flex justify-center mt-8">
                         <Stack spacing={2}>
                             <Pagination
