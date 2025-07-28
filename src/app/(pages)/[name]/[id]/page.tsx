@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { ChevronDown, ChevronUp, Menu, X } from "lucide-react";
 import Stack from "@mui/material/Stack";
 import Pagination from "@mui/material/Pagination";
+import Drawer from "@mui/material/Drawer";
 
 import categoryOne from "../../../../../public/images/tv.png";
 import ItemCard from "@/components/ItemCard";
@@ -15,22 +16,11 @@ interface Product {
     id: number;
     name: string;
     sku: string;
-    model_number?: string;
     price: number;
     old_price?: number;
     quantity: number;
-    warranty?: number;
-    delivery_available: boolean;
     category: string;
-    subcategory?: string;
-    image_url?: string;
-    description?: string;
     images?: string[];
-}
-
-interface SidebarProps {
-    isOpen: boolean;
-    onClose: () => void;
 }
 
 const categories = [
@@ -44,7 +34,74 @@ const categories = [
 
 const brands = ["LG", "Toshiba", "Haier", "JVC", "Abans"];
 
-function Sidebar({ isOpen, onClose }: SidebarProps) {
+function FilterContent({
+                           selectedCategories,
+                           selectedBrands,
+                           toggleCategory,
+                           toggleBrand,
+                           categoriesOpen,
+                           setCategoriesOpen,
+                           brandsOpen,
+                           setBrandsOpen,
+                       }: any) {
+    return (
+        <div className="p-6 w-full bg-white">
+            <h3 className="text-xl font-semibold mb-6">Filter Products</h3>
+
+            <div className="mb-8">
+                <button
+                    onClick={() => setCategoriesOpen(!categoriesOpen)}
+                    className="flex justify-between w-full font-semibold text-gray-800 mb-3"
+                >
+                    <span>Categories</span>
+                    {categoriesOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
+                {categoriesOpen && (
+                    <div className="flex flex-col space-y-2">
+                        {categories.map((cat) => (
+                            <label key={cat} className="inline-flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    className="mr-3 w-4 h-4 text-red-500 accent-red-500"
+                                    checked={selectedCategories.includes(cat)}
+                                    onChange={() => toggleCategory(cat)}
+                                />
+                                {cat}
+                            </label>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <div>
+                <button
+                    onClick={() => setBrandsOpen(!brandsOpen)}
+                    className="flex justify-between w-full font-semibold text-gray-800 mb-3"
+                >
+                    <span>Brands</span>
+                    {brandsOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
+                {brandsOpen && (
+                    <div className="flex flex-col space-y-2">
+                        {brands.map((brand) => (
+                            <label key={brand} className="inline-flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    className="mr-3 w-4 h-4 text-red-500 accent-red-500"
+                                    checked={selectedBrands.includes(brand)}
+                                    onChange={() => toggleBrand(brand)}
+                                />
+                                {brand}
+                            </label>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const [categoriesOpen, setCategoriesOpen] = useState(true);
     const [brandsOpen, setBrandsOpen] = useState(true);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -52,9 +109,7 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     const toggleCategory = (category: string) => {
         setSelectedCategories((prev) =>
-            prev.includes(category)
-                ? prev.filter((c) => c !== category)
-                : [...prev, category]
+            prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
         );
     };
 
@@ -66,88 +121,49 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     return (
         <>
-            <div
-                onClick={onClose}
-                className={`fixed inset-0 bg-black bg-opacity-40 z-20 transition-opacity duration-300 ${
-                    isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-                } md:hidden`}
-            />
+            {/* Desktop Sidebar */}
+            <aside className="hidden md:block w-64 border-r border-gray-200 bg-white">
+                <FilterContent
+                    selectedCategories={selectedCategories}
+                    selectedBrands={selectedBrands}
+                    toggleCategory={toggleCategory}
+                    toggleBrand={toggleBrand}
+                    categoriesOpen={categoriesOpen}
+                    setCategoriesOpen={setCategoriesOpen}
+                    brandsOpen={brandsOpen}
+                    setBrandsOpen={setBrandsOpen}
+                />
+            </aside>
 
-            <aside
-                className={`fixed top-0 left-0 bottom-0 w-72 bg-white border-r border-gray-200 p-6 z-20 transform transition-transform duration-300 ${
-                    isOpen ? "translate-x-0" : "-translate-x-full"
-                } md:translate-x-0 md:static md:w-64 flex flex-col`}
+            {/* Mobile Drawer */}
+            <Drawer
+                anchor="left"
+                open={isOpen}
+                onClose={onClose}
+                sx={{
+                    display: { xs: "block", md: "none" },
+                    "& .MuiDrawer-paper": {
+                        width: "80%",
+                        maxWidth: 320,
+                    },
+                }}
             >
-                <div className="flex justify-end mb-4 md:hidden">
-                    <button
-                        onClick={onClose}
-                        className="p-2 rounded hover:bg-gray-100 focus:outline-none"
-                        aria-label="Close sidebar"
-                    >
+                <div className="flex justify-end p-4 border-b">
+                    <button onClick={onClose}>
                         <X size={24} />
                     </button>
                 </div>
-
-                <h3 className="text-xl font-semibold mb-6">Filter Products</h3>
-
-                <div className="flex-grow overflow-y-auto">
-                    <section className="mb-8">
-                        <button
-                            onClick={() => setCategoriesOpen(!categoriesOpen)}
-                            className="flex items-center justify-between w-full font-semibold text-gray-800 mb-3"
-                        >
-                            <span>Categories</span>
-                            {categoriesOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                        </button>
-                        {categoriesOpen && (
-                            <div className="flex flex-col space-y-2">
-                                {categories.map((cat) => (
-                                    <label
-                                        key={cat}
-                                        className="inline-flex items-center cursor-pointer text-gray-700 hover:text-red-500"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            className="mr-3 w-4 h-4 text-red-500 accent-red-500"
-                                            checked={selectedCategories.includes(cat)}
-                                            onChange={() => toggleCategory(cat)}
-                                        />
-                                        {cat}
-                                    </label>
-                                ))}
-                            </div>
-                        )}
-                    </section>
-
-                    <section>
-                        <button
-                            onClick={() => setBrandsOpen(!brandsOpen)}
-                            className="flex items-center justify-between w-full font-semibold text-gray-800 mb-3"
-                        >
-                            <span>Brands</span>
-                            {brandsOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                        </button>
-                        {brandsOpen && (
-                            <div className="flex flex-col space-y-2">
-                                {brands.map((brand) => (
-                                    <label
-                                        key={brand}
-                                        className="inline-flex items-center cursor-pointer text-gray-700 hover:text-red-500"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            className="mr-3 w-4 h-4 text-red-500 accent-red-500"
-                                            checked={selectedBrands.includes(brand)}
-                                            onChange={() => toggleBrand(brand)}
-                                        />
-                                        {brand}
-                                    </label>
-                                ))}
-                            </div>
-                        )}
-                    </section>
-                </div>
-            </aside>
+                <FilterContent
+                    selectedCategories={selectedCategories}
+                    selectedBrands={selectedBrands}
+                    toggleCategory={toggleCategory}
+                    toggleBrand={toggleBrand}
+                    categoriesOpen={categoriesOpen}
+                    setCategoriesOpen={setCategoriesOpen}
+                    brandsOpen={brandsOpen}
+                    setBrandsOpen={setBrandsOpen}
+                />
+            </Drawer>
         </>
     );
 }
@@ -171,8 +187,6 @@ function ProductGrid({ id }: { id?: any }) {
                 const apiProducts = data.results || [];
 
                 setProducts(apiProducts);
-
-                // Calculate total pages based on total count
                 if (data.count) {
                     setTotalPages(Math.ceil(data.count / productsPerPage));
                 }
@@ -195,25 +209,17 @@ function ProductGrid({ id }: { id?: any }) {
                 <h2 className="text-2xl font-bold text-gray-800">TV (ALL)</h2>
                 <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">Sort Products By</span>
-                    <div className="relative">
-                        <select className="appearance-none bg-white border border-gray-300 rounded px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                            <option>New Arrivals</option>
-                            <option>Price: Low to High</option>
-                            <option>Price: High to Low</option>
-                            <option>Discount</option>
-                        </select>
-                        <ChevronDown
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
-                            size={16}
-                        />
-                    </div>
+                    <select className="bg-white border border-gray-300 rounded px-4 py-2">
+                        <option>New Arrivals</option>
+                        <option>Price: Low to High</option>
+                        <option>Price: High to Low</option>
+                        <option>Discount</option>
+                    </select>
                 </div>
             </div>
 
             {loading ? (
-                <div className="text-center py-20 text-red-600 font-medium">
-                    Loading products...
-                </div>
+                <div className="text-center py-20 text-red-600 font-medium">Loading products...</div>
             ) : (
                 <>
                     <div className="flex flex-wrap gap-4">
@@ -270,6 +276,7 @@ export default function Page() {
                 <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
                 <div className="flex-1 flex flex-col">
+                    {/* Mobile button to open filter drawer */}
                     <div className="md:hidden p-4">
                         <button
                             onClick={() => setSidebarOpen(true)}
