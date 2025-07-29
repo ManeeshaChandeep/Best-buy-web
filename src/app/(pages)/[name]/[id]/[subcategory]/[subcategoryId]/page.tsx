@@ -1,33 +1,23 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams } from 'next/navigation';
+import { useParams } from "next/navigation";
 import { ChevronDown, ChevronUp, Menu, X } from "lucide-react";
-import categoryOne from "../../../../../../../public/images/tv.png";
-import ItemCard from "@/components/ItemCard";
-const BE_URL = "https://api.bestbuyelectronics.lk";
+import Drawer from "@mui/material/Drawer";
+import Stack from "@mui/material/Stack";
+import Pagination from "@mui/material/Pagination";
 
+const BE_URL = "https://api.bestbuyelectronics.lk";
 
 interface Product {
     id: number;
     name: string;
     sku: string;
-    model_number?: string;
     price: number;
     old_price?: number;
     quantity: number;
-    warranty?: number;
-    delivery_available: boolean;
     category: string;
-    subcategory?: string;
-    image_url?: string;
-    description?: string;
     images?: string[];
-}
-
-interface SidebarProps {
-    isOpen: boolean;
-    onClose: () => void;
 }
 
 const categories = [
@@ -41,11 +31,270 @@ const categories = [
 
 const brands = ["LG", "Toshiba", "Haier", "JVC", "Abans"];
 
-function Sidebar({ isOpen, onClose }: SidebarProps) {
+// ------------------ ItemCard ------------------
+
+function ItemCard({
+                      id,
+                      imageUrl,
+                      title,
+                      oldPrice,
+                      newPrice,
+                  }: {
+    id: number;
+    imageUrl: string;
+    title: string;
+    oldPrice?: number;
+    newPrice: number;
+}) {
+    return (
+        <div className="bg-white rounded shadow-sm p-3 hover:shadow-md transition w-full sm:w-auto">
+            <img
+                src={imageUrl}
+                alt={title}
+                className="w-full h-32 object-contain mb-2"
+            />
+            <h3 className="text-sm font-medium text-gray-700 truncate">{title}</h3>
+            <div className="mt-1">
+                {oldPrice && (
+                    <p className="text-xs line-through text-gray-400 mb-0.5">
+                        Rs. {oldPrice.toLocaleString()}.00
+                    </p>
+                )}
+                <p className="text-sm text-red-600 font-semibold">
+                    Rs. {newPrice.toLocaleString()}.00
+                </p>
+            </div>
+        </div>
+    );
+}
+
+// ------------------ Sidebar ------------------
+
+function Sidebar({
+                     isOpen,
+                     onClose,
+                     selectedCategories,
+                     selectedBrands,
+                     toggleCategory,
+                     toggleBrand,
+                 }: {
+    isOpen: boolean;
+    onClose: () => void;
+    selectedCategories: string[];
+    selectedBrands: string[];
+    toggleCategory: (cat: string) => void;
+    toggleBrand: (brand: string) => void;
+}) {
     const [categoriesOpen, setCategoriesOpen] = useState(true);
     const [brandsOpen, setBrandsOpen] = useState(true);
+
+    const FilterContent = () => (
+        <div className="p-6 w-full bg-white">
+            <h3 className="text-xl font-semibold mb-6">Filter Products</h3>
+            <div className="mb-8">
+                <button
+                    onClick={() => setCategoriesOpen(!categoriesOpen)}
+                    className="flex justify-between w-full font-semibold text-gray-800 mb-3"
+                    aria-expanded={categoriesOpen}
+                    aria-controls="categories-list"
+                >
+                    <span>Categories</span>
+                    {categoriesOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
+                {categoriesOpen && (
+                    <div id="categories-list" className="flex flex-col space-y-2">
+                        {categories.map((cat) => (
+                            <label key={cat} className="inline-flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    className="mr-3 w-4 h-4 text-red-500 accent-red-500"
+                                    checked={selectedCategories.includes(cat)}
+                                    onChange={() => toggleCategory(cat)}
+                                />
+                                {cat}
+                            </label>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <div>
+                <button
+                    onClick={() => setBrandsOpen(!brandsOpen)}
+                    className="flex justify-between w-full font-semibold text-gray-800 mb-3"
+                    aria-expanded={brandsOpen}
+                    aria-controls="brands-list"
+                >
+                    <span>Brands</span>
+                    {brandsOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
+                {brandsOpen && (
+                    <div id="brands-list" className="flex flex-col space-y-2">
+                        {brands.map((brand) => (
+                            <label key={brand} className="inline-flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    className="mr-3 w-4 h-4 text-red-500 accent-red-500"
+                                    checked={selectedBrands.includes(brand)}
+                                    onChange={() => toggleBrand(brand)}
+                                />
+                                {brand}
+                            </label>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+
+    return (
+        <>
+            {/* Desktop sidebar: visible only at lg and above */}
+            <aside className="hidden lg:block w-64 border-r border-gray-200 bg-white sticky top-0 h-screen overflow-auto">
+                <FilterContent />
+            </aside>
+
+            {/* Mobile + Tablet Drawer: visible below lg */}
+            <Drawer
+                anchor="left"
+                open={isOpen}
+                onClose={onClose}
+                sx={{
+                    display: { xs: "block", md: "block", lg: "none" }, // xs + sm + md (mobile+tablet)
+                    "& .MuiDrawer-paper": {
+                        width: "80%",
+                        maxWidth: 320,
+                    },
+                }}
+            >
+                <div className="flex justify-end p-4 border-b">
+                    <button onClick={onClose} aria-label="Close filters">
+                        <X size={24} />
+                    </button>
+                </div>
+                <FilterContent />
+            </Drawer>
+        </>
+    );
+}
+
+// ------------------ ProductGrid ------------------
+
+function ProductGrid({
+                         id,
+                         selectedCategories,
+                         selectedBrands,
+                         sortBy,
+                     }: {
+    id?: any;
+    selectedCategories: string[];
+    selectedBrands: string[];
+    sortBy: string;
+}) {
+    const productsPerPage = 8;
+    const [products, setProducts] = useState<Product[]>([]);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        async function fetchProducts(pageNum: number) {
+            setLoading(true);
+            try {
+                const queryParams = new URLSearchParams({
+                    page: pageNum.toString(),
+                    limit: productsPerPage.toString(),
+                    category: id || "",
+                    sort: sortBy,
+                });
+
+                if (selectedCategories.length > 0)
+                    queryParams.append("categoryFilter", selectedCategories.join(","));
+                if (selectedBrands.length > 0)
+                    queryParams.append("brandFilter", selectedBrands.join(","));
+
+                const res = await fetch(`${BE_URL}/products/?${queryParams.toString()}`, {
+                    cache: "no-store",
+                });
+                const data = await res.json();
+                const apiProducts = data.results || [];
+
+                setProducts(apiProducts);
+                if (data.count) {
+                    setTotalPages(Math.ceil(data.count / productsPerPage));
+                }
+            } catch (error) {
+                console.error("Failed to fetch products", error);
+            }
+            setLoading(false);
+        }
+
+        fetchProducts(page);
+    }, [page, id, selectedCategories, selectedBrands, sortBy]);
+
+    const handlePageChange = (_: any, value: number) => {
+        setPage(value);
+    };
+
+    return (
+        <div className="flex-1 px-0 sm:px-4 max-w-screen-xl mx-auto">
+            <h2 className="text-xl font-semibold mb-4 mt-2 text-gray-800">TV (ALL)</h2>
+            {loading ? (
+                <div className="text-center py-20 text-red-600 font-medium">
+                    Loading products...
+                </div>
+            ) : (
+                <>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        {products.map((product) => (
+                            <ItemCard
+                                key={product.id}
+                                id={product.id}
+                                imageUrl={`${BE_URL}${product.images?.[0] || ""}`}
+                                title={product.name}
+                                oldPrice={product.old_price}
+                                newPrice={product.price}
+                            />
+                        ))}
+                    </div>
+
+                    <div className="flex justify-center mt-8 mb-6">
+                        <Stack spacing={2}>
+                            <Pagination
+                                count={totalPages}
+                                page={page}
+                                onChange={handlePageChange}
+                                variant="outlined"
+                                shape="rounded"
+                                sx={{
+                                    "& .MuiPaginationItem-root": {
+                                        borderColor: "red",
+                                        color: "red",
+                                    },
+                                    "& .Mui-selected": {
+                                        backgroundColor: "red !important",
+                                        color: "white !important",
+                                        borderColor: "red !important",
+                                    },
+                                }}
+                            />
+                        </Stack>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
+// ------------------ Main Page ------------------
+
+export default function Page() {
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+    const [sortBy, setSortBy] = useState("new");
+    const params = useParams();
+    const id = params?.subcategoryId;
 
     const toggleCategory = (category: string) => {
         setSelectedCategories((prev) =>
@@ -60,217 +309,20 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
     };
 
     return (
-        <>
-            <div
-                onClick={onClose}
-                className={`fixed inset-0 bg-black bg-opacity-40 z-20 transition-opacity duration-300 ${
-                    isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-                } md:hidden`}
-            />
-
-            <aside
-                className={`fixed top-0 left-0 bottom-0 w-72 bg-white border-r border-gray-200 p-6 z-20 transform transition-transform duration-300 ${
-                    isOpen ? "translate-x-0" : "-translate-x-full"
-                } md:translate-x-0 md:static md:w-64 flex flex-col`}
-            >
-                <div className="flex justify-end mb-4 md:hidden">
-                    <button
-                        onClick={onClose}
-                        className="p-2 rounded hover:bg-gray-100 focus:outline-none"
-                        aria-label="Close sidebar"
-                    >
-                        <X size={24} />
-                    </button>
-                </div>
-
-                <h3 className="text-xl font-semibold mb-6">Filter Products</h3>
-
-                <div className="flex-grow overflow-y-auto">
-                    <section className="mb-8">
-                        <button
-                            onClick={() => setCategoriesOpen(!categoriesOpen)}
-                            className="flex items-center justify-between w-full font-semibold text-gray-800 mb-3"
-                        >
-                            <span>Categories</span>
-                            {categoriesOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                        </button>
-                        {categoriesOpen && (
-                            <div className="flex flex-col space-y-2">
-                                {categories.map((cat) => (
-                                    <label key={cat} className="inline-flex items-center cursor-pointer text-gray-700 hover:text-red-500">
-                                        <input
-                                            type="checkbox"
-                                            className="mr-3 w-4 h-4 text-red-500 accent-red-500"
-                                            checked={selectedCategories.includes(cat)}
-                                            onChange={() => toggleCategory(cat)}
-                                        />
-                                        {cat}
-                                    </label>
-                                ))}
-                            </div>
-                        )}
-                    </section>
-
-                    <section>
-                        <button
-                            onClick={() => setBrandsOpen(!brandsOpen)}
-                            className="flex items-center justify-between w-full font-semibold text-gray-800 mb-3"
-                        >
-                            <span>Brands</span>
-                            {brandsOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                        </button>
-                        {brandsOpen && (
-                            <div className="flex flex-col space-y-2">
-                                {brands.map((brand) => (
-                                    <label key={brand} className="inline-flex items-center cursor-pointer text-gray-700 hover:text-red-500">
-                                        <input
-                                            type="checkbox"
-                                            className="mr-3 w-4 h-4 text-red-500 accent-red-500"
-                                            checked={selectedBrands.includes(brand)}
-                                            onChange={() => toggleBrand(brand)}
-                                        />
-                                        {brand}
-                                    </label>
-                                ))}
-                            </div>
-                        )}
-                    </section>
-                </div>
-            </aside>
-        </>
-    );
-}
-
-function ProductGrid({id}:{id?:any}) {
-    const productsPerPage = 7;
-    const [products, setProducts] = useState<Product[]>([]);
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        async function fetchProducts(pageNum: number) {
-            setLoading(true);
-            try {
-                const res = await fetch(
-                    `https://api.bestbuyelectronics.lk/products/?page=${pageNum}&limit=30&category=${id}`,
-                    { cache: "no-store" }
-                );
-                const data = await res.json();
-                const apiProducts = data.results || [];
-
-                setProducts(apiProducts);
-            } catch (error) {
-                console.error("Failed to fetch products", error);
-            }
-            setLoading(false);
-        }
-
-        fetchProducts(page);
-    }, [page]);
-
-
-
-    return (
-        <div className="flex-1 p-4">
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">TV (ALL)</h2>
-                <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Sort Products By</span>
-                    <div className="relative">
-                        <select className="appearance-none bg-white border border-gray-300 rounded px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                            <option>New Arrivals</option>
-                            <option>Price: Low to High</option>
-                            <option>Price: High to Low</option>
-                            <option>Discount</option>
-                        </select>
-                        <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                    </div>
-                </div>
-            </div>
-
-            {loading ? (
-                <div className="text-center py-20 text-purple-600 font-medium">
-                    Loading products...
-                </div>
-            ) : (
-                <>
-                    <div className="flex flex-wrap gap-2">
-                        {products.map((product) => (
-                            <ItemCard
-                                id={product.id}
-                                key={product.id}
-                                imageUrl={`${BE_URL}${product.images?.[0] || ''}`}
-                                imageSrc={categoryOne}
-                                title={product.name}
-                                oldPrice={product.old_price}
-                                newPrice={product.price}
-                                inStock={product.quantity > 0}
-                            />
-                        ))}
-                    </div>
-
-                    <div className="flex justify-center gap-4 mt-8">
-                        <button
-                            onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                            disabled={page === 1}
-                            className={`px-4 py-2 rounded-lg ${
-                                page === 1
-                                    ? "bg-gray-300 cursor-not-allowed"
-                                    : "bg-red-500 text-white hover:bg-red-600"
-                            }`}
-                        >
-                            Prev
-                        </button>
-
-                        {Array.from({ length: totalPages }).map((_, idx) => {
-                            const pageNum = idx + 1;
-                            return (
-                                <button
-                                    key={pageNum}
-                                    onClick={() => setPage(pageNum)}
-                                    className={`px-4 py-2 rounded-lg ${
-                                        page === pageNum
-                                            ? "bg-red-600 text-white"
-                                            : "bg-red-200 text-red-700 hover:bg-red-300"
-                                    }`}
-                                >
-                                    {pageNum}
-                                </button>
-                            );
-                        })}
-
-                        <button
-                            onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                            disabled={page === totalPages}
-                            className={`px-4 py-2 rounded-lg ${
-                                page === totalPages
-                                    ? "bg-gray-300 cursor-not-allowed"
-                                    : "bg-red-500 text-white hover:bg-red-600"
-                            }`}
-                        >
-                            Next
-                        </button>
-                    </div>
-                </>
-            )}
-        </div>
-    );
-}
-
-export default function Page() {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const params = useParams();
-    const id = params?.subcategoryId;
-
-
-    return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
-            <div className="mx-auto mt-6 gap-6 flex flex-1">
-                <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            <div className="mx-auto mt-6 gap-6 flex flex-1 max-w-screen-xl px-4">
+                <Sidebar
+                    isOpen={sidebarOpen}
+                    onClose={() => setSidebarOpen(false)}
+                    selectedCategories={selectedCategories}
+                    selectedBrands={selectedBrands}
+                    toggleCategory={toggleCategory}
+                    toggleBrand={toggleBrand}
+                />
 
                 <div className="flex-1 flex flex-col">
-                    <div className="md:hidden p-4">
+                    {/* Filter toggle button: visible only below lg */}
+                    <div className="lg:hidden flex justify-between items-center mb-4">
                         <button
                             onClick={() => setSidebarOpen(true)}
                             className="flex items-center gap-2 text-purple-700 font-semibold"
@@ -278,9 +330,26 @@ export default function Page() {
                             <Menu size={24} />
                             Filters
                         </button>
+
+                        <select
+                            className="bg-white border border-gray-300 rounded px-4 py-2 text-sm text-gray-700"
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            aria-label="Sort products"
+                        >
+                            <option value="new">New Arrivals</option>
+                            <option value="low">Price: Low to High</option>
+                            <option value="high">Price: High to Low</option>
+                            <option value="discount">Discount</option>
+                        </select>
                     </div>
 
-                    <ProductGrid id={id} />
+                    <ProductGrid
+                        id={id}
+                        selectedCategories={selectedCategories}
+                        selectedBrands={selectedBrands}
+                        sortBy={sortBy}
+                    />
                 </div>
             </div>
         </div>
