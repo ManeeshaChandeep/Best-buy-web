@@ -92,7 +92,8 @@ const ProductGrid = () => {
                 <p className="text-gray-500">No products found.</p>
             ) : (
                 <>
-                    <div className="flex flex-wrap gap-4">
+                    {/* Responsive grid: 2 cards per row on mobile */}
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {results.map((product) => (
                             <ItemCard
                                 id={product.id}
