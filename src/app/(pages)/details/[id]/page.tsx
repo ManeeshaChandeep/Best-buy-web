@@ -153,7 +153,7 @@ const ItemView: React.FC = () => {
                             <div className="space-y-4 text-left">
                                 {/* Model Number */}
                                 <div className="flex items-center space-x-3 mb-5">
-                                    <FaBarcode className="text-gray-600" size={20} />
+                                    <FaBarcode className="text-gray-200" size={20} />
                                     <div>
                                         <p className="text-xs text-gray-500 uppercase tracking-wide">Model Number</p>
                                         <p className="text-sm font-medium text-gray-800">{details.model_number || 'N/A'}</p>
@@ -162,7 +162,7 @@ const ItemView: React.FC = () => {
 
                                 {/* SKU */}
                                 <div className="flex items-center space-x-3 mb-5">
-                                    <FaHashtag className="text-gray-600" size={20} />
+                                    <FaHashtag className="text-gray-200" size={20} />
                                     <div>
                                         <p className="text-xs text-gray-500 uppercase tracking-wide">SKU</p>
                                         <p className="text-sm font-medium text-gray-800">{details.sku || 'N/A'}</p>
@@ -171,7 +171,7 @@ const ItemView: React.FC = () => {
 
                                 {/* Warranty */}
                                 <div className="flex items-center space-x-3 mb-5">
-                                    <FaShieldAlt className="text-gray-600" size={20} />
+                                    <FaShieldAlt className="text-gray-200" size={20} />
                                     <div>
                                         <p className="text-xs text-gray-500 uppercase tracking-wide">Warranty</p>
                                         <p className="text-sm font-medium text-gray-800">{details.warranty ? `${details.warranty} Month(s)` : 'N/A'}</p>
@@ -180,7 +180,7 @@ const ItemView: React.FC = () => {
 
                                 {/* Delivery Info */}
                                 <div className="flex items-center space-x-3 pt-2 border-t border-gray-200 mb-5">
-                                    <FaShippingFast className="text-gray-600" size={20} />
+                                    <FaShippingFast className="text-gray-200" size={20} />
                                     <div>
                                         <p className="text-xs text-gray-500 uppercase tracking-wide">Standard Delivery</p>
                                         <p className="text-sm text-gray-700">3 - 5 Working Days Available</p>
@@ -189,7 +189,7 @@ const ItemView: React.FC = () => {
 
                                 {/* Pickup In-Store */}
                                 <div className="flex items-center space-x-3 mb-5">
-                                    <FaStore className="text-gray-600" size={20} />
+                                    <FaStore className="text-gray-200" size={20} />
                                     <div>
                                         <p className="text-xs text-gray-500 uppercase tracking-wide">Pickup In-Store</p>
                                         <p className="text-sm text-gray-700">Today Available</p>
@@ -198,22 +198,22 @@ const ItemView: React.FC = () => {
 
                                 {/* Wishlist Button */}
                                 <button className="w-full flex items-center justify-center gap-2 py-2 rounded-md border border-gray-300 text-gray-700 text-sm hover:bg-gray-100 transition">
-                                    <FaHeart className="text-gray-600" size={18} />
+                                    <FaHeart className="text-gray-400" size={18} />
                                     Add to Wishlist
                                 </button>
 
                                 {/* Social Links */}
                                 <div className="flex justify-center space-x-6 pt-3 border-t border-gray-200">
-                                    <a href="#" aria-label="Facebook" className="text-gray-600 hover:text-blue-600 transition">
+                                    <a href="#" aria-label="Facebook" className="text-gray-400 hover:text-blue-600 transition">
                                         <FaFacebookF size={18} />
                                     </a>
-                                    <a href="#" aria-label="Instagram" className="text-gray-600 hover:text-pink-600 transition">
+                                    <a href="#" aria-label="Instagram" className="text-gray-400 hover:text-pink-600 transition">
                                         <FaInstagram size={18} />
                                     </a>
-                                    <a href="#" aria-label="Twitter" className="text-gray-600 hover:text-blue-400 transition">
+                                    <a href="#" aria-label="Twitter" className="text-gray-400 hover:text-blue-400 transition">
                                         <FaTwitter size={18} />
                                     </a>
-                                    <a href="#" aria-label="WhatsApp" className="text-gray-600 hover:text-green-600 transition">
+                                    <a href="#" aria-label="WhatsApp" className="text-gray-400 hover:text-green-600 transition">
                                         <FaWhatsapp size={18} />
                                     </a>
                                 </div>
@@ -224,106 +224,91 @@ const ItemView: React.FC = () => {
                 </div>
 
                 {/* Mobile Only - Additional Info */}
-                <div className="flex md:hidden flex-col space-y-6 mt-8">
-                    <div className="space-y-4">
-                        <div className="flex md:hidden flex-col space-y-6 mt-8">
-                            <div className="space-y-4">
-                                {/* Model Number */}
-                                <div className="flex items-center space-x-3 mb-5">
-                                    <FaBarcode className="text-gray-600" size={20} />
-                                    <div>
-                                        <p className="text-xs text-gray-500 uppercase tracking-wide">Model Number</p>
-                                        <p className="text-sm font-medium text-gray-800">{details.model_number || 'N/A'}</p>
-                                    </div>
-                                </div>
+                <div className="flex md:hidden flex-col space-y-4 mt-6 text-[13px] text-gray-800">
 
-                                {/* SKU */}
-                                <div className="flex items-center space-x-3 mb-5">
-                                    <FaHashtag className="text-gray-600" size={20} />
-                                    <div>
-                                        <p className="text-xs text-gray-500 uppercase tracking-wide">SKU</p>
-                                        <p className="text-sm font-medium text-gray-800">{details.sku || 'N/A'}</p>
-                                    </div>
-                                </div>
-
-                                {/* Warranty */}
-                                <div className="flex items-center space-x-3 mb-5">
-                                    <FaShieldAlt className="text-gray-600" size={20} />
-                                    <div>
-                                        <p className="text-xs text-gray-500 uppercase tracking-wide">Warranty</p>
-                                        <p className="text-sm font-medium text-gray-800">
-                                            {details.warranty ? `${details.warranty} Month(s)` : 'N/A'}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Delivery Info */}
-                                <div className="flex items-center space-x-3 pt-2 border-t border-gray-200 mb-5">
-                                    <FaShippingFast className="text-gray-600" size={20} />
-                                    <div>
-                                        <p className="text-xs text-gray-500 uppercase tracking-wide">Standard Delivery</p>
-                                        <p className="text-sm text-gray-700">3 - 5 Working Days Available</p>
-                                    </div>
-                                </div>
-
-                                {/* Pickup In-Store */}
-                                <div className="flex items-center space-x-3 mb-5">
-                                    <FaStore className="text-gray-600" size={20} />
-                                    <div>
-                                        <p className="text-xs text-gray-500 uppercase tracking-wide">Pickup In-Store</p>
-                                        <p className="text-sm text-gray-700">Today Available</p>
-                                    </div>
-                                </div>
-
-                                {/* Wishlist Button */}
-                                <button className="w-full flex items-center justify-center gap-2 py-2 rounded-md border border-gray-300 text-gray-700 text-sm hover:bg-gray-100 transition">
-                                    <FaHeart className="text-gray-600" size={18} />
-                                    Add to Wishlist
-                                </button>
-
-                                {/* Social Links */}
-                                <div className="flex justify-center space-x-6 pt-3 border-t border-gray-200">
-                                    <a href="#" aria-label="Facebook" className="text-gray-600 hover:text-blue-600 transition">
-                                        <FaFacebookF size={18} />
-                                    </a>
-                                    <a href="#" aria-label="Instagram" className="text-gray-600 hover:text-pink-600 transition">
-                                        <FaInstagram size={18} />
-                                    </a>
-                                    <a href="#" aria-label="Twitter" className="text-gray-600 hover:text-blue-400 transition">
-                                        <FaTwitter size={18} />
-                                    </a>
-                                    <a href="#" aria-label="WhatsApp" className="text-gray-600 hover:text-green-600 transition">
-                                        <FaWhatsapp size={18} />
-                                    </a>
-                                </div>
+                    {/* Model Number & SKU */}
+                    <div className="flex justify-between gap-3">
+                        {/* Model Number */}
+                        <div className="flex items-start gap-2 w-1/2">
+                            <FaBarcode className="text-gray-200" size={18} />
+                            <div>
+                                <p className="text-xs text-gray-500 uppercase">Model Number</p>
+                                <p className="text-sm font-medium text-gray-800">{details.model_number || 'N/A'}</p>
                             </div>
                         </div>
 
+                        {/* SKU */}
+                        <div className="flex items-start gap-2 w-1/2">
+                            <FaHashtag className="text-gray-200" size={18} />
+                            <div>
+                                <p className="text-xs text-gray-500 uppercase">SKU</p>
+                                <p className="text-sm font-medium text-gray-800 break-words">{details.sku || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
 
-                        {/* Wishlist Button */}
-                        <button className="w-full flex items-center justify-center gap-2 py-2 rounded-md border border-gray-300 text-gray-700 text-sm hover:bg-gray-100 transition">
-                            <FaHeart className="text-gray-600" size={18} />
-                            Add to Wishlist
-                        </button>
+                    {/* Warranty */}
+                    <div className="flex items-start gap-2">
+                        <FaShieldAlt className="text-gray-200" size={18} />
+                        <div>
+                            <p className="text-xs text-gray-500 uppercase">Warranty</p>
+                            <p className="text-sm font-medium text-gray-800">
+                                {details.warranty ? `${details.warranty} Month(s)` : 'No warranty'}
+                            </p>
+                        </div>
+                    </div>
 
-                        {/* Social Links */}
-                        <div className="flex justify-center space-x-6 pt-3 border-t border-gray-200">
-                            <a href="#" aria-label="Facebook" className="text-gray-600 hover:text-blue-600 transition">
-                                <FaFacebookF size={18} />
+                    <hr className="border-gray-300" />
+
+                    {/* Delivery Info */}
+                    <div className="flex justify-between gap-3">
+                        {/* Standard Delivery */}
+                        <div className="flex items-start gap-2 w-1/2">
+                            <FaShippingFast className="text-gray-200" size={18} />
+                            <div>
+                                <p className="text-xs text-gray-500 uppercase">Standard Delivery</p>
+                                <p className="text-sm font-medium text-gray-800 leading-tight">3 - 5 Working Days<br />Available</p>
+                            </div>
+                        </div>
+
+                        {/* Pickup In-Store */}
+                        <div className="flex items-start gap-2 w-1/2">
+                            <FaStore className="text-gray-200" size={18} />
+                            <div>
+                                <p className="text-xs text-gray-500 uppercase">Pickup In-Store</p>
+                                <p className="text-sm font-medium text-gray-800 leading-tight">Today<br />Available</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Wishlist Button */}
+                    <button className="w-full flex items-center justify-center gap-2 py-2 mt-2 rounded border border-gray-300 text-sm text-gray-800 hover:bg-gray-100 transition">
+                        <FaHeart className="text-gray-400" size={16} />
+                        Add to Wishlist
+                    </button>
+
+                    {/* Share Product */}
+                    <div className="flex flex-col items-center space-y-1 mt-2">
+                        <div className="flex space-x-5">
+                            <a href="#" aria-label="Facebook" className="text-gray-800 hover:opacity-70 transition">
+                                <FaFacebookF size={16} />
                             </a>
-                            <a href="#" aria-label="Instagram" className="text-gray-600 hover:text-pink-600 transition">
-                                <FaInstagram size={18} />
+                            <a href="#" aria-label="Instagram" className="text-gray-800 hover:opacity-70 transition">
+                                <FaInstagram size={16} />
                             </a>
-                            <a href="#" aria-label="Twitter" className="text-gray-600 hover:text-blue-400 transition">
-                                <FaTwitter size={18} />
+                            <a href="#" aria-label="Twitter" className="text-gray-800 hover:opacity-70 transition">
+                                <FaTwitter size={16} />
                             </a>
-                            <a href="#" aria-label="WhatsApp" className="text-gray-600 hover:text-green-600 transition">
-                                <FaWhatsapp size={18} />
+                            <a href="#" aria-label="WhatsApp" className="text-gray-800 hover:opacity-70 transition">
+                                <FaWhatsapp size={16} />
                             </a>
                         </div>
                     </div>
 
                 </div>
+
+
+
 
 
                 {/* Product Description - aligned below image */}

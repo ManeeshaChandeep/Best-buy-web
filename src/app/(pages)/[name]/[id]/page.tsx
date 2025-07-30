@@ -354,10 +354,10 @@ export default function Page() {
 
                 <div className="flex-1 flex flex-col">
                     {/* Filter + Sort Row for Mobile & Tablet */}
-                    <div className="flex justify-between items-center px-4 mb-2 lg:hidden">
+                    <div className="flex justify-between items-center mb-4 lg:hidden">
                         <button
                             onClick={() => setSidebarOpen(true)}
-                            className="flex items-center gap-2 text-purple-700 font-semibold"
+                            className="flex items-center gap-2 text-red-600 font-semibold"
                             aria-label="Open filters"
                         >
                             <Menu size={20} />
@@ -376,6 +376,8 @@ export default function Page() {
                             <option value="discount">Discount</option>
                         </select>
                     </div>
+
+
 
                     <ProductGrid
                         id={id}

@@ -325,7 +325,7 @@ export default function Page() {
                     <div className="lg:hidden flex justify-between items-center mb-4">
                         <button
                             onClick={() => setSidebarOpen(true)}
-                            className="flex items-center gap-2 text-purple-700 font-semibold"
+                            className="flex items-center gap-2 text-red-600 font-semibold"
                         >
                             <Menu size={24} />
                             Filters
