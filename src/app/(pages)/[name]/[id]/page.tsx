@@ -261,14 +261,14 @@ function ProductGrid({
         }
 
         fetchProducts(page);
-    }, [page, id, selectedCategories, selectedBrands, sortBy]);
+    }, [page, id]);
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
         setPage(value);
     };
 
     return (
-        <div className="flex-1 px-0 sm:px-4 max-w-screen-xl mx-auto">
+        <div className="flex-1 px-0 max-w-screen-xl mx-auto">
             <h2 className="text-xl font-semibold mb-4 mt-2 text-gray-800">TV (ALL)</h2>
             {loading ? (
                 <div className="text-center py-20 text-red-600 font-medium">
@@ -342,7 +342,7 @@ export default function Page() {
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
             {/* Main Content */}
-            <div className="mx-auto mt-4 gap-6 flex flex-1 max-w-screen-xl px-4 md:px-0">
+            <div className="mx-auto mt-4 gap-6 flex flex-1 max-w-screen-xl px-4 md:px-2">
                 <Sidebar
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}

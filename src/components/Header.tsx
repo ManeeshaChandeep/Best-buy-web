@@ -8,6 +8,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Drawer from "@mui/material/Drawer";
 import { apiClient } from "@/libs/network";
+import Link from "next/link";
 
 interface ApiCategory {
     id: string;
@@ -117,6 +118,7 @@ export default function Navbar() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [desktopDropdownOpen, setDesktopDropdownOpen] = useState(false);
+    const [searchWarning, setSearchWarning] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -149,11 +151,18 @@ export default function Navbar() {
     }, []);
 
     const handleSearch = () => {
-        if (searchQuery.trim()) {
-            router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-            setShowMobileSearch(false);
+        const trimmedQuery = searchQuery.trim();
+
+        if (trimmedQuery.length < 2) {
+            setSearchWarning(true);
+            return;
         }
+
+        setSearchWarning(false);
+        router.push(`/search?q=${encodeURIComponent(trimmedQuery)}`);
+        setShowMobileSearch(false);
     };
+
 
     if (error) console.error("Error loading categories:", error);
 
@@ -172,9 +181,9 @@ export default function Navbar() {
                     >
                         <HiOutlineViewGrid size={22} />
                     </button>
-                    <a href="#" className="text-xl font-bold text-red-600">
+                    <Link href="/" className="text-xl font-bold text-red-600">
                         BestBuy
-                    </a>
+                    </Link>
                     <button
                         onClick={() => setShowMobileSearch(!showMobileSearch)}
                         className="text-gray-700 hover:text-red-600"
@@ -221,9 +230,9 @@ export default function Navbar() {
                         >
                             <HiOutlineViewGrid size={20} />
                         </button>
-                        <a href="#" className="text-2xl font-bold text-red-600 whitespace-nowrap">
+                        <Link href="/" className="text-xl font-bold text-red-600">
                             BestBuy
-                        </a>
+                        </Link>
                     </div>
 
                     {/* CENTER: Search Bar */}
