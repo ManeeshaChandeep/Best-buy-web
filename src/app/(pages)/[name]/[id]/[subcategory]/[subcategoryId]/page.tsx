@@ -6,6 +6,8 @@ import { ChevronDown, ChevronUp, Menu, X } from "lucide-react";
 import Drawer from "@mui/material/Drawer";
 import Stack from "@mui/material/Stack";
 import Pagination from "@mui/material/Pagination";
+import ItemCard from "@/components/ItemCard";
+import categoryOne from "../../../../../../../public/images/tv.png";
 
 const BE_URL = "https://api.bestbuyelectronics.lk";
 
@@ -31,42 +33,6 @@ const categories = [
 
 const brands = ["LG", "Toshiba", "Haier", "JVC", "Abans"];
 
-// ------------------ ItemCard ------------------
-
-function ItemCard({
-                      id,
-                      imageUrl,
-                      title,
-                      oldPrice,
-                      newPrice,
-                  }: {
-    id: number;
-    imageUrl: string;
-    title: string;
-    oldPrice?: number;
-    newPrice: number;
-}) {
-    return (
-        <div className="bg-white rounded shadow-sm p-3 hover:shadow-md transition w-full sm:w-auto">
-            <img
-                src={imageUrl}
-                alt={title}
-                className="w-full h-32 object-contain mb-2"
-            />
-            <h3 className="text-sm font-medium text-gray-700 truncate">{title}</h3>
-            <div className="mt-1">
-                {oldPrice && (
-                    <p className="text-xs line-through text-gray-400 mb-0.5">
-                        Rs. {oldPrice.toLocaleString()}.00
-                    </p>
-                )}
-                <p className="text-sm text-red-600 font-semibold">
-                    Rs. {newPrice.toLocaleString()}.00
-                </p>
-            </div>
-        </div>
-    );
-}
 
 // ------------------ Sidebar ------------------
 
@@ -89,7 +55,7 @@ function Sidebar({
     const [brandsOpen, setBrandsOpen] = useState(true);
 
     const FilterContent = () => (
-        <div className="p-6 w-full bg-white">
+        <div className="p-6 w-full bg-white border border-gray-300 rounded-sm">
             <h3 className="text-xl font-semibold mb-6">Filter Products</h3>
             <div className="mb-8">
                 <button
@@ -248,12 +214,14 @@ function ProductGrid({
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {products.map((product) => (
                             <ItemCard
-                                key={product.id}
                                 id={product.id}
+                                key={product.id}
                                 imageUrl={`${BE_URL}${product.images?.[0] || ""}`}
+                                imageSrc={categoryOne}
                                 title={product.name}
                                 oldPrice={product.old_price}
                                 newPrice={product.price}
+                                inStock={product.quantity > 0}
                             />
                         ))}
                     </div>
@@ -309,7 +277,7 @@ export default function Page() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col">
+        <div className="min-h-screen bg-white flex flex-col">
             <div className="mx-auto mt-4 gap-6 flex flex-1 max-w-screen-xl px-4 md:px-2">
                 <Sidebar
                     isOpen={sidebarOpen}
