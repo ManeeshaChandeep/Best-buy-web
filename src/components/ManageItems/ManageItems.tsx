@@ -290,7 +290,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                 </div>
 
                 {/* Brand Selector */}
-                <div>
+                <div className="w-64"> {/* or w-48, w-40 based  design */}
                     <label className="block text-sm font-medium mb-1">Brand</label>
                     <Select
                         value={formData.brand || ''}
@@ -308,6 +308,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                         ))}
                     </Select>
                 </div>
+
 
                 {/* Description */}
                 <div>
