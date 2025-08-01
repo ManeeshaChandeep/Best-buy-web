@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Select, MenuItem, ListSubheader } from '@mui/material';
 import { apiClient } from '@/../src/libs/network';
@@ -19,6 +19,11 @@ interface Category {
     subcategories?: Category[];
 }
 
+interface Brand {
+    id: string;
+    name: string;
+}
+
 interface FormData {
     id?: number;
     name: string;
@@ -32,13 +37,9 @@ interface FormData {
     description: string;
     category: string;
     subcategory: string;
+    brand?: string;
     image_url?: string;
     images?: string[];
-}
-
-interface UploadResponse {
-    filename: string;
-    status?: string;
 }
 
 interface Product {
@@ -54,14 +55,9 @@ interface Product {
     description: string;
     category?: string;
     subcategory?: string;
+    brand?: string;
     image_url?: string;
     images?: string[];
-}
-
-interface ImagePreview {
-    id: string;
-    url: string;
-    file: File | null;
 }
 
 interface ManageItemsProps {
@@ -69,7 +65,6 @@ interface ManageItemsProps {
     onProductUpdated?: () => void;
 }
 
-// 🔁 Recursive MUI Select Rendering
 const renderCategories = (categories: Category[], level = 0): React.ReactNode[] => {
     const indent = '\u00A0\u00A0\u00A0'.repeat(level);
     return categories.flatMap((category) => {
@@ -90,7 +85,6 @@ const renderCategories = (categories: Category[], level = 0): React.ReactNode[] 
     });
 };
 
-// 💡 GroupedSelect Component
 const GroupedSelect = ({
                            categories,
                            value,
@@ -99,16 +93,14 @@ const GroupedSelect = ({
     categories: Category[];
     value: string;
     onChange: (e: any) => void;
-}) => {
-    return (
-        <Select value={value} onChange={onChange} fullWidth displayEmpty>
-            <MenuItem value="">
-                <em>Select a category</em>
-            </MenuItem>
-            {renderCategories(categories)}
-        </Select>
-    );
-};
+}) => (
+    <Select value={value} onChange={onChange} fullWidth displayEmpty>
+        <MenuItem value="">
+            <em>Select a category</em>
+        </MenuItem>
+        {renderCategories(categories)}
+    </Select>
+);
 
 const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
     const [formData, setFormData] = useState<FormData>({
@@ -123,39 +115,29 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
         description: '',
         category: '',
         subcategory: '',
+        brand: '',
         images: [],
     });
 
     const [loading, setLoading] = useState<boolean>(true);
     const [allCategories, setAllCategories] = useState<Category[]>([]);
     const [allCategoriesNested, setAllCategoriesNested] = useState<Category[]>([]);
-    const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
+    const [brands, setBrands] = useState<Brand[]>([]);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<boolean>(false);
     const [isEditing, setIsEditing] = useState(false);
 
-    // 🧠 Convert flat category list to nested
     const nestCategories = (flat: Category[]): Category[] => {
         const map: { [key: string]: Category } = {};
         const roots: Category[] = [];
-
-        flat.forEach((cat) => {
-            map[cat.id] = { ...cat, subcategories: [] };
-        });
-
-        flat.forEach((cat) => {
-            if (cat.parent) {
-                map[cat.parent]?.subcategories?.push(map[cat.id]);
-            } else {
-                roots.push(map[cat.id]);
-            }
-        });
-
+        flat.forEach((cat) => (map[cat.id] = { ...cat, subcategories: [] }));
+        flat.forEach((cat) =>
+            cat.parent ? map[cat.parent]?.subcategories?.push(map[cat.id]) : roots.push(map[cat.id])
+        );
         return roots;
     };
 
-    // 📦 Fetch categories
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -169,10 +151,20 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                 setLoading(false);
             }
         };
+
+        const fetchBrands = async () => {
+            try {
+                const data: Brand[] = await apiClient.get('brands/');
+                setBrands(data);
+            } catch (err) {
+                setError('Failed to load brands');
+            }
+        };
+
         fetchCategories();
+        fetchBrands();
     }, []);
 
-    // 🛒 Fetch product
     useEffect(() => {
         if (!productId) return;
         const fetchProduct = async () => {
@@ -192,6 +184,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                     description: product.description,
                     category: product.category || '',
                     subcategory: product.subcategory || '',
+                    brand: product.brand || '',
                     image_url: product.image_url,
                     images: product.images || [],
                 });
@@ -205,7 +198,9 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
         fetchProduct();
     }, [productId]);
 
-    // 📤 Submit
+    const onSelectChange = useCallback((e) =>
+        setFormData((prev) => ({ ...prev, brand: e.target.value })), []);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
@@ -217,6 +212,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                 quantity: parseInt(formData.quantity),
                 warranty: formData.warranty ? parseInt(formData.warranty) : null,
                 category: formData.subcategory || formData.category,
+                brand: formData.brand || null,
             };
             if (isEditing && formData.id) {
                 await apiClient.put(`products/${formData.id}/`, payload);
@@ -225,7 +221,19 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
             } else {
                 await apiClient.post('products/', payload);
                 setSuccess(true);
-                setFormData({ ...formData, name: '', sku: '', model_number: '', price: '', old_price: '', quantity: '', warranty: '', description: '', images: [] });
+                setFormData({
+                    ...formData,
+                    name: '',
+                    sku: '',
+                    model_number: '',
+                    price: '',
+                    old_price: '',
+                    quantity: '',
+                    warranty: '',
+                    description: '',
+                    brand: '',
+                    images: [],
+                });
             }
         } catch (err) {
             setError('Failed to save product');
@@ -248,69 +256,23 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
     };
 
     return (
-        <div className="container mx-auto p-6">
-            <h1 className="text-2xl font-bold mb-4">
-                {isEditing ? 'Edit Product' : 'Add Product'}
-            </h1>
+        <div className="container mx-auto p-4 sm:p-6">
+            <h1 className="text-2xl font-bold mb-4">{isEditing ? 'Edit Product' : 'Add Product'}</h1>
 
             {error && <p className="text-red-500 mb-2">{error}</p>}
             {success && <p className="text-green-500 mb-2">Saved successfully!</p>}
 
-            <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded shadow">
+            <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        className="border px-3 py-2 rounded w-full"
-                        placeholder="Product Name"
-                        required
-                    />
-                    <input
-                        name="sku"
-                        value={formData.sku}
-                        onChange={handleChange}
-                        className="border px-3 py-2 rounded w-full"
-                        placeholder="SKU"
-                        required
-                    />
-                    <input
-                        name="model_number"
-                        value={formData.model_number}
-                        onChange={handleChange}
-                        className="border px-3 py-2 rounded w-full"
-                        placeholder="Model Number"
-                        required
-                    />
-                    <input
-                        name="price"
-                        type="number"
-                        value={formData.price}
-                        onChange={handleChange}
-                        className="border px-3 py-2 rounded w-full"
-                        placeholder="Price"
-                        required
-                    />
-                    <input
-                        name="old_price"
-                        type="number"
-                        value={formData.old_price}
-                        onChange={handleChange}
-                        className="border px-3 py-2 rounded w-full"
-                        placeholder="Old Price"
-                    />
-                    <input
-                        name="quantity"
-                        type="number"
-                        value={formData.quantity}
-                        onChange={handleChange}
-                        className="border px-3 py-2 rounded w-full"
-                        placeholder="Quantity"
-                        required
-                    />
+                    <input name="name" value={formData.name} onChange={handleChange} className="border px-3 py-2 rounded w-full" placeholder="Product Name" required />
+                    <input name="sku" value={formData.sku} onChange={handleChange} className="border px-3 py-2 rounded w-full" placeholder="SKU" required />
+                    <input name="model_number" value={formData.model_number} onChange={handleChange} className="border px-3 py-2 rounded w-full" placeholder="Model Number" required />
+                    <input name="price" type="number" value={formData.price} onChange={handleChange} className="border px-3 py-2 rounded w-full" placeholder="Price" required />
+                    <input name="old_price" type="number" value={formData.old_price} onChange={handleChange} className="border px-3 py-2 rounded w-full" placeholder="Old Price" />
+                    <input name="quantity" type="number" value={formData.quantity} onChange={handleChange} className="border px-3 py-2 rounded w-full" placeholder="Quantity" required />
                 </div>
 
-                {/* Nested Category Selector */}
+                {/* Category Selector */}
                 <div>
                     <label className="block text-sm font-medium mb-1">Category*</label>
                     <GroupedSelect
@@ -321,10 +283,30 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                             setFormData((prev) => ({
                                 ...prev,
                                 category: val,
-                                subcategory: '', // reset subcategory
+                                subcategory: '',
                             }));
                         }}
                     />
+                </div>
+
+                {/* Brand Selector */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">Brand</label>
+                    <Select
+                        value={formData.brand || ''}
+                        onChange={onSelectChange}
+                        fullWidth
+                        displayEmpty
+                    >
+                        <MenuItem value="">
+                            <em>Select a brand</em>
+                        </MenuItem>
+                        {brands.map((brand) => (
+                            <MenuItem key={brand.id} value={brand.id}>
+                                {brand.name}
+                            </MenuItem>
+                        ))}
+                    </Select>
                 </div>
 
                 {/* Description */}
@@ -338,13 +320,15 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                     />
                 </div>
 
-                <button
-                    type="submit"
-                    className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-                    disabled={submitting}
-                >
-                    {submitting ? 'Saving...' : isEditing ? 'Update Product' : 'Add Product'}
-                </button>
+                <div className="flex justify-end">
+                    <button
+                        type="submit"
+                        className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                        disabled={submitting}
+                    >
+                        {submitting ? 'Saving...' : isEditing ? 'Update Product' : 'Add Product'}
+                    </button>
+                </div>
             </form>
         </div>
     );
