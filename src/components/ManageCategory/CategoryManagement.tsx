@@ -30,6 +30,7 @@ const CategoryManagement = () => {
         imagePreview: '',
         parent: ''
     });
+    const [brandName, setBrandName] = useState('');
     const [uploading, setUploading] = useState(false);
     const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
 
@@ -37,7 +38,6 @@ const CategoryManagement = () => {
         fetchCategories();
 
         return () => {
-            // Clean up object URLs
             if (categoryFormData.imagePreview) {
                 URL.revokeObjectURL(categoryFormData.imagePreview);
             }
@@ -113,9 +113,7 @@ const CategoryManagement = () => {
     const handleDeleteCategory = async (categoryId: string) => {
         if (window.confirm('Are you sure you want to delete this category and all its subcategories?')) {
             try {
-                await apiClient.delete(`categories/?id=${categoryId}`, {
-                    id: categoryId
-                });
+                await apiClient.delete(`categories/?id=${categoryId}`);
                 fetchCategories();
                 if (editingCategory?.id === categoryId) {
                     setEditingCategory(null);
@@ -370,6 +368,13 @@ const CategoryManagement = () => {
         ));
     };
 
+    const handleAddBrand = (e: React.FormEvent) => {
+        e.preventDefault();
+        // Placeholder: integrate with your backend here
+        console.log('Brand Submitted:', brandName);
+        setBrandName('');
+    };
+
     return (
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl font-bold mb-8 text-gray-800">Category Management</h1>
@@ -388,7 +393,7 @@ const CategoryManagement = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    {/* Category Form */}
+                    {/* Add/Edit Category Form */}
                     <div className="bg-white p-6 rounded-lg shadow-md mb-6">
                         <h2 className="text-xl font-semibold mb-4 text-gray-700">
                             {editingCategory ? `Edit Category (${editingCategory.parentName || 'Top Level'})` : 'Add Category'}
@@ -439,10 +444,52 @@ const CategoryManagement = () => {
                             </div>
                         </form>
                     </div>
+
+                    {/* Add Brand Form */}
+                    <div className="bg-white p-6 rounded-lg shadow-md">
+                        <h2 className="text-xl font-semibold mb-4 text-gray-700">Add Brand</h2>
+
+                        <form onSubmit={handleAddBrand}>
+                            {/* Category Label with Name (no input) */}
+                            <div className="mb-4">
+                                <label className="block text-gray-600 text-sm font-bold mb-2">
+                                    Category: HiFi Speaker {/* Replace with actual category name */}
+                                </label>
+                            </div>
+
+                            {/* Brand Name Input */}
+                            <div className="mb-4">
+                                <label
+                                    className="block text-gray-700 text-sm font-bold mb-2"
+                                    htmlFor="brand"
+                                >
+                                    Brand Name
+                                </label>
+                                <input
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                    id="brand"
+                                    type="text"
+                                    name="brand"
+                                    value={brandName}
+                                    onChange={(e) => setBrandName(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <button
+                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                type="submit"
+                            >
+                                Add Brand
+                            </button>
+                        </form>
+                    </div>
+
+
                 </div>
 
-                <div>
                     {/* Category List */}
+                <div>
                     <div className="bg-white p-6 rounded-lg shadow-md">
                         <h2 className="text-xl font-semibold mb-4 text-gray-700">Categories</h2>
 
