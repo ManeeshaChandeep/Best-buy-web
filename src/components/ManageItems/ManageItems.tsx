@@ -100,6 +100,7 @@ const GroupedSelect = ({
         </MenuItem>
         {renderCategories(categories)}
     </Select>
+
 );
 
 const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
@@ -307,6 +308,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                             </MenuItem>
                         ))}
                     </Select>
+
                 </div>
 
 
