@@ -6,6 +6,7 @@ import { ChevronDown, ChevronUp, Menu, X } from "lucide-react";
 import Stack from "@mui/material/Stack";
 import Pagination from "@mui/material/Pagination";
 import Drawer from "@mui/material/Drawer";
+import { apiClient } from "@/libs/network";
 
 const BE_URL = "https://api.bestbuyelectronics.lk";
 
@@ -19,6 +20,15 @@ interface Product {
     category: string;
     images?: string[];
 }
+
+interface Category {
+    id: number;
+    name: string;
+    image: string;
+    parent: number | null;
+    subcategories: Category[];
+}
+
 
 const categories = [
     "LED TV",
@@ -226,6 +236,7 @@ function ProductGrid({
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [categoryName, setCategoryName] = useState("");
 
     useEffect(() => {
         async function fetchProducts(pageNum: number) {
@@ -260,6 +271,16 @@ function ProductGrid({
             setLoading(false);
         }
 
+        const fetchCategory = () => {
+            apiClient.get<Category>(`/categories/details/${id}/`).then((response) => {
+                setCategoryName(response.name || "Unknown Category");
+            }).catch((error) => {
+                console.error("Failed to fetch category", error);
+                setCategoryName("Unknown Category");
+            })
+        }
+
+        fetchCategory()
         fetchProducts(page);
     }, [page, id]);
 
@@ -269,7 +290,7 @@ function ProductGrid({
 
     return (
         <div className="flex-1 px-0 max-w-screen-xl mx-auto">
-            <h2 className="text-xl font-semibold mb-4 mt-2 text-gray-800">TV (ALL)</h2>
+            <h2 className="text-xl font-semibold mb-4 mt-2 text-gray-800">{categoryName} (ALL)</h2>
             {loading ? (
                 <div className="text-center py-20 text-red-600 font-medium">
                     Loading products...

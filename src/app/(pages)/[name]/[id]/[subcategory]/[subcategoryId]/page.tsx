@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import { ChevronDown, ChevronUp, Menu, X } from "lucide-react";
+import React, {useEffect, useState} from "react";
+import {useParams} from "next/navigation";
+import {ChevronDown, ChevronUp, Menu, X} from "lucide-react";
 import Drawer from "@mui/material/Drawer";
 import Stack from "@mui/material/Stack";
 import Pagination from "@mui/material/Pagination";
 import ItemCard from "@/components/ItemCard";
 import categoryOne from "../../../../../../../public/images/tv.png";
+import {apiClient} from "@/libs/network";
 
 const BE_URL = "https://api.bestbuyelectronics.lk";
 
@@ -22,6 +23,14 @@ interface Product {
     images?: string[];
 }
 
+interface Category {
+    id: number;
+    name: string;
+    image: string;
+    parent: number | null;
+    subcategories: Category[];
+}
+
 const categories = [
     "LED TV",
     "Smart LED TV",
@@ -31,12 +40,10 @@ const categories = [
     "TV Accessories",
 ];
 
-const brands = ["LG", "Toshiba", "Haier", "JVC", "Abans"];
-
-
 // ------------------ Sidebar ------------------
 
 function Sidebar({
+                     id,
                      isOpen,
                      onClose,
                      selectedCategories,
@@ -44,6 +51,7 @@ function Sidebar({
                      toggleCategory,
                      toggleBrand,
                  }: {
+    id?: any;
     isOpen: boolean;
     onClose: () => void;
     selectedCategories: string[];
@@ -53,6 +61,7 @@ function Sidebar({
 }) {
     const [categoriesOpen, setCategoriesOpen] = useState(true);
     const [brandsOpen, setBrandsOpen] = useState(true);
+    const [brands, setBrands] = useState([]);
 
     const FilterContent = () => (
         <div className="p-6 w-full bg-white border border-gray-300 rounded-sm">
@@ -65,7 +74,7 @@ function Sidebar({
                     aria-controls="categories-list"
                 >
                     <span>Categories</span>
-                    {categoriesOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    {categoriesOpen ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
                 </button>
                 {categoriesOpen && (
                     <div id="categories-list" className="flex flex-col space-y-2">
@@ -92,7 +101,7 @@ function Sidebar({
                     aria-controls="brands-list"
                 >
                     <span>Brands</span>
-                    {brandsOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    {brandsOpen ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
                 </button>
                 {brandsOpen && (
                     <div id="brands-list" className="flex flex-col space-y-2">
@@ -116,8 +125,9 @@ function Sidebar({
     return (
         <>
             {/* Desktop sidebar: visible only at lg and above */}
-            <aside className="hidden lg:block w-64 border-r border-gray-200 bg-white sticky top-0 h-screen overflow-auto">
-                <FilterContent />
+            <aside
+                className="hidden lg:block w-64 border-r border-gray-200 bg-white sticky top-0 h-screen overflow-auto">
+                <FilterContent/>
             </aside>
 
             {/* Mobile + Tablet Drawer: visible below lg */}
@@ -126,7 +136,7 @@ function Sidebar({
                 open={isOpen}
                 onClose={onClose}
                 sx={{
-                    display: { xs: "block", md: "block", lg: "none" }, // xs + sm + md (mobile+tablet)
+                    display: {xs: "block", md: "block", lg: "none"}, // xs + sm + md (mobile+tablet)
                     "& .MuiDrawer-paper": {
                         width: "80%",
                         maxWidth: 320,
@@ -135,10 +145,10 @@ function Sidebar({
             >
                 <div className="flex justify-end p-4 border-b">
                     <button onClick={onClose} aria-label="Close filters">
-                        <X size={24} />
+                        <X size={24}/>
                     </button>
                 </div>
-                <FilterContent />
+                <FilterContent/>
             </Drawer>
         </>
     );
@@ -162,6 +172,7 @@ function ProductGrid({
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [subCategoryName, setSubCategoryName] = useState("");
 
     useEffect(() => {
         async function fetchProducts(pageNum: number) {
@@ -195,7 +206,17 @@ function ProductGrid({
             setLoading(false);
         }
 
+        const fetchCategory = () => {
+            apiClient.get<Category>(`/categories/details/${id}/`).then((response) => {
+                setSubCategoryName(response.name || "Unknown Category");
+            }).catch((error) => {
+                console.error("Failed to fetch category", error);
+                setSubCategoryName("Unknown Category");
+            })
+        }
+
         fetchProducts(page);
+        fetchCategory()
     }, [page, id]);
 
     const handlePageChange = (_: any, value: number) => {
@@ -204,7 +225,7 @@ function ProductGrid({
 
     return (
         <div className="flex-1 px-0 max-w-screen-xl mx-auto">
-            <h2 className="text-xl font-semibold mb-4 mt-2 text-gray-800">TV (ALL)</h2>
+            <h2 className="text-xl font-semibold mb-4 mt-2 text-gray-800">{subCategoryName}</h2>
             {loading ? (
                 <div className="text-center py-20 text-red-600 font-medium">
                     Loading products...
@@ -280,6 +301,7 @@ export default function Page() {
         <div className="min-h-screen bg-white flex flex-col">
             <div className="mx-auto mt-4 gap-6 flex flex-1 max-w-screen-xl px-4 md:px-2">
                 <Sidebar
+                    id={id}
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
                     selectedCategories={selectedCategories}
@@ -295,7 +317,7 @@ export default function Page() {
                             onClick={() => setSidebarOpen(true)}
                             className="flex items-center gap-2 text-red-600 font-semibold"
                         >
-                            <Menu size={24} />
+                            <Menu size={24}/>
                             Filters
                         </button>
 

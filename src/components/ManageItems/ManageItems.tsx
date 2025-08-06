@@ -19,9 +19,20 @@ interface Category {
     subcategories?: Category[];
 }
 
+interface UploadResponse {
+    filename: string;
+    status?: string;
+}
+
 interface Brand {
     id: string;
     name: string;
+}
+
+interface ImagePreview {
+    id: string;
+    url: string;
+    file: File | null;
 }
 
 interface FormData {
@@ -55,10 +66,16 @@ interface Product {
     description: string;
     category?: string;
     subcategory?: string;
-    brand?: string;
+    brand?: Brand;
     image_url?: string;
     images?: string[];
 }
+
+interface Brand {
+    Id?: number;
+    Name?: string;
+}
+
 
 interface ManageItemsProps {
     productId?: number;
@@ -67,23 +84,28 @@ interface ManageItemsProps {
 
 const renderCategories = (categories: Category[], level = 0): React.ReactNode[] => {
     const indent = '\u00A0\u00A0\u00A0'.repeat(level);
+
     return categories.flatMap((category) => {
-        if (category.subcategories && category.subcategories.length > 0) {
-            return [
-                level === 0 ? (
-                    <ListSubheader key={`header-${category.id}`}>{category.name}</ListSubheader>
-                ) : null,
-                ...renderCategories(category.subcategories, level + 1),
-            ];
-        } else {
-            return (
+        const isLeaf = category.subcategories.length === 0;
+
+        const current = isLeaf
+            ? (
                 <MenuItem key={category.id} value={category.id}>
                     {indent + category.name}
                 </MenuItem>
+            )
+            : (
+                <ListSubheader key={`header-${category.id}`}>
+                    {indent + category.name}
+                </ListSubheader>
             );
-        }
+
+        const children = renderCategories(category.subcategories, level + 1);
+
+        return [current, ...children];
     });
 };
+
 
 const GroupedSelect = ({
                            categories,
@@ -128,43 +150,55 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<boolean>(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
 
-    const nestCategories = (flat: Category[]): Category[] => {
-        const map: { [key: string]: Category } = {};
-        const roots: Category[] = [];
-        flat.forEach((cat) => (map[cat.id] = { ...cat, subcategories: [] }));
-        flat.forEach((cat) =>
-            cat.parent ? map[cat.parent]?.subcategories?.push(map[cat.id]) : roots.push(map[cat.id])
-        );
-        return roots;
+    // Initialize with 5 empty image slots (first one is main)
+    useEffect(() => {
+        if (imagePreviews.length === 0) {
+            const initialImages = Array(5).fill(null).map((_, index) => ({
+                id: `img-${Date.now()}-${index}`,
+                url: '',
+                file: null
+            }));
+            setImagePreviews(initialImages);
+        }
+    }, []);
+
+    const fetchBrands = async () => {
+
+        if (!formData.category) {
+            setBrands([]);
+            return;
+        }
+
+        try {
+            const data: Brand[] = await apiClient.get(`categories/${formData.category}/brands/`);
+            setBrands(data);
+        } catch (err) {
+            setError('Failed to load brands');
+        }
     };
 
     useEffect(() => {
         const fetchCategories = async () => {
             try {
                 setLoading(true);
-                const data: Category[] = await apiClient.get('categories/');
+                const data: Category[] = await apiClient.get('categories/v2/');
                 setAllCategories(data);
-                setAllCategoriesNested(nestCategories(data));
+                setAllCategoriesNested(data);
             } catch (err) {
                 setError('Failed to load categories');
             } finally {
                 setLoading(false);
             }
         };
-
-        const fetchBrands = async () => {
-            try {
-                const data: Brand[] = await apiClient.get('brands/');
-                setBrands(data);
-            } catch (err) {
-                setError('Failed to load brands');
-            }
-        };
-
+        fetchBrands()
         fetchCategories();
-        fetchBrands();
     }, []);
+
+    useEffect(() => {
+        fetchBrands();
+    }, [formData.category]);
 
     useEffect(() => {
         if (!productId) return;
@@ -185,7 +219,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                     description: product.description,
                     category: product.category || '',
                     subcategory: product.subcategory || '',
-                    brand: product.brand || '',
+                    brand: product.brand.id || '',
                     image_url: product.image_url,
                     images: product.images || [],
                 });
@@ -222,19 +256,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
             } else {
                 await apiClient.post('products/', payload);
                 setSuccess(true);
-                setFormData({
-                    ...formData,
-                    name: '',
-                    sku: '',
-                    model_number: '',
-                    price: '',
-                    old_price: '',
-                    quantity: '',
-                    warranty: '',
-                    description: '',
-                    brand: '',
-                    images: [],
-                });
+                resetForm()
             }
         } catch (err) {
             setError('Failed to save product');
@@ -255,6 +277,147 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
     const handleDescriptionChange = (value: string) => {
         setFormData((prev) => ({ ...prev, description: value }));
     };
+
+    const resetForm = () => {
+        setFormData({
+            name: '',
+            sku: '',
+            model_number: '',
+            price: '',
+            old_price: '',
+            quantity: '',
+            warranty: '',
+            delivery_available: false,
+            description: '',
+            category: '',
+            subcategory: '',
+            images: []
+        });
+        setImagePreviews(Array(5).fill(null).map((_, index) => ({
+            id: `img-${Date.now()}-${index}`,
+            url: '',
+            file: null
+        })));
+        setIsEditing(false);
+        setError(null);
+        setSuccess(false);
+    };
+
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            const timestamp = Date.now();
+            let imageName = "";
+
+            const formPayload = new FormData();
+            formPayload.append("file", file);
+            formPayload.append("image_name", `image_${timestamp}`);
+            formPayload.append("type", "products"); // if this is a category image set this as 'categories'
+
+            try {
+                console.log(file)
+
+                await apiClient.post("upload/", formPayload).then((res: UploadResponse ) => {
+                    if (res?.filename) {
+                        imageName = res?.filename;
+                        setFormData(prev => ({
+                            ...prev,
+                            images: [...prev?.images, res.filename]
+                        }));
+                    }
+                })
+            } catch (e) {
+                setError("Error Uploading Image, Try again")
+                return
+            }
+
+            reader.onloadend = () => {
+                const newImagePreviews = [...imagePreviews];
+                newImagePreviews[index] = {
+                    ...newImagePreviews[index],
+                    url: reader.result as string,
+                    file: file,
+                    id:imageName
+                };
+                setImagePreviews(newImagePreviews);
+            };
+
+            reader.readAsDataURL(file);
+
+        }
+    };
+
+    const handleRemoveImage = (index: number) => {
+        const newImagePreviews = [...imagePreviews];
+        const previousId = imagePreviews[index]?.id;
+
+        newImagePreviews[index] = {
+            id: `img-${Date.now()}-${index}`,
+            url: '',
+            file: null
+        };
+        setImagePreviews(newImagePreviews);
+
+        setFormData(prev => ({
+            ...prev,
+            images: prev.images.filter(imgName => imgName !== previousId)
+        }));
+
+    };
+
+    const renderImageUploads = () => (
+        <div className="mt-8">
+            <h2 className="text-xl font-bold mb-4">Product Images</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {imagePreviews.map((image, index) => (
+                    <div key={image.id} className={`relative border-2 rounded-lg p-2 ${index === 0 ? 'border-blue-500' : 'border-gray-300'}`}>
+                        {image.url ? (
+                            <>
+                                <img
+                                    src={image.url}
+                                    alt={`Preview ${index + 1}`}
+                                    className="w-full h-32 object-contain mb-2"
+                                />
+                                {index === 0 && (
+                                    <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                                        Main
+                                    </div>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveImage(index)}
+                                    className="w-full text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
+                                >
+                                    Remove
+                                </button>
+                            </>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-32 bg-gray-100 rounded">
+                                <span className="text-gray-500 text-sm mb-2">
+                                    {index === 0 ? 'Main Image*' : `Image ${index + 1}`}
+                                </span>
+                                <label className="cursor-pointer bg-white border border-blue-500 text-blue-500 hover:bg-blue-50 px-3 py-1 rounded text-xs">
+                                    Upload
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => handleImageChange(e, index)}
+                                        disabled={submitting}
+                                        required={index === 0 && !image.url}
+                                    />
+                                </label>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+            <p className="text-sm text-gray-500 mt-2">
+                First image will be used as the main product image. Main image is required.
+            </p>
+        </div>
+    );
 
     return (
         <div className="container mx-auto p-4 sm:p-6">
@@ -284,8 +447,10 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                             setFormData((prev) => ({
                                 ...prev,
                                 category: val,
-                                subcategory: '',
+                                subcategory: val,
                             }));
+
+                            fetchBrands()
                         }}
                     />
                 </div>
@@ -322,6 +487,8 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                         className="bg-white"
                     />
                 </div>
+
+                {renderImageUploads()}
 
                 <div className="flex justify-end">
                     <button

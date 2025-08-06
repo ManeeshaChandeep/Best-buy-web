@@ -33,6 +33,7 @@ const CategoryManagement = () => {
     const [brandName, setBrandName] = useState('');
     const [uploading, setUploading] = useState(false);
     const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+    const [brandSelectedCategory, setBrandSelectedCategory] = useState<Category>();
 
     useEffect(() => {
         fetchCategories();
@@ -82,7 +83,7 @@ const CategoryManagement = () => {
     const handleAddCategory = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await apiClient.post('categories/v2/', {
+            await apiClient.post('categories/', {
                 name: categoryFormData.name,
                 image: categoryFormData.image,
                 parent: categoryFormData.parent || null
@@ -342,6 +343,16 @@ const CategoryManagement = () => {
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
+                                console.log(category)
+                                setBrandSelectedCategory(category)
+                            }}
+                            className="text-green-500 hover:text-green-700 text-sm"
+                        >
+                            Add Brand
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
                                 startEditing(category);
                             }}
                             className="text-blue-500 hover:text-blue-700 text-sm"
@@ -372,7 +383,9 @@ const CategoryManagement = () => {
         e.preventDefault();
         // Placeholder: integrate with your backend here
         console.log('Brand Submitted:', brandName);
-        setBrandName('');
+        apiClient.post(`categories/${brandSelectedCategory.id}/brands/`,{name:brandName})
+        // setBrandName('');
+        // setBrandSelectedCategory(null)
     };
 
     return (
@@ -446,14 +459,14 @@ const CategoryManagement = () => {
                     </div>
 
                     {/* Add Brand Form */}
-                    <div className="bg-white p-6 rounded-lg shadow-md">
+                    <div className={`${!brandSelectedCategory ? "hidden" : "" } bg-white p-6 rounded-lg shadow-md`}>
                         <h2 className="text-xl font-semibold mb-4 text-gray-700">Add Brand</h2>
 
                         <form onSubmit={handleAddBrand}>
                             {/* Category Label with Name (no input) */}
                             <div className="mb-4">
                                 <label className="block text-gray-600 text-sm font-bold mb-2">
-                                    Category: HiFi Speaker {/* Replace with actual category name */}
+                                    Category: {brandSelectedCategory?.name} {/* Replace with actual category name */}
                                 </label>
                             </div>
 

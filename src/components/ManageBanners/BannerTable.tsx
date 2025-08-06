@@ -136,7 +136,7 @@ const BannerTable = () => {
                             <tr key={banner.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <img
-                                        src={`http://api.bestbuyelectronics.lk${banner.image}`}
+                                        src={`https://api.bestbuyelectronics.lk${banner.image}`}
                                         alt="Banner"
                                         className="h-16 w-32 object-cover rounded"
                                         onError={(e) => {

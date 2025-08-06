@@ -11,8 +11,8 @@ interface Product {
     quantity: number;
     warranty?: number;
     delivery_available: boolean;
-    category: string;
-    subcategory?: string;
+    category: Category;
+    subcategory?: Category;
     image_url?: string;
     description?: string;
     images?: string[];
@@ -96,8 +96,6 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
                         ? (typeof product.old_price === 'string' ? parseFloat(product.old_price) : product.old_price)
                         : undefined,
                     quantity: product.quantity || 0,
-                    category: product.category || 'Uncategorized',
-                    subcategory: product.subcategory || undefined,
                     delivery_available: product.delivery_available || false,
                     warranty: product.warranty || undefined
                 }));
@@ -161,10 +159,10 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
         }
 
         if (selectedCategory !== 'all') {
-            results = results.filter(product => product.category === selectedCategory);
+            results = results.filter(product => product.category.name === selectedCategory);
 
             if (selectedSubcategory !== 'all') {
-                results = results.filter(product => product.subcategory === selectedSubcategory);
+                results = results.filter(product => product.subcategory.name === selectedSubcategory);
             }
         }
 
@@ -189,10 +187,15 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
                 })
                 .map(cat => cat.name),
             ...products
-                .filter(p => p.category === selectedCategory && p.subcategory)
-                .map(p => p.subcategory as string)
+                .filter(p => p.category.name === selectedCategory && p.subcategory)
+                .map(p => p.subcategory.name as string)
         ].filter(Boolean))];
     };
+
+    useEffect(() => {
+        console.log(categories)
+        console.log(products)
+    }, [categories, products]);
 
     // Safe price formatter
     const formatPrice = (price?: number): string => {
@@ -296,11 +299,11 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
                                 setSelectedSubcategory('all');
                             }}
                         >
-                            {mainCategories.map(category => (
+                            {/*{mainCategories.map(category => (
                                 <option key={category} value={category}>
                                     {category.charAt(0).toUpperCase() + category.slice(1)}
                                 </option>
-                            ))}
+                            ))}*/}
                         </select>
                     </div>
 
@@ -315,11 +318,11 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
                                 value={selectedSubcategory}
                                 onChange={(e) => setSelectedSubcategory(e.target.value)}
                             >
-                                {getSubcategories().map(subcategory => (
+                                {/*{getSubcategories().map(subcategory => (
                                     <option key={subcategory} value={subcategory}>
                                         {subcategory.charAt(0).toUpperCase() + subcategory.slice(1)}
                                     </option>
-                                ))}
+                                ))}*/}
                             </select>
                         </div>
                     )}
@@ -403,10 +406,10 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
                                     {product.quantity <= 0 && ' (Out of stock)'}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {product.category}
+                                    {product.category.name}
                                     {product.subcategory && (
                                         <span className="block text-xs text-gray-400">
-                                            {product.subcategory}
+                                            {product.subcategory.name}
                                         </span>
                                     )}
                                 </td>
