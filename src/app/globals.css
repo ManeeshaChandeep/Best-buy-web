@@ -3,6 +3,8 @@
 @tailwind components;
 @tailwind utilities;
 
+
+
 /*when description longer than two lines add this styles in project explore page */
 .card-description {
     display: -webkit-box;

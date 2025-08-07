@@ -456,7 +456,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                 </div>
 
                 {/* Brand Selector */}
-                <div className="w-64"> {/* or w-48, w-40 based  design */}
+                <div className="w-64">
                     <label className="block text-sm font-medium mb-1">Brand</label>
                     <Select
                         value={formData.brand || ''}
