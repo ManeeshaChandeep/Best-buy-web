@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Slider from "react-slick";
+import { useMediaQuery } from "react-responsive";
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -10,12 +11,9 @@ const BE_URL = "https://api.bestbuyelectronics.lk";
 
 // images
 import categoryOne from "@/../public/images/tv.png";
-
-
 import postOne from "@/../public/images/posts/postOne.png";
 import postTwo from "@/../public/images/posts/postTwo.png";
 import postThree from "@/../public/images/posts/postThree.png";
-
 
 import HeroSection from "@/components/HeroSection";
 import ItemCard from "@/components/ItemCard";
@@ -70,15 +68,51 @@ const loadProducts = (params: { category?: number; subcategory?: number }) => {
     return apiClient.get<ProductListResponse>(`products/?${query.toString()}`);
 };
 
+// ✅ EXTRACTED OUTSIDE
+const ResponsiveImageGallery = () => {
+    const isMobile = useMediaQuery({ maxWidth: 767 });
 
+    const sliderSettings = {
+        dots: false,
+        infinite: true,
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        autoplay: true,
+        speed: 2000,
+        autoplaySpeed: 3000,
+        cssEase: "ease-in-out",
+        arrows: true,
+    };
+
+    const images = [postOne, postTwo];
+
+    return (
+        <div className="w-full my-14">
+            {isMobile ? (
+                <Slider {...sliderSettings}>
+                    {images.map((img, idx) => (
+                        <div key={idx} className="px-4">
+                            <Image src={img} alt={`Post ${idx}`} className="rounded-md" />
+                        </div>
+                    ))}
+                </Slider>
+            ) : (
+                <div className="flex gap-5 justify-center">
+                    {images.map((img, idx) => (
+                        <div key={idx}>
+                            <Image src={img} alt={`Post ${idx}`} className="rounded-md" />
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
 
 export default function Home() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [newProducts, setNewProducts] = useState<Product[]>([]);
-
-    const [productsByCategory, setProductsByCategory] = useState<
-        Record<CategoryKey, Product[]>
-    >({
+    const [productsByCategory, setProductsByCategory] = useState<Record<CategoryKey, Product[]>>({
         category1: [],
         category2: [],
         category3: [],
@@ -87,10 +121,7 @@ export default function Home() {
         category6: [],
     });
 
-    const loadProductsByCategory = async (
-        categoryKey: CategoryKey,
-        category: number
-    ) => {
+    const loadProductsByCategory = async (categoryKey: CategoryKey, category: number) => {
         try {
             const res = await loadProducts({ category });
             setProductsByCategory((prev) => ({
@@ -125,6 +156,7 @@ export default function Home() {
         });
     }, []);
 
+    const sliderImages = [postOne, postTwo, postThree];
     const sliderSettings = {
         dots: false,
         infinite: true,
@@ -135,11 +167,7 @@ export default function Home() {
         autoplaySpeed: 3000,
         cssEase: "ease-in-out",
         arrows: true,
-
     };
-
-
-    const sliderImages = [postOne, postTwo, postThree];
 
     return (
         <div>
@@ -157,9 +185,6 @@ export default function Home() {
                     ))}
                 </Slider>
             </div>
-
-
-
 
             <div className="mx-4 sm:mx-6 md:mx-12">
                 <div className="border-b border-gray-300 pb-1 mb-2 mt-4">
@@ -204,15 +229,8 @@ export default function Home() {
                 </div>
 
                 <section className="flex justify-center flex-wrap">
-
-                    <div className="flex gap-5 my-14 justify-center w-full">
-                        <div>
-                            <Image src={postOne} alt="" className="rounded-md" />
-                        </div>
-                        <div>
-                            <Image src={postTwo} alt="" className="rounded-md" />
-                        </div>
-                    </div>
+                    {/* ✅ Replaced with the ResponsiveImageGallery */}
+                    <ResponsiveImageGallery />
 
                     {categories.slice(0, 6).map((category, index) => {
                         const categoryKey = `category${index + 1}` as CategoryKey;
@@ -267,8 +285,9 @@ export default function Home() {
                     })}
                 </section>
             </div>
+
             <div className="mt-10 w-full">
-                <Image src={postThree} alt="" className='rounded-md' />
+                <Image src={postThree} alt="" className="rounded-md" />
             </div>
         </div>
     );
