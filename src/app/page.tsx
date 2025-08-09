@@ -264,17 +264,19 @@ export default function Home() {
 
     return (
         <div>
+
+
             <HeroSection />
 
             {/* Hero slider */}
-            <div className="mt-10 w-full relative px-4 sm:px-6 lg:px-8">
+            <div className="mt-10 w-full relative">
                 <Slider {...heroSliderSettings}>
                     {sliderImages.map((img, index) => (
                         <div key={index} className="w-full h-[180px] sm:h-[250px] md:h-[300px]">
                             <Image
                                 src={img}
                                 alt={`Slide ${index + 1}`}
-                                className="rounded-md w-full h-full object-cover"
+                                className="rounded-none w-full h-full object-cover"
                             />
                         </div>
                     ))}
