@@ -51,13 +51,6 @@ function MobileCategoryPanel({
             onClose={() => setShowMobileCategories(false)}
             PaperProps={{ sx: { width: "75%", maxWidth: 300 } }}
         >
-            <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200">
-                <h2 className="font-semibold text-lg text-gray-800">All Categories</h2>
-                <button onClick={() => setShowMobileCategories(false)}>
-                    <CloseIcon className="text-gray-600 hover:text-red-600" />
-                </button>
-            </div>
-
             <div
                 className="p-4 overflow-y-auto"
                 style={{ maxHeight: "calc(100vh - 64px)" }}
@@ -65,11 +58,15 @@ function MobileCategoryPanel({
                 {loading ? (
                     <p className="text-center text-gray-500">Loading...</p>
                 ) : (
-                    categories.map((category) => (
-                        <div key={category.id} className="mb-4">
+                    categories.map((category, index) => (
+                        <div
+                            key={category.id}
+                            className={`pb-3 ${index !== categories.length - 1 ? "border-b border-gray-200 mb-3" : ""}`}
+                        >
+                            {/* Category Button */}
                             <button
                                 onClick={() => toggleExpanded(category.id)}
-                                className="w-full flex justify-between items-center text-gray-800 font-medium text-lg hover:text-red-600"
+                                className="w-full flex justify-between items-center text-gray-800  text-lg hover:text-red-600 transition-colors"
                             >
                                 {category.name}
                                 <ExpandMoreIcon
@@ -79,6 +76,7 @@ function MobileCategoryPanel({
                                 />
                             </button>
 
+                            {/* Subcategories */}
                             {expanded === category.id && (
                                 <div className="mt-2 ml-4 flex flex-col space-y-2">
                                     <a
