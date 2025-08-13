@@ -1,14 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, {useState, useEffect, JSX} from "react";
 import { useRouter } from "next/navigation";
 import { HiOutlineViewGrid } from "react-icons/hi";
 import { FiSearch } from "react-icons/fi";
-import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Drawer from "@mui/material/Drawer";
 import { apiClient } from "@/libs/network";
 import Link from "next/link";
+import {
+    FaTv,
+    FaHeadphones,
+    FaTshirt,
+    FaMobileAlt,
+    FaBlender,
+    FaCogs
+} from "react-icons/fa";
 
 interface ApiCategory {
     id: string;
@@ -27,11 +34,20 @@ interface Category {
     subcategories: Subcategory[];
 }
 
+const categoryIcons: Record<string, JSX.Element> = {
+    "TV": <FaTv className="text-red-500" />,
+    "Audio & Video": <FaHeadphones className="text-red-500" />,
+    "Home Appliances": <FaCogs className="text-red-500" />,
+    "Kitchen Appliances": <FaBlender className="text-red-500" />,
+    "Mobile Phones & Devices": <FaMobileAlt className="text-red-500" />,
+    "Personal Care": <FaTshirt className="text-red-500" />
+};
+
 function MobileCategoryPanel({
                                  showMobileCategories,
                                  setShowMobileCategories,
                                  categories,
-                                 loading,
+                                 loading
                              }: {
     showMobileCategories: boolean;
     setShowMobileCategories: React.Dispatch<React.SetStateAction<boolean>>;
@@ -51,10 +67,7 @@ function MobileCategoryPanel({
             onClose={() => setShowMobileCategories(false)}
             PaperProps={{ sx: { width: "75%", maxWidth: 300 } }}
         >
-            <div
-                className="p-4 overflow-y-auto"
-                style={{ maxHeight: "calc(100vh - 64px)" }}
-            >
+            <div className="p-4 overflow-y-auto" style={{ maxHeight: "calc(100vh - 64px)" }}>
                 {loading ? (
                     <p className="text-center text-gray-500">Loading...</p>
                 ) : (
@@ -66,19 +79,22 @@ function MobileCategoryPanel({
                             {/* Category Button */}
                             <button
                                 onClick={() => toggleExpanded(category.id)}
-                                className="w-full flex justify-between items-center text-gray-800  text-lg hover:text-red-600 transition-colors"
+                                className="w-full flex justify-between items-center transition-colors"
                             >
-                                {category.name}
+                                <div className="flex items-center gap-3">
+                                    {categoryIcons[category.name] || <FaCogs className="text-red-500" />}
+                                    <span className="text-base text-black">{category.name}</span>
+                                </div>
                                 <ExpandMoreIcon
                                     className={`transform transition-transform duration-300 ${
                                         expanded === category.id ? "rotate-180" : "rotate-0"
-                                    }`}
+                                    } text-gray-500`}
                                 />
                             </button>
 
                             {/* Subcategories */}
                             {expanded === category.id && (
-                                <div className="mt-2 ml-4 flex flex-col space-y-2">
+                                <div className="mt-2 ml-9 flex flex-col space-y-2">
                                     <a
                                         href={`/category/${category.id}`}
                                         className="text-sm font-medium text-gray-700 hover:text-red-600"
@@ -131,13 +147,31 @@ export default function Navbar() {
                 setLoading(true);
                 const response = await apiClient.get<ApiCategory[]>("categories/");
                 const mainCategories = response.filter((cat) => !cat.parent);
-                const categoriesWithSubs = mainCategories.map((category) => ({
-                    id: category.id,
-                    name: category.name,
-                    subcategories: response
-                        .filter((sub) => sub.parent === category.id)
-                        .map((sub) => ({ id: sub.id, name: sub.name })),
-                }));
+
+                // Order categories according to your first screenshot
+                const desiredOrder = [
+                    "TV",
+                    "Audio & Video",
+                    "Home Appliances",
+                    "Kitchen Appliances",
+                    "Mobile Phones & Devices",
+                    "Personal Care"
+                ];
+
+                const categoriesWithSubs = desiredOrder
+                    .map((name) => {
+                        const category = mainCategories.find((cat) => cat.name === name);
+                        if (!category) return null;
+                        return {
+                            id: category.id,
+                            name: category.name,
+                            subcategories: response
+                                .filter((sub) => sub.parent === category.id)
+                                .map((sub) => ({ id: sub.id, name: sub.name }))
+                        };
+                    })
+                    .filter(Boolean) as Category[];
+
                 setCategories(categoriesWithSubs);
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Failed to load categories");
@@ -150,17 +184,14 @@ export default function Navbar() {
 
     const handleSearch = () => {
         const trimmedQuery = searchQuery.trim();
-
         if (trimmedQuery.length < 2) {
             setSearchWarning(true);
             return;
         }
-
         setSearchWarning(false);
         router.push(`/search?q=${encodeURIComponent(trimmedQuery)}`);
         setShowMobileSearch(false);
     };
-
 
     if (error) console.error("Error loading categories:", error);
 
