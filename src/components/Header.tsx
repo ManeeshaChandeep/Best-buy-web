@@ -68,6 +68,21 @@ function MobileCategoryPanel({
             PaperProps={{ sx: { width: "75%", maxWidth: 300 } }}
         >
             <div className="p-4 overflow-y-auto" style={{ maxHeight: "calc(100vh - 64px)" }}>
+
+                {/* Hotline section */}
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="bg-red-600 p-2 rounded">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" strokeWidth="1.5" stroke="white" className="w-5 h-5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h1.5a2.25 2.25 0 002.25-2.25v-2.25a1.125 1.125 0 00-1.125-1.125h-2.25a1.125 1.125 0 00-1.125 1.125v.375a11.25 11.25 0 01-11.25-11.25v-.375A1.125 1.125 0 006.375 5.25H4.125A1.125 1.125 0 003 6.375v.375z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p className="text-sm ">HOT LINE</p>
+                        <p className="text-sm text-gray-600">+94 76 123 4567</p>
+                    </div>
+                </div>
+
+                {/* Category List */}
                 {loading ? (
                     <p className="text-center text-gray-500">Loading...</p>
                 ) : (
@@ -119,6 +134,7 @@ function MobileCategoryPanel({
                 )}
             </div>
         </Drawer>
+
     );
 }
 
