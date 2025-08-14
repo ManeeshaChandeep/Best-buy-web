@@ -154,14 +154,12 @@ const ItemView: React.FC = () => {
                         <div className="hidden md:flex flex-col max-w-xs ml-auto space-y-6">
                             <div className="space-y-4 text-left">
 
+
                                 {/* Brand Name */}
                                 <div className="flex items-center space-x-3 mb-5">
-                                    <div>
-                                        <p className="text-xs text-gray-500 uppercase tracking-wide">Brand</p>
-                                        {/*<p className="text-sm font-medium text-gray-800">{details.brand || 'N/A'}</p>*/}
-                                    </div>
+                                    <p className="text-2xl font-bold text-red-600 text-center">{'LG'}</p>
+                                    <div className="w-full mt-2"></div>
                                 </div>
-
 
 
                                 {/* Model Number */}
@@ -240,8 +238,13 @@ const ItemView: React.FC = () => {
                 {/* Mobile Only - Additional Info */}
                 <div className="flex md:hidden flex-col space-y-4 mt-6 text-[13px] text-gray-800">
 
+                    {/* Brand Name */}
+                    <div className="w-full flex justify-center mb-3">
+                        <p className="text-2xl font-bold text-red-600">{'LG'}</p>
+                    </div>
+
                     {/* Model Number & SKU */}
-                    <div className="flex justify-between gap-3">
+                    <div className="flex justify-between gap-3 border-t border-gray-200">
                         {/* Model Number */}
                         <div className="flex items-start gap-2 w-1/2">
                             <FaBarcode className="text-gray-200" size={18} />
