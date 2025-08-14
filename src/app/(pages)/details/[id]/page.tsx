@@ -328,10 +328,16 @@ const ItemView: React.FC = () => {
                 {/* Product Description - aligned below image */}
                 <div className="mt-6">
                     {/* Tab-like Header */}
-                    <div className=" w-full flex items-center border-gray-200 bg-gray-100">
-        <span className="  px-4 py-2 ">
-            Product description
-        </span>
+                    <div className="w-full flex items-center bg-gray-50 border-b border-gray-200">
+                        {/* Product details tab */}
+                        <span className="px-4 py-2 text-red-600 font-semibold">
+      Product Description
+    </span>
+
+                        {/* Specification tab */}
+                        <span className="px-4 py-2 text-gray-600 hover:text-red-600 cursor-pointer">
+      Specification
+    </span>
                     </div>
 
                     {/* Product description content */}
@@ -340,6 +346,7 @@ const ItemView: React.FC = () => {
                         dangerouslySetInnerHTML={{ __html: details.description || '' }}
                     />
                 </div>
+
 
 
 
