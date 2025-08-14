@@ -333,8 +333,8 @@ export default function Home() {
                             <div key={category.id} className="mt-10 w-full">
                                 <div className="border-b border-gray-300 pb-1 mb-2">
                                     <div className="flex justify-between items-center">
-                                        <h1 className="text-gray-800 text-xs md:text-sm font-medium">{category.name}</h1>
-                                        <a href="#" className="text-blue-600 hover:text-blue-800 text-xs md:text-sm">
+                                        <h1 className="text-red-600 text-xs md:text-xl font-semibold">{category.name}</h1>
+                                        <a href="#" className="text-blue-600 hover:text-red-600 text-xs md:text-sm">
                                             VIEW ALL
                                         </a>
                                     </div>
