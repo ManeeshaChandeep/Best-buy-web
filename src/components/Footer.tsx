@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { FaFacebook, FaTwitter, FaInstagram } from 'react-icons/fa';
 import { IoMdArrowDropdown, IoMdArrowDropup } from 'react-icons/io';
 import { MdEmail, MdPhone, MdLocationOn } from 'react-icons/md';
+import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
+
 
 const Footer: React.FC = () => {
     const [isMobile, setIsMobile] = useState(false);
@@ -87,23 +89,25 @@ const Footer: React.FC = () => {
                 </div>
 
                 <div className="grid px-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6"> {/* Reduced gap from gap-6 md:gap-10 */}
-                  
+
 
                     {/* Policies */}
-                    <div className="mt-2 md:mt-0"> {/* Reduced mt-4 to mt-2 */}
+                    <div className="mt-0 border-b border-gray-200 md:border-none">
                         <h3
-                            className={`text-lg text-gray-800 flex justify-between items-center cursor-pointer ${
-                                !isMobile || expandedSections.policies ? 'mb-2' : '' // Reduced mb-3 to mb-2
+                            className={`text-base font-medium text-gray-800 flex justify-between items-center py-3 cursor-pointer ${
+                                !isMobile || expandedSections.policies ? 'mb-1' : ''
                             }`}
                             onClick={() => toggleSection('policies')}
                         >
                             Policies
                             {isMobile && (
-                                expandedSections.policies ? <IoMdArrowDropup /> : <IoMdArrowDropdown />
+                                expandedSections.policies
+                                    ? <IoMdArrowDropup size={18} className="text-gray-600" />
+                                    : <IoMdArrowDropdown size={18} className="text-gray-600" />
                             )}
                         </h3>
                         {(expandedSections.policies || !isMobile) && (
-                            <ul className="space-y-1"> {/* Reduced space-y-2 to space-y-1 */}
+                            <ul className="space-y-1 pb-3">
                                 {[
                                     { label: 'Shipping Policy', url: '/shipping' },
                                     { label: 'Return Policy', url: '/returns' },
@@ -126,20 +130,22 @@ const Footer: React.FC = () => {
                     </div>
 
                     {/* Help Center */}
-                    <div className="mt-2 md:mt-0"> {/* Reduced mt-4 to mt-2 */}
+                    <div className="mt-0 border-b border-gray-200 md:border-none">
                         <h3
-                            className={`text-lg  text-gray-800 flex justify-between items-center cursor-pointer ${
-                                !isMobile || expandedSections.help ? 'mb-2' : '' // Reduced mb-3 to mb-2
+                            className={`text-base font-medium text-gray-800 flex justify-between items-center py-3 cursor-pointer ${
+                                !isMobile || expandedSections.help ? 'mb-1' : ''
                             }`}
                             onClick={() => toggleSection('help')}
                         >
-                            Help 
+                            Help
                             {isMobile && (
-                                expandedSections.help ? <IoMdArrowDropup /> : <IoMdArrowDropdown />
+                                expandedSections.help
+                                    ? <IoMdArrowDropup size={18} className="text-gray-600" />
+                                    : <IoMdArrowDropdown size={18} className="text-gray-600" />
                             )}
                         </h3>
                         {(expandedSections.help || !isMobile) && (
-                            <ul className="space-y-1"> {/* Reduced space-y-2 to space-y-1 */}
+                            <ul className="space-y-1 pb-3">
                                 {[
                                     { label: 'FAQs', url: '/faq' },
                                     { label: 'Track Order', url: '/track-order' },
@@ -162,21 +168,23 @@ const Footer: React.FC = () => {
                     </div>
 
                     {/* Company */}
-                    <div className="mt-2 md:mt-0"> {/* Reduced mt-4 to mt-2 */}
+                    <div className="mt-0 md:mt-0 border-b border-gray-200 md:border-none">
                         <h3
-                            className={`text-lg text-gray-800 flex justify-between items-center cursor-pointer ${
-                                !isMobile || expandedSections.company ? 'mb-2' : '' // Reduced mb-3 to mb-2
+                            className={`text-base font-medium text-gray-800 flex justify-between items-center py-3 cursor-pointer ${
+                                !isMobile || expandedSections.company ? 'mb-1' : ''
                             }`}
                             onClick={() => toggleSection('company')}
                         >
                             About
                             {isMobile && (
-                                expandedSections.company ? <IoMdArrowDropup /> : <IoMdArrowDropdown />
+                                expandedSections.company
+                                    ? <IoMdArrowDropup size={18} className="text-gray-600" />
+                                    : <IoMdArrowDropdown size={18} className="text-gray-600" />
                             )}
                         </h3>
                         {(expandedSections.company || !isMobile) && (
-                            <div className="space-y-3"> {/* Reduced space-y-4 to space-y-3 */}
-                                <ul className="space-y-1"> {/* Reduced space-y-2 to space-y-1 */}
+                            <div className="space-y-3 pb-3">
+                                <ul className="space-y-1">
                                     {[
                                         { label: 'About Us', url: '/about' },
                                         { label: 'Careers', url: '/careers' },
@@ -194,9 +202,12 @@ const Footer: React.FC = () => {
                                         </li>
                                     ))}
                                 </ul>
+
+
+                                {/* Social Links */}
                                 <div>
-                                    <h4 className="text-sm font-medium text-gray-800 mb-1">Connect With Us</h4> {/* Reduced mb-2 to mb-1 */}
-                                    <div className="flex flex-wrap gap-1"> {/* Reduced gap-2 to gap-1 */}
+                                    <h4 className="text-sm font-medium text-gray-800 mb-1">Connect With Us</h4>
+                                    <div className="flex flex-wrap gap-1">
                                         {socialLinks.map((social, index) => (
                                             <a
                                                 key={index}
@@ -214,7 +225,7 @@ const Footer: React.FC = () => {
                     </div>
 
 
-                      {/* Brand Info */}
+                    {/* Brand Info */}
                     <div className="lg:col-span-2">
                         <div className="flex items-center mb-4">
                             <span className="text-3xl font-bold text-red-600 mr-2">BestBuy</span>
