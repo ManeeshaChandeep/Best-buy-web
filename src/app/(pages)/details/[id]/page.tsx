@@ -14,7 +14,7 @@ import {
     FaHeart,
     FaBarcode,
     FaHashtag,
-    FaShieldAlt,
+    FaShieldAlt, FaTrademark,
 } from "react-icons/fa";
 import { apiClient } from "@/libs/network";
 
@@ -136,26 +136,39 @@ const ItemView: React.FC = () => {
 
 
                             {/* Price Section */}
-                            <div className="space-x-4">
-                                <span className="text-2xl font-semibold text-red-600">
-                                    Rs. {Number(details.price).toLocaleString()}
-                                </span>
+                            <div className="flex items-baseline space-x-2">
                                 {details.old_price && (
                                     <span className="text-xl line-through text-gray-400">
-                                        Rs. {Number(details.old_price).toLocaleString()}
-                                    </span>
+      Rs. {Number(details.old_price).toLocaleString()}
+    </span>
                                 )}
+                                <span className="text-2xl font-semibold text-red-600">
+    Rs. {Number(details.price).toLocaleString()}
+  </span>
                             </div>
+
+
                         </div>
 
                         {/* Sidebar */}
                         <div className="hidden md:flex flex-col max-w-xs ml-auto space-y-6">
                             <div className="space-y-4 text-left">
-                                {/* Model Number */}
+
+                                {/* Brand Name */}
                                 <div className="flex items-center space-x-3 mb-5">
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase tracking-wide">Brand</p>
+                                        {/*<p className="text-sm font-medium text-gray-800">{details.brand || 'N/A'}</p>*/}
+                                    </div>
+                                </div>
+
+
+
+                                {/* Model Number */}
+                                <div className="flex items-center border-t border-gray-200 space-x-3 mb-5">
                                     <FaBarcode className="text-gray-200" size={20} />
                                     <div>
-                                        <p className="text-xs text-gray-500 uppercase tracking-wide">Model Number</p>
+                                        <p className="text-xs text-gray-500 uppercase  tracking-wide">Model Number</p>
                                         <p className="text-sm font-medium text-gray-800">{details.model_number || 'N/A'}</p>
                                     </div>
                                 </div>
@@ -219,6 +232,7 @@ const ItemView: React.FC = () => {
                                 </div>
                             </div>
                         </div>
+
 
                     </div>
                 </div>
@@ -313,14 +327,21 @@ const ItemView: React.FC = () => {
 
                 {/* Product Description - aligned below image */}
                 <div className="mt-6">
-                    <h2 className="text-lg  text-gray-800 mb-2">
-                        Product Description
-                    </h2>
+                    {/* Tab-like Header */}
+                    <div className=" w-full flex items-center border-gray-200 bg-gray-100">
+        <span className="  px-4 py-2 ">
+            Product description
+        </span>
+                    </div>
+
+                    {/* Product description content */}
                     <div
-                        className="text-gray-600 text-sm leading-relaxed ql-editor"
+                        className="text-gray-600 text-sm leading-relaxed ql-editor mt-4"
                         dangerouslySetInnerHTML={{ __html: details.description || '' }}
                     />
                 </div>
+
+
 
 
             </div>
