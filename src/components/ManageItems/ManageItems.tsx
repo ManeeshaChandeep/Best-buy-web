@@ -64,18 +64,12 @@ interface Product {
     warranty?: number;
     delivery_available: boolean;
     description: string;
-    category?: string;
-    subcategory?: string;
+    category?: Category;
+    subcategory?: Category;
     brand?: Brand;
     image_url?: string;
     images?: string[];
 }
-
-interface Brand {
-    Id?: number;
-    Name?: string;
-}
-
 
 interface ManageItemsProps {
     productId?: number;
@@ -106,12 +100,11 @@ const renderCategories = (categories: Category[], level = 0): React.ReactNode[] 
     });
 };
 
-
 const GroupedSelect = ({
-                           categories,
-                           value,
-                           onChange,
-                       }: {
+    categories,
+    value,
+    onChange,
+}: {
     categories: Category[];
     value: string;
     onChange: (e: any) => void;
@@ -122,7 +115,6 @@ const GroupedSelect = ({
         </MenuItem>
         {renderCategories(categories)}
     </Select>
-
 );
 
 const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
@@ -165,7 +157,6 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
     }, []);
 
     const fetchBrands = async () => {
-
         if (!formData.category) {
             setBrands([]);
             return;
@@ -217,9 +208,9 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                     warranty: product.warranty?.toString() || '',
                     delivery_available: product.delivery_available,
                     description: product.description,
-                    category: product.category || '',
-                    subcategory: product.subcategory || '',
-                    brand: product.brand.id || '',
+                    category: product.category?.id?.toString() || '',
+                    subcategory: product.subcategory?.id?.toString() || '',
+                    brand: product.brand?.id?.toString() || '',
                     image_url: product.image_url,
                     images: product.images || [],
                 });
@@ -249,6 +240,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                 category: formData.subcategory || formData.category,
                 brand: formData.brand || null,
             };
+
             if (isEditing && formData.id) {
                 await apiClient.put(`products/${formData.id}/`, payload);
                 setSuccess(true);
@@ -313,12 +305,12 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
             const formPayload = new FormData();
             formPayload.append("file", file);
             formPayload.append("image_name", `image_${timestamp}`);
-            formPayload.append("type", "products"); // if this is a category image set this as 'categories'
+            formPayload.append("type", "products");
 
             try {
                 console.log(file)
 
-                await apiClient.post("upload/", formPayload).then((res: UploadResponse ) => {
+                await apiClient.post("upload/", formPayload).then((res: UploadResponse) => {
                     if (res?.filename) {
                         imageName = res?.filename;
                         setFormData(prev => ({
@@ -338,13 +330,12 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                     ...newImagePreviews[index],
                     url: reader.result as string,
                     file: file,
-                    id:imageName
+                    id: imageName
                 };
                 setImagePreviews(newImagePreviews);
             };
 
             reader.readAsDataURL(file);
-
         }
     };
 
@@ -363,12 +354,11 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
             ...prev,
             images: prev.images.filter(imgName => imgName !== previousId)
         }));
-
     };
 
     const renderImageUploads = () => (
-        <div className="mt-8">
-            <h2 className="text-xl font-bold mb-4">Product Images</h2>
+        <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-700">Product Images</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 {imagePreviews.map((image, index) => (
                     <div key={image.id} className={`relative border-2 rounded-lg p-2 ${index === 0 ? 'border-blue-500' : 'border-gray-300'}`}>
@@ -387,17 +377,17 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                                 <button
                                     type="button"
                                     onClick={() => handleRemoveImage(index)}
-                                    className="w-full text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
+                                    className="w-full text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded transition-colors"
                                 >
                                     Remove
                                 </button>
                             </>
                         ) : (
                             <div className="flex flex-col items-center justify-center h-32 bg-gray-100 rounded">
-                                <span className="text-gray-500 text-sm mb-2">
+                                <span className="text-gray-500 text-sm mb-2 text-center">
                                     {index === 0 ? 'Main Image*' : `Image ${index + 1}`}
                                 </span>
-                                <label className="cursor-pointer bg-white border border-blue-500 text-blue-500 hover:bg-blue-50 px-3 py-1 rounded text-xs">
+                                <label className="cursor-pointer bg-white border border-blue-500 text-blue-500 hover:bg-blue-50 px-3 py-1 rounded text-xs transition-colors">
                                     Upload
                                     <input
                                         type="file"
@@ -413,73 +403,181 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                     </div>
                 ))}
             </div>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-gray-500">
                 First image will be used as the main product image. Main image is required.
             </p>
         </div>
     );
 
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                <span className="ml-3 text-gray-600">Loading...</span>
+            </div>
+        );
+    }
+
     return (
-        <div className="container mx-auto p-4 sm:p-6">
-            <h1 className="text-2xl font-bold mb-4">{isEditing ? 'Edit Product' : 'Add Product'}</h1>
+        <div className="space-y-6">
+            {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    {error}
+                </div>
+            )}
 
-            {error && <p className="text-red-500 mb-2">{error}</p>}
-            {success && <p className="text-green-500 mb-2">Saved successfully!</p>}
+            {success && (
+                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                    Product saved successfully!
+                </div>
+            )}
 
-            <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input name="name" value={formData.name} onChange={handleChange} className="border px-3 py-2 rounded w-full" placeholder="Product Name" required />
-                    <input name="sku" value={formData.sku} onChange={handleChange} className="border px-3 py-2 rounded w-full" placeholder="SKU" required />
-                    <input name="model_number" value={formData.model_number} onChange={handleChange} className="border px-3 py-2 rounded w-full" placeholder="Model Number" required />
-                    <input name="price" type="number" value={formData.price} onChange={handleChange} className="border px-3 py-2 rounded w-full" placeholder="Price" required />
-                    <input name="old_price" type="number" value={formData.old_price} onChange={handleChange} className="border px-3 py-2 rounded w-full" placeholder="Old Price" />
-                    <input name="quantity" type="number" value={formData.quantity} onChange={handleChange} className="border px-3 py-2 rounded w-full" placeholder="Quantity" required />
+            <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">Basic Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
+                            <input
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter product name"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">SKU *</label>
+                            <input
+                                name="sku"
+                                value={formData.sku}
+                                onChange={handleChange}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter SKU"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Model Number *</label>
+                            <input
+                                name="model_number"
+                                value={formData.model_number}
+                                onChange={handleChange}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter model number"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Price *</label>
+                            <input
+                                name="price"
+                                type="number"
+                                step="0.01"
+                                value={formData.price}
+                                onChange={handleChange}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="0.00"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Old Price</label>
+                            <input
+                                name="old_price"
+                                type="number"
+                                step="0.01"
+                                value={formData.old_price}
+                                onChange={handleChange}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
+                            <input
+                                name="quantity"
+                                type="number"
+                                value={formData.quantity}
+                                onChange={handleChange}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="0"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Warranty (months)</label>
+                            <input
+                                name="warranty"
+                                type="number"
+                                value={formData.warranty}
+                                onChange={handleChange}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="0"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center">
+                        <input
+                            type="checkbox"
+                            name="delivery_available"
+                            checked={formData.delivery_available}
+                            onChange={handleChange}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label className="ml-2 block text-sm text-gray-700">
+                            Delivery Available
+                        </label>
+                    </div>
                 </div>
 
-                {/* Category Selector */}
-                <div>
-                    <label className="block text-sm font-medium mb-1">Category*</label>
-                    <GroupedSelect
-                        categories={allCategoriesNested}
-                        value={formData.category}
-                        onChange={(e) => {
-                            const val = e.target.value;
-                            setFormData((prev) => ({
-                                ...prev,
-                                category: val,
-                                subcategory: val,
-                            }));
-
-                            fetchBrands()
-                        }}
-                    />
+                {/* Category & Brand Selection */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">Category & Brand</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                            <GroupedSelect
+                                categories={allCategoriesNested}
+                                value={formData.category}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        category: val,
+                                        subcategory: val,
+                                    }));
+                                    fetchBrands()
+                                }}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+                            <Select
+                                value={formData.brand || ''}
+                                onChange={onSelectChange}
+                                fullWidth
+                                displayEmpty
+                            >
+                                <MenuItem value="">
+                                    <em>Select a brand</em>
+                                </MenuItem>
+                                {brands.map((brand) => (
+                                    <MenuItem key={brand.id} value={brand.id}>
+                                        {brand.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </div>
+                    </div>
                 </div>
-
-                {/* Brand Selector */}
-                <div className="w-64">
-                    <label className="block text-sm font-medium mb-1">Brand</label>
-                    <Select
-                        value={formData.brand || ''}
-                        onChange={onSelectChange}
-                        fullWidth
-                        displayEmpty
-                    >
-                        <MenuItem value="">
-                            <em>Select a brand</em>
-                        </MenuItem>
-                        {brands.map((brand) => (
-                            <MenuItem key={brand.id} value={brand.id}>
-                                {brand.name}
-                            </MenuItem>
-                        ))}
-                    </Select>
-
-                </div>
-
 
                 {/* Description */}
-                <div>
-                    <label className="block text-sm font-medium mb-1">Description</label>
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">Description</h3>
                     <ReactQuill
                         theme="snow"
                         value={formData.description}
@@ -488,12 +586,14 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                     />
                 </div>
 
+                {/* Images */}
                 {renderImageUploads()}
 
-                <div className="flex justify-end">
+                {/* Submit Button */}
+                <div className="flex justify-end pt-4 border-t">
                     <button
                         type="submit"
-                        className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors disabled:opacity-50"
                         disabled={submitting}
                     >
                         {submitting ? 'Saving...' : isEditing ? 'Update Product' : 'Add Product'}

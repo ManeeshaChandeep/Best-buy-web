@@ -35,7 +35,7 @@ const ProductCard = ({
             <div
                 className="bg-white rounded-md transition-all duration-200 flex flex-col items-center
                 hover:scale-[1.03] hover:shadow-md group min-w-[110px] w-[43vw] sm:w-[31vw]
-                md:w-[22vw] lg:w-[16vw] h-[220px] md:mx-auto mb-8">
+                md:w-[22vw] lg:w-[16vw] h-[180px] md:mx-auto mb-4">
 
 
                 {/* Image Section */}

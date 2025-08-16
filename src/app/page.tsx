@@ -146,7 +146,7 @@ const ResponsiveImageGallery = () => {
     const images = [postOne, postTwo];
 
     return (
-        <div className="w-full my-14">
+        <div className="w-full my-4">
             {isMobile ? (
                 <Slider {...sliderSettings}>
                     {images.map((img, idx) => (
@@ -216,6 +216,10 @@ export default function Home() {
         });
     }, []);
 
+    const getSlidesToShow = (maxSlides, length) => {
+        return Math.min(maxSlides, length);
+    };
+
     const sliderImages = [postOne, postTwo, postThree];
     const heroSliderSettings = {
         dots: false,
@@ -233,7 +237,7 @@ export default function Home() {
 
     const productSliderSettings = {
         dots: false,
-        infinite: false,
+        infinite: true,
         speed: 500,
         arrows: true,
         nextArrow: <NextArrow />,
@@ -259,6 +263,21 @@ export default function Home() {
             },
         ],
     };
+
+    const getProductSettings = (items) => {
+        const slidesToShow = getSlidesToShow(5, items.length);
+        return {
+            ...productSliderSettings,
+            slidesToShow: slidesToShow,
+            responsive: productSliderSettings.responsive.map((breakpoint) => ({
+                ...breakpoint,
+                settings: {
+                    ...breakpoint.settings,
+                    slidesToShow: getSlidesToShow(breakpoint.settings.slidesToShow, items.length),
+                },
+            })),
+        };
+    }
 
     if (!mounted) return null; // Prevent hydration mismatch on Home page (for media queries)
 
@@ -295,7 +314,7 @@ export default function Home() {
                 </div>
 
                 <div className="relative">
-                    <Slider {...productSliderSettings}>
+                    <Slider {...getProductSettings(newProducts)}>
                         {newProducts.map((product) => (
                             <div key={product.id} className="px-1">
                                 <ItemCard
@@ -330,7 +349,7 @@ export default function Home() {
                         const products = productsByCategory[categoryKey] || [];
 
                         return (
-                            <div key={category.id} className="mt-10 w-full">
+                            <div key={category.id} className=" w-full">
                                 <div className="border-b border-gray-300 pb-1 mb-2">
                                     <div className="flex justify-between items-center">
                                         <h1 className="text-red-600 text-[18px] md:text-[16px] font-bold">
@@ -347,7 +366,7 @@ export default function Home() {
                                 </div>
 
                                 <div className="relative">
-                                    <Slider {...productSliderSettings}>
+                                    <Slider {...getProductSettings(products)}>
                                         {products.map((product) => (
                                             <div key={product.id} className="px-1">
                                                 <ItemCard

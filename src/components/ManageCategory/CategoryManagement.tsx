@@ -48,6 +48,11 @@ const CategoryManagement = () => {
     const [brandName, setBrandName] = useState("");
     const [brandIdToEdit, setBrandIdToEdit] = useState<string | null>(null);
 
+    // New states for better management
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [selectedCategoryForBrands, setSelectedCategoryForBrands] = useState<Category | null>(null);
+    const [showBrandForm, setShowBrandForm] = useState(false);
+
     useEffect(() => {
         fetchCategories();
 
@@ -62,16 +67,14 @@ const CategoryManagement = () => {
     }, []);
 
     useEffect(() => {
-        if (brandSelectedCategory) {
-            fetchBrands(brandSelectedCategory.id);
+        if (selectedCategoryForBrands) {
+            fetchBrands(selectedCategoryForBrands.id);
             setBrandName("");
             setBrandIdToEdit(null);
         } else {
             setBrands([]);
         }
-    }, [brandSelectedCategory]);
-
-    // Category methods (unchanged)
+    }, [selectedCategoryForBrands]);
 
     const fetchCategories = async () => {
         try {
@@ -114,6 +117,7 @@ const CategoryManagement = () => {
                 parent: categoryFormData.parent || null,
             });
             setCategoryFormData({ name: "", image: "", imagePreview: "", parent: "" });
+            setShowAddForm(false);
             fetchCategories();
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to add category");
@@ -144,8 +148,8 @@ const CategoryManagement = () => {
                 if (editingCategory?.id === categoryId) {
                     setEditingCategory(null);
                 }
-                if (brandSelectedCategory?.id === categoryId) {
-                    setBrandSelectedCategory(undefined);
+                if (selectedCategoryForBrands?.id === categoryId) {
+                    setSelectedCategoryForBrands(null);
                 }
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Failed to delete category");
@@ -221,6 +225,7 @@ const CategoryManagement = () => {
             ...category,
             parentName: parentCategory?.name || "None",
         });
+        setShowAddForm(false);
     };
 
     const toggleExpand = (categoryId: string) => {
@@ -228,6 +233,13 @@ const CategoryManagement = () => {
             ...prev,
             [categoryId]: !prev[categoryId],
         }));
+    };
+
+    const selectCategoryForBrands = (category: Category) => {
+        setSelectedCategoryForBrands(category);
+        setShowBrandForm(false);
+        setBrandIdToEdit(null);
+        setBrandName("");
     };
 
     const renderImageUpload = (
@@ -334,73 +346,84 @@ const CategoryManagement = () => {
     const renderCategoryTree = (categories: Category[], level = 0) => {
         return categories.map((category) => (
             <div key={category.id} className="ml-4">
-                <div className={`p-2 rounded flex items-center justify-between ${level > 0 ? "bg-gray-50" : "bg-white"}`}>
-                    <div className="flex items-center gap-2 cursor-pointer" onClick={() => toggleExpand(category.id)}>
-                        {category.subcategories && category.subcategories.length > 0 ? (
-                            <span className="text-gray-500">{expandedCategories[category.id] ? "▼" : "►"}</span>
-                        ) : (
-                            <span className="w-4"></span>
-                        )}
-                        {category.image && (
-                            <img
-                                src={`https://api.bestbuyelectronics.lk${category.image}`}
-                                alt={category.name}
-                                className="h-8 w-8 object-cover rounded"
-                            />
-                        )}
-                        <span>{category.name}</span>
-                    </div>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setBrandSelectedCategory(category);
-                            }}
-                            className="text-green-500 hover:text-green-700 text-sm"
-                        >
-                            Add Brand
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                startEditing(category);
-                            }}
-                            className="text-blue-500 hover:text-blue-700 text-sm"
-                        >
-                            Edit
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteCategory(category.id);
-                            }}
-                            className="text-red-500 hover:text-red-700 text-sm"
-                        >
-                            Delete
-                        </button>
+                <div className={`p-3 rounded border ${level > 0 ? "bg-gray-50 border-gray-200" : "bg-white border-gray-300"} hover:shadow-md transition-shadow`}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 cursor-pointer" onClick={() => toggleExpand(category.id)}>
+                                {category.subcategories && category.subcategories.length > 0 ? (
+                                    <span className="text-gray-500 text-lg">{expandedCategories[category.id] ? "▼" : "►"}</span>
+                                ) : (
+                                    <span className="w-6"></span>
+                                )}
+                                {category.image && (
+                                    <img
+                                        src={`https://api.bestbuyelectronics.lk${category.image}`}
+                                        alt={category.name}
+                                        className="h-10 w-10 object-cover rounded"
+                                    />
+                                )}
+                                <span className="font-medium text-gray-800">{category.name}</span>
+                                {category.subcategories && category.subcategories.length > 0 && (
+                                    <span className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                                        {category.subcategories.length} subcategories
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    selectCategoryForBrands(category);
+                                }}
+                                className="text-green-600 hover:text-green-800 text-sm font-medium bg-green-100 hover:bg-green-200 px-3 py-1 rounded-md transition-colors"
+                                title="Manage Brands"
+                            >
+                                Brands
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    startEditing(category);
+                                }}
+                                className="text-blue-600 hover:text-blue-800 text-sm font-medium bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-md transition-colors"
+                                title="Edit Category"
+                            >
+                                Edit
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteCategory(category.id);
+                                }}
+                                className="text-red-600 hover:text-red-800 text-sm font-medium bg-red-100 hover:bg-red-200 px-3 py-1 rounded-md transition-colors"
+                                title="Delete Category"
+                            >
+                                Delete
+                            </button>
+                        </div>
                     </div>
                 </div>
                 {expandedCategories[category.id] && category.subcategories && category.subcategories.length > 0 && (
-                    <div className="border-l-2 border-gray-200 pl-2">{renderCategoryTree(category.subcategories, level + 1)}</div>
+                    <div className="border-l-2 border-gray-200 pl-4 mt-2">{renderCategoryTree(category.subcategories, level + 1)}</div>
                 )}
             </div>
         ));
     };
 
     // Brand methods
-
     const handleAddBrand = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!brandSelectedCategory) return;
+        if (!selectedCategoryForBrands) return;
         try {
             if (brandIdToEdit) {
                 await apiClient.put(`brands/${brandIdToEdit}/`, { name: brandName });
             } else {
-                await apiClient.post(`categories/${brandSelectedCategory.id}/brands/`, { name: brandName });
+                await apiClient.post(`categories/${selectedCategoryForBrands.id}/brands/`, { name: brandName });
             }
             setBrandName("");
             setBrandIdToEdit(null);
-            fetchBrands(brandSelectedCategory.id);
+            fetchBrands(selectedCategoryForBrands.id);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to save brand");
         }
@@ -420,21 +443,51 @@ const CategoryManagement = () => {
     const handleBrandEdit = (brand: Brand) => {
         setBrandIdToEdit(brand.id);
         setBrandName(brand.name);
+        setShowBrandForm(true);
     };
 
     const handleDeleteBrand = async (brandId: string) => {
         if (!window.confirm("Are you sure you want to delete this brand?")) return;
         try {
             await apiClient.delete(`brands/${brandId}/`);
-            if (brandSelectedCategory) fetchBrands(brandSelectedCategory.id);
+            if (selectedCategoryForBrands) fetchBrands(selectedCategoryForBrands.id);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to delete brand");
         }
     };
 
+    const resetForms = () => {
+        setCategoryFormData({ name: "", image: "", imagePreview: "", parent: "" });
+        setEditingCategory(null);
+        setShowAddForm(false);
+        setSelectedCategoryForBrands(null);
+        setBrandName("");
+        setBrandIdToEdit(null);
+        setShowBrandForm(false);
+    };
+
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8 text-gray-800">Category Management</h1>
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-3xl font-bold text-gray-800">Category Management</h1>
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => {
+                            resetForms();
+                            setShowAddForm(true);
+                        }}
+                        className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                    >
+                        + Add Category
+                    </button>
+                    <button
+                        onClick={resetForms}
+                        className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                    >
+                        Reset
+                    </button>
+                </div>
+            </div>
 
             {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -445,31 +498,42 @@ const CategoryManagement = () => {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                    {/* Add/Edit Category Form */}
-                    <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-                        <h2 className="text-xl font-semibold mb-4 text-gray-700">
-                            {editingCategory ? `Edit Category (${editingCategory.parentName || "Top Level"})` : "Add Category"}
-                        </h2>
+            <div className="space-y-8">
+                {/* Add/Edit Category Form */}
+                {(showAddForm || editingCategory) && (
+                    <div className="bg-white p-6 rounded-lg shadow-md">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-semibold text-gray-700">
+                                {editingCategory ? `Edit Category` : "Add New Category"}
+                            </h2>
+                            <button
+                                onClick={resetForms}
+                                className="text-gray-500 hover:text-gray-700 text-2xl"
+                            >
+                                ×
+                            </button>
+                        </div>
 
                         <form onSubmit={editingCategory ? handleUpdateCategory : handleAddCategory}>
-                            <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
-                                    Category Name
-                                </label>
-                                <input
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                    id="name"
-                                    type="text"
-                                    name="name"
-                                    value={editingCategory ? editingCategory.name : categoryFormData.name}
-                                    onChange={editingCategory ? handleEditChange : handleCategoryChange}
-                                    required
-                                />
-                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+                                        Category Name
+                                    </label>
+                                    <input
+                                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                        id="name"
+                                        type="text"
+                                        name="name"
+                                        value={editingCategory ? editingCategory.name : categoryFormData.name}
+                                        onChange={editingCategory ? handleEditChange : handleCategoryChange}
+                                        required
+                                        placeholder="Enter category name"
+                                    />
+                                </div>
 
-                            {renderParentSelect(editingCategory ? editingCategory.parent : categoryFormData.parent)}
+                                {renderParentSelect(editingCategory ? editingCategory.parent : categoryFormData.parent)}
+                            </div>
 
                             {renderImageUpload(
                                 editingCategory ? editingCategory.image : categoryFormData.image,
@@ -484,129 +548,142 @@ const CategoryManagement = () => {
                                     type="submit"
                                     disabled={uploading || (!editingCategory && !categoryFormData.image)}
                                 >
-                                    {editingCategory ? "Update Category" : "Add Category"}
+                                    {uploading ? "Uploading..." : editingCategory ? "Update Category" : "Add Category"}
                                 </button>
-                                {editingCategory && (
-                                    <button
-                                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                                        type="button"
-                                        onClick={() => setEditingCategory(null)}
-                                    >
-                                        Cancel
-                                    </button>
-                                )}
                             </div>
                         </form>
                     </div>
+                )}
 
-                    {/* Category List */}
-                    <div className="bg-white p-6 rounded-lg shadow-md">
-                        <h2 className="text-xl font-semibold mb-4 text-gray-700">Categories</h2>
+                {/* Category List */}
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                    <h2 className="text-xl font-semibold mb-4 text-gray-700">Categories</h2>
 
-                        {loading ? (
-                            <div className="flex justify-center items-center h-32">
-                                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-                            </div>
-                        ) : (
-                            <div className="space-y-1">{renderCategoryTree(categories.filter((cat) => !cat.parent))}</div>
-                        )}
-                    </div>
+                    {loading ? (
+                        <div className="flex justify-center items-center h-32">
+                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                        </div>
+                    ) : categories.length === 0 ? (
+                        <div className="text-center text-gray-500 py-8">
+                            <p>No categories found.</p>
+                            <button
+                                onClick={() => setShowAddForm(true)}
+                                className="text-blue-500 hover:text-blue-700 mt-2"
+                            >
+                                Add your first category
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">{renderCategoryTree(categories.filter((cat) => !cat.parent))}</div>
+                    )}
                 </div>
 
-                {/* Brand Section */}
-                <div>
-                    <div className={`${!brandSelectedCategory ? "hidden" : ""} bg-white p-6 rounded-lg shadow-md`}>
-                        <h2 className="text-xl font-semibold mb-4 text-gray-700">Add Brand</h2>
-
-                        <form onSubmit={handleAddBrand}>
-                            <div className="mb-4">
-                                <label className="block text-gray-600 text-sm font-bold mb-2">
-                                    Category: {brandSelectedCategory?.name}
-                                </label>
-                            </div>
-
-                            <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="brandName">
-                                    Brand Name
-                                </label>
-                                <input
-                                    id="brandName"
-                                    type="text"
-                                    name="brandName"
-                                    value={brandName}
-                                    onChange={(e) => setBrandName(e.target.value)}
-                                    required
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                />
-                            </div>
-
+                {/* Brand Management */}
+                {selectedCategoryForBrands && (
+                    <div className="bg-white p-6 rounded-lg shadow-md">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-semibold text-gray-700">
+                                Brands for: {selectedCategoryForBrands.name}
+                            </h2>
                             <button
-                                type="submit"
-                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                onClick={() => setSelectedCategoryForBrands(null)}
+                                className="text-gray-500 hover:text-gray-700 text-2xl"
                             >
-                                {brandIdToEdit ? "Update Brand" : "Add Brand"}
+                                ×
                             </button>
+                        </div>
 
-                            {brandIdToEdit && (
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setBrandIdToEdit(null);
-                                        setBrandName("");
-                                    }}
-                                    className="mt-3 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                                >
-                                    Cancel Edit
-                                </button>
-                            )}
-                        </form>
-                    </div>
+                        {/* Brand Form */}
+                        {(showBrandForm || brands.length === 0) && (
+                            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                                <form onSubmit={handleAddBrand}>
+                                    <div className="mb-4">
+                                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="brandName">
+                                            Brand Name
+                                        </label>
+                                        <input
+                                            id="brandName"
+                                            type="text"
+                                            name="brandName"
+                                            value={brandName}
+                                            onChange={(e) => setBrandName(e.target.value)}
+                                            required
+                                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                            placeholder="Enter brand name"
+                                        />
+                                    </div>
 
-                    {/* Brand Table */}
-                    <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
-                        {loadingBrands ? (
-                            <div className="text-gray-500">Loading brands...</div>
-                        ) : brands.length > 0 ? (
-                            <table className="min-w-full border border-gray-300">
-                                <thead className="bg-gray-100">
-                                <tr>
-                                    <th className="py-2 px-4 border-b text-left">ID</th>
-                                    <th className="py-2 px-4 border-b text-left">Name</th>
-                                    <th className="py-2 px-4 border-b text-left">Actions</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {brands.map((brand) => (
-                                    <tr key={brand.id} className="hover:bg-gray-50">
-                                        <td className="py-2 px-4 border-b">{brand.id}</td>
-                                        <td className="py-2 px-4 border-b">{brand.name}</td>
-                                        <td className="py-2 px-4 border-b space-x-2">
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="submit"
+                                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex-1"
+                                        >
+                                            {brandIdToEdit ? "Update Brand" : "Add Brand"}
+                                        </button>
+                                        {brandIdToEdit && (
                                             <button
-                                                className="text-blue-500 hover:underline"
+                                                type="button"
+                                                onClick={() => {
+                                                    setBrandIdToEdit(null);
+                                                    setBrandName("");
+                                                    setShowBrandForm(false);
+                                                }}
+                                                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                            >
+                                                Cancel
+                                            </button>
+                                        )}
+                                    </div>
+                                </form>
+                            </div>
+                        )}
+
+                        {/* Add Brand Button */}
+                        {!showBrandForm && brands.length > 0 && (
+                            <button
+                                onClick={() => setShowBrandForm(true)}
+                                className="mb-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded w-full transition-colors"
+                            >
+                                + Add New Brand
+                            </button>
+                        )}
+
+                        {/* Brand Table */}
+                        {loadingBrands ? (
+                            <div className="text-center text-gray-500 py-8">
+                                <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                                Loading brands...
+                            </div>
+                        ) : brands.length > 0 ? (
+                            <div className="space-y-2">
+                                {brands.map((brand) => (
+                                    <div key={brand.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                        <span className="font-medium text-gray-800">{brand.name}</span>
+                                        <div className="flex gap-2">
+                                            <button
+                                                className="text-blue-500 hover:text-blue-700 text-sm font-medium"
                                                 onClick={() => handleBrandEdit(brand)}
                                             >
                                                 Edit
                                             </button>
                                             <button
-                                                className="text-red-500 hover:underline"
+                                                className="text-red-500 hover:text-red-700 text-sm font-medium"
                                                 onClick={() => handleDeleteBrand(brand.id)}
                                             >
                                                 Delete
                                             </button>
-                                        </td>
-                                    </tr>
+                                        </div>
+                                    </div>
                                 ))}
-                                </tbody>
-                            </table>
+                            </div>
                         ) : (
-                            <p className="text-gray-500">No brands added yet.</p>
+                            <p className="text-gray-500 text-center py-4">No brands added yet.</p>
                         )}
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );
 };
-
 
 export default CategoryManagement;
