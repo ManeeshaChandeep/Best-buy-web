@@ -417,7 +417,7 @@ const CategoryManagement = () => {
         if (!selectedCategoryForBrands) return;
         try {
             if (brandIdToEdit) {
-                await apiClient.put(`brands/${brandIdToEdit}/`, { name: brandName });
+                await apiClient.put(`categories/brand-details/${brandIdToEdit}/`, { name: brandName });
             } else {
                 await apiClient.post(`categories/${selectedCategoryForBrands.id}/brands/`, { name: brandName });
             }
@@ -449,7 +449,7 @@ const CategoryManagement = () => {
     const handleDeleteBrand = async (brandId: string) => {
         if (!window.confirm("Are you sure you want to delete this brand?")) return;
         try {
-            await apiClient.delete(`brands/${brandId}/`);
+            await apiClient.delete(`categories/brand-details/${brandId}/`);
             if (selectedCategoryForBrands) fetchBrands(selectedCategoryForBrands.id);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to delete brand");
