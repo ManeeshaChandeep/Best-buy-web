@@ -3,12 +3,11 @@
 import React, {useEffect, useState} from "react";
 import {useParams} from "next/navigation";
 import {ChevronDown, ChevronUp, Menu, X} from "lucide-react";
-import Drawer from "@mui/material/Drawer";
 import Stack from "@mui/material/Stack";
 import Pagination from "@mui/material/Pagination";
-import ItemCard from "@/components/ItemCard";
-import categoryOne from "../../../../../../../public/images/tv.png";
+import Drawer from "@mui/material/Drawer";
 import {apiClient} from "@/libs/network";
+import ItemCard from "@/components/ItemCard";
 
 const BE_URL = "https://api.bestbuyelectronics.lk";
 
@@ -31,41 +30,36 @@ interface Category {
     subcategories: Category[];
 }
 
-const categories = [
-    "LED TV",
-    "Smart LED TV",
-    "OLED TV",
-    "UHD TV",
-    "JVC TV Special Offer",
-    "TV Accessories",
-];
+interface Brand {
+    id: number;
+    name: string;
+}
 
-// ------------------ Sidebar ------------------
+interface DetailsResponse {
+    id: number;
+    image: string;
+    name: string;
+    subcategories: Category[];
+    brands: Brand[];
+}
 
-function Sidebar({
-                     id,
-                     isOpen,
-                     onClose,
-                     selectedCategories,
-                     selectedBrands,
-                     toggleCategory,
-                     toggleBrand,
-                 }: {
-    id?: any;
-    isOpen: boolean;
-    onClose: () => void;
-    selectedCategories: string[];
-    selectedBrands: string[];
-    toggleCategory: (cat: string) => void;
-    toggleBrand: (brand: string) => void;
-}) {
-    const [categoriesOpen, setCategoriesOpen] = useState(true);
-    const [brandsOpen, setBrandsOpen] = useState(true);
-    const [brands, setBrands] = useState([]);
-
-    const FilterContent = () => (
-        <div className="p-6 w-full bg-white border border-gray-300 rounded-sm">
+function FilterContent({
+                           id,
+                           selectedCategories,
+                           selectedBrands,
+                           toggleCategory,
+                           toggleBrand,
+                           categoriesOpen,
+                           setCategoriesOpen,
+                           brandsOpen,
+                           setBrandsOpen,
+                           brands,
+                           subcategories,
+                       }: any) {
+    return (
+        <div className="p-6 w-full bg-white">
             <h3 className="text-xl font-semibold mb-6">Filter Products</h3>
+
             <div className="mb-8">
                 <button
                     onClick={() => setCategoriesOpen(!categoriesOpen)}
@@ -78,17 +72,21 @@ function Sidebar({
                 </button>
                 {categoriesOpen && (
                     <div id="categories-list" className="flex flex-col space-y-2">
-                        {categories.map((cat) => (
-                            <label key={cat} className="inline-flex items-center cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    className="mr-3 w-4 h-4 text-red-500 accent-red-500"
-                                    checked={selectedCategories.includes(cat)}
-                                    onChange={() => toggleCategory(cat)}
-                                />
-                                {cat}
-                            </label>
-                        ))}
+                        {subcategories.length > 0 ? (
+                            subcategories.map((cat: Category) => (
+                                <label key={cat.id} className="inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="mr-3 w-4 h-4 text-red-500 accent-red-500"
+                                        checked={selectedCategories.includes(cat.id)}
+                                        onChange={() => toggleCategory(cat.id)}
+                                    />
+                                    {cat.name}
+                                </label>
+                            ))
+                        ) : (
+                            <span className="text-gray-500 text-sm">No categories available</span>
+                        )}
                     </div>
                 )}
             </div>
@@ -105,38 +103,79 @@ function Sidebar({
                 </button>
                 {brandsOpen && (
                     <div id="brands-list" className="flex flex-col space-y-2">
-                        {brands.map((brand) => (
-                            <label key={brand} className="inline-flex items-center cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    className="mr-3 w-4 h-4 text-red-500 accent-red-500"
-                                    checked={selectedBrands.includes(brand)}
-                                    onChange={() => toggleBrand(brand)}
-                                />
-                                {brand}
-                            </label>
-                        ))}
+                        {brands.length > 0 ? (
+                            brands.map((brand: Brand) => (
+                                <label key={brand.id} className="inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="mr-3 w-4 h-4 text-red-500 accent-red-500"
+                                        checked={selectedBrands.includes(brand.id)}
+                                        onChange={() => toggleBrand(brand.id)}
+                                    />
+                                    {brand.name}
+                                </label>
+                            ))
+                        ) : (
+                            <span className="text-gray-500 text-sm">No brands available</span>
+                        )}
                     </div>
                 )}
             </div>
         </div>
     );
+}
+
+function Sidebar({
+                     id,
+                     isOpen,
+                     onClose,
+                     selectedCategories,
+                     selectedBrands,
+                     toggleCategory,
+                     toggleBrand,
+                     brands,
+                     subcategories,
+                 }: {
+    id?: any;
+    isOpen: boolean;
+    onClose: () => void;
+    selectedCategories: string[];
+    selectedBrands: string[];
+    toggleCategory: (cat: string) => void;
+    toggleBrand: (brand: string) => void;
+    brands: Brand[];
+    subcategories: Category[];
+}) {
+    const [categoriesOpen, setCategoriesOpen] = useState(true);
+    const [brandsOpen, setBrandsOpen] = useState(true);
 
     return (
         <>
-            {/* Desktop sidebar: visible only at lg and above */}
+            {/* Desktop sidebar only at lg and above */}
             <aside
                 className="hidden lg:block w-64 border-r border-gray-200 bg-white sticky top-0 h-screen overflow-auto">
-                <FilterContent/>
+                <FilterContent
+                    id={id}
+                    selectedCategories={selectedCategories}
+                    selectedBrands={selectedBrands}
+                    toggleCategory={toggleCategory}
+                    toggleBrand={toggleBrand}
+                    categoriesOpen={categoriesOpen}
+                    setCategoriesOpen={setCategoriesOpen}
+                    brandsOpen={brandsOpen}
+                    setBrandsOpen={setBrandsOpen}
+                    brands={brands}
+                    subcategories={subcategories}
+                />
             </aside>
 
-            {/* Mobile + Tablet Drawer: visible below lg */}
+            {/* Mobile and tablet Drawer */}
             <Drawer
                 anchor="left"
                 open={isOpen}
                 onClose={onClose}
                 sx={{
-                    display: {xs: "block", md: "block", lg: "none"}, // xs + sm + md (mobile+tablet)
+                    display: {xs: "block", md: "block", lg: "none"},
                     "& .MuiDrawer-paper": {
                         width: "80%",
                         maxWidth: 320,
@@ -148,31 +187,44 @@ function Sidebar({
                         <X size={24}/>
                     </button>
                 </div>
-                <FilterContent/>
+                <FilterContent
+                    id={id}
+                    selectedCategories={selectedCategories}
+                    selectedBrands={selectedBrands}
+                    toggleCategory={toggleCategory}
+                    toggleBrand={toggleBrand}
+                    categoriesOpen={categoriesOpen}
+                    setCategoriesOpen={setCategoriesOpen}
+                    brandsOpen={brandsOpen}
+                    setBrandsOpen={setBrandsOpen}
+                    brands={brands}
+                    subcategories={subcategories}
+                />
             </Drawer>
         </>
     );
 }
-
-// ------------------ ProductGrid ------------------
 
 function ProductGrid({
                          id,
                          selectedCategories,
                          selectedBrands,
                          sortBy,
+                         setSortBy,
+                         categoryName,
                      }: {
     id?: any;
     selectedCategories: string[];
     selectedBrands: string[];
     sortBy: string;
+    categoryName: string;
+    setSortBy: React.Dispatch<React.SetStateAction<string>>;
 }) {
-    const productsPerPage = 8;
+    const productsPerPage = 10;
     const [products, setProducts] = useState<Product[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
-    const [subCategoryName, setSubCategoryName] = useState("");
 
     useEffect(() => {
         async function fetchProducts(pageNum: number) {
@@ -181,18 +233,33 @@ function ProductGrid({
                 const queryParams = new URLSearchParams({
                     page: pageNum.toString(),
                     limit: productsPerPage.toString(),
-                    category: id || "",
                     sort: sortBy,
                 });
 
-                if (selectedCategories.length > 0)
-                    queryParams.append("categoryFilter", selectedCategories.join(","));
-                if (selectedBrands.length > 0)
-                    queryParams.append("brandFilter", selectedBrands.join(","));
+                // category from `id` if set
+                if (id) {
+                    queryParams.set("category", id);
+                }
 
-                const res = await fetch(`${BE_URL}/products/?${queryParams.toString()}`, {
-                    cache: "no-store",
-                });
+                // multiple categories
+                if (selectedCategories.length > 0) {
+                    queryParams.set("category", selectedCategories.join(","));
+                }
+
+                // multiple brands
+                if (selectedBrands.length > 0) {
+                    queryParams.set("brand", selectedBrands.join(","));
+                }
+
+                const res = await fetch(
+                    `${BE_URL}/products/?${queryParams.toString()}`,
+                    { cache: "no-store" }
+                );
+
+                if (!res.ok) {
+                    throw new Error(`API error ${res.status}`);
+                }
+
                 const data = await res.json();
                 const apiProducts = data.results || [];
 
@@ -202,47 +269,39 @@ function ProductGrid({
                 }
             } catch (error) {
                 console.error("Failed to fetch products", error);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
-        }
-
-        const fetchCategory = () => {
-            apiClient.get<Category>(`/categories/details/${id}/`).then((response) => {
-                setSubCategoryName(response.name || "Unknown Category");
-            }).catch((error) => {
-                console.error("Failed to fetch category", error);
-                setSubCategoryName("Unknown Category");
-            })
         }
 
         fetchProducts(page);
-        fetchCategory()
-    }, [page, id]);
+    }, [page, id, selectedCategories, selectedBrands]);
 
-    const handlePageChange = (_: any, value: number) => {
+    const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
         setPage(value);
     };
 
     return (
         <div className="flex-1 px-0 max-w-screen-xl mx-auto">
-            <h2 className="text-xl font-semibold mb-4 mt-2 text-gray-800">{subCategoryName}</h2>
+            <h2 className="text-xl font-semibold mb-4 mt-2 text-gray-800">{categoryName}</h2>
             {loading ? (
                 <div className="text-center py-20 text-red-600 font-medium">
                     Loading products...
                 </div>
             ) : (
                 <>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {/* 2 cols on mobile/tablet, 3 on md laptop, 4 on lg desktop */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 bg-white">
                         {products.map((product) => (
                             <ItemCard
+                                imageSrc={null}
+                                inStock={true}
                                 id={product.id}
                                 key={product.id}
                                 imageUrl={`${BE_URL}${product.images?.[0] || ""}`}
-                                imageSrc={categoryOne}
                                 title={product.name}
                                 oldPrice={product.old_price}
                                 newPrice={product.price}
-                                inStock={product.quantity > 0}
                             />
                         ))}
                     </div>
@@ -275,13 +334,15 @@ function ProductGrid({
     );
 }
 
-// ------------------ Main Page ------------------
-
 export default function Page() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
     const [sortBy, setSortBy] = useState("new");
+    const [categoryName, setCategoryName] = useState<string>("");
+    const [brands, setBrands] = useState([]);
+    const [subcategories, setSubcategories] = useState([]);
+
     const params = useParams();
     const id = params?.subcategoryId;
 
@@ -297,8 +358,23 @@ export default function Page() {
         );
     };
 
+    useEffect(() => {
+        const fetchCategory = () => {
+            apiClient.get<DetailsResponse>(`/categories/details/${id}/`).then((response) => {
+                setCategoryName(response.name || "Unknown Category");
+                setBrands(response.brands)
+                setSubcategories(response.subcategories)
+            }).catch((error) => {
+                console.error("Failed to fetch category", error);
+            })
+        }
+
+        fetchCategory();
+    }, []);
+
     return (
-        <div className="min-h-screen bg-white flex flex-col">
+        <div className="min-h-screen bg-gray-100 flex flex-col">
+            {/* Main Content */}
             <div className="mx-auto mt-4 gap-6 flex flex-1 max-w-screen-xl px-4 md:px-2">
                 <Sidebar
                     id={id}
@@ -306,18 +382,21 @@ export default function Page() {
                     onClose={() => setSidebarOpen(false)}
                     selectedCategories={selectedCategories}
                     selectedBrands={selectedBrands}
+                    brands={brands}
+                    subcategories={subcategories}
                     toggleCategory={toggleCategory}
                     toggleBrand={toggleBrand}
                 />
 
                 <div className="flex-1 flex flex-col">
-                    {/* Filter toggle button: visible only below lg */}
-                    <div className="lg:hidden flex justify-between items-center mb-4">
+                    {/* Filter + Sort Row for Mobile & Tablet */}
+                    <div className="flex justify-between items-center mb-4 lg:hidden">
                         <button
                             onClick={() => setSidebarOpen(true)}
                             className="flex items-center gap-2 text-red-600 font-semibold"
+                            aria-label="Open filters"
                         >
-                            <Menu size={24}/>
+                            <Menu size={20}/>
                             Filters
                         </button>
 
@@ -334,11 +413,14 @@ export default function Page() {
                         </select>
                     </div>
 
+
                     <ProductGrid
                         id={id}
                         selectedCategories={selectedCategories}
                         selectedBrands={selectedBrands}
+                        categoryName={categoryName}
                         sortBy={sortBy}
+                        setSortBy={setSortBy}
                     />
                 </div>
             </div>

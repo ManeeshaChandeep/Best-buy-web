@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import { ChevronDown, ChevronUp, Menu, X } from "lucide-react";
+import React, {useEffect, useState} from "react";
+import {useParams} from "next/navigation";
+import {ChevronDown, ChevronUp, Menu, X} from "lucide-react";
 import Stack from "@mui/material/Stack";
 import Pagination from "@mui/material/Pagination";
 import Drawer from "@mui/material/Drawer";
-import { apiClient } from "@/libs/network";
+import {apiClient} from "@/libs/network";
+import ItemCard from "@/components/ItemCard";
 
 const BE_URL = "https://api.bestbuyelectronics.lk";
 
@@ -29,54 +30,21 @@ interface Category {
     subcategories: Category[];
 }
 
-
-const categories = [
-    "LED TV",
-    "Smart LED TV",
-    "OLED TV",
-    "UHD TV",
-    "JVC TV Special Offer",
-    "TV Accessories",
-];
-
-const brands = ["LG", "Toshiba", "Haier", "JVC", "Abans"];
-
-function ItemCard({
-                      id,
-                      imageUrl,
-                      title,
-                      oldPrice,
-                      newPrice,
-                  }: {
+interface Brand {
     id: number;
-    imageUrl: string;
-    title: string;
-    oldPrice?: number;
-    newPrice: number;
-}) {
-    return (
-        <div className="bg-white rounded shadow-sm p-3 hover:shadow-md transition w-full sm:w-auto">
-            <img
-                src={imageUrl}
-                alt={title}
-                className="w-full h-32 object-contain mb-2"
-            />
-            <h3 className="text-sm font-medium text-gray-700 truncate">{title}</h3>
-            <div className="mt-1">
-                {oldPrice && (
-                    <p className="text-xs line-through text-gray-400 mb-0.5">
-                        Rs. {oldPrice.toLocaleString()}.00
-                    </p>
-                )}
-                <p className="text-sm text-red-600 font-semibold">
-                    Rs. {newPrice.toLocaleString()}.00
-                </p>
-            </div>
-        </div>
-    );
+    name: string;
+}
+
+interface DetailsResponse {
+    id: number;
+    image: string;
+    name: string;
+    subcategories: Category[];
+    brands: Brand[];
 }
 
 function FilterContent({
+                           id,
                            selectedCategories,
                            selectedBrands,
                            toggleCategory,
@@ -85,10 +53,13 @@ function FilterContent({
                            setCategoriesOpen,
                            brandsOpen,
                            setBrandsOpen,
+                           brands,
+                           subcategories,
                        }: any) {
     return (
         <div className="p-6 w-full bg-white">
             <h3 className="text-xl font-semibold mb-6">Filter Products</h3>
+
             <div className="mb-8">
                 <button
                     onClick={() => setCategoriesOpen(!categoriesOpen)}
@@ -97,27 +68,29 @@ function FilterContent({
                     aria-controls="categories-list"
                 >
                     <span>Categories</span>
-                    {categoriesOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    {categoriesOpen ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
                 </button>
                 {categoriesOpen && (
                     <div id="categories-list" className="flex flex-col space-y-2">
-                        {categories.map((cat) => (
-                            <label
-                                key={cat}
-                                className="inline-flex items-center cursor-pointer"
-                            >
-                                <input
-                                    type="checkbox"
-                                    className="mr-3 w-4 h-4 text-red-500 accent-red-500"
-                                    checked={selectedCategories.includes(cat)}
-                                    onChange={() => toggleCategory(cat)}
-                                />
-                                {cat}
-                            </label>
-                        ))}
+                        {subcategories.length > 0 ? (
+                            subcategories.map((cat: Category) => (
+                                <label key={cat.id} className="inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="mr-3 w-4 h-4 text-red-500 accent-red-500"
+                                        checked={selectedCategories.includes(cat.id)}
+                                        onChange={() => toggleCategory(cat.id)}
+                                    />
+                                    {cat.name}
+                                </label>
+                            ))
+                        ) : (
+                            <span className="text-gray-500 text-sm">No categories available</span>
+                        )}
                     </div>
                 )}
             </div>
+
             <div>
                 <button
                     onClick={() => setBrandsOpen(!brandsOpen)}
@@ -126,24 +99,25 @@ function FilterContent({
                     aria-controls="brands-list"
                 >
                     <span>Brands</span>
-                    {brandsOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    {brandsOpen ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
                 </button>
                 {brandsOpen && (
                     <div id="brands-list" className="flex flex-col space-y-2">
-                        {brands.map((brand) => (
-                            <label
-                                key={brand}
-                                className="inline-flex items-center cursor-pointer"
-                            >
-                                <input
-                                    type="checkbox"
-                                    className="mr-3 w-4 h-4 text-red-500 accent-red-500"
-                                    checked={selectedBrands.includes(brand)}
-                                    onChange={() => toggleBrand(brand)}
-                                />
-                                {brand}
-                            </label>
-                        ))}
+                        {brands.length > 0 ? (
+                            brands.map((brand: Brand) => (
+                                <label key={brand.id} className="inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="mr-3 w-4 h-4 text-red-500 accent-red-500"
+                                        checked={selectedBrands.includes(brand.id)}
+                                        onChange={() => toggleBrand(brand.id)}
+                                    />
+                                    {brand.name}
+                                </label>
+                            ))
+                        ) : (
+                            <span className="text-gray-500 text-sm">No brands available</span>
+                        )}
                     </div>
                 )}
             </div>
@@ -151,20 +125,27 @@ function FilterContent({
     );
 }
 
+
 function Sidebar({
+                     id,
                      isOpen,
                      onClose,
                      selectedCategories,
                      selectedBrands,
                      toggleCategory,
                      toggleBrand,
+                     brands,
+                     subcategories,
                  }: {
+    id?: any;
     isOpen: boolean;
     onClose: () => void;
     selectedCategories: string[];
     selectedBrands: string[];
     toggleCategory: (cat: string) => void;
     toggleBrand: (brand: string) => void;
+    brands: Brand[];
+    subcategories: Category[];
 }) {
     const [categoriesOpen, setCategoriesOpen] = useState(true);
     const [brandsOpen, setBrandsOpen] = useState(true);
@@ -172,8 +153,10 @@ function Sidebar({
     return (
         <>
             {/* Desktop sidebar only at lg and above */}
-            <aside className="hidden lg:block w-64 border-r border-gray-200 bg-white sticky top-0 h-screen overflow-auto">
+            <aside
+                className="hidden lg:block w-64 border-r border-gray-200 bg-white sticky top-0 h-screen overflow-auto">
                 <FilterContent
+                    id={id}
                     selectedCategories={selectedCategories}
                     selectedBrands={selectedBrands}
                     toggleCategory={toggleCategory}
@@ -182,6 +165,8 @@ function Sidebar({
                     setCategoriesOpen={setCategoriesOpen}
                     brandsOpen={brandsOpen}
                     setBrandsOpen={setBrandsOpen}
+                    brands={brands}
+                    subcategories={subcategories}
                 />
             </aside>
 
@@ -191,7 +176,7 @@ function Sidebar({
                 open={isOpen}
                 onClose={onClose}
                 sx={{
-                    display: { xs: "block", md: "block", lg: "none" },
+                    display: {xs: "block", md: "block", lg: "none"},
                     "& .MuiDrawer-paper": {
                         width: "80%",
                         maxWidth: 320,
@@ -200,10 +185,11 @@ function Sidebar({
             >
                 <div className="flex justify-end p-4 border-b">
                     <button onClick={onClose} aria-label="Close filters">
-                        <X size={24} />
+                        <X size={24}/>
                     </button>
                 </div>
                 <FilterContent
+                    id={id}
                     selectedCategories={selectedCategories}
                     selectedBrands={selectedBrands}
                     toggleCategory={toggleCategory}
@@ -212,6 +198,8 @@ function Sidebar({
                     setCategoriesOpen={setCategoriesOpen}
                     brandsOpen={brandsOpen}
                     setBrandsOpen={setBrandsOpen}
+                    brands={brands}
+                    subcategories={subcategories}
                 />
             </Drawer>
         </>
@@ -224,19 +212,20 @@ function ProductGrid({
                          selectedBrands,
                          sortBy,
                          setSortBy,
+                         categoryName,
                      }: {
     id?: any;
     selectedCategories: string[];
     selectedBrands: string[];
     sortBy: string;
+    categoryName: string;
     setSortBy: React.Dispatch<React.SetStateAction<string>>;
 }) {
-    const productsPerPage = 7;
+    const productsPerPage = 10;
     const [products, setProducts] = useState<Product[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
-    const [categoryName, setCategoryName] = useState("");
 
     useEffect(() => {
         async function fetchProducts(pageNum: number) {
@@ -245,18 +234,32 @@ function ProductGrid({
                 const queryParams = new URLSearchParams({
                     page: pageNum.toString(),
                     limit: productsPerPage.toString(),
-                    category: id || "",
                     sort: sortBy,
                 });
 
-                if (selectedCategories.length > 0)
-                    queryParams.append("categoryFilter", selectedCategories.join(","));
-                if (selectedBrands.length > 0)
-                    queryParams.append("brandFilter", selectedBrands.join(","));
+                // category from `id` if set
+                if (id) {
+                    queryParams.set("category", id);
+                }
 
-                const res = await fetch(`${BE_URL}/products/?${queryParams.toString()}`, {
-                    cache: "no-store",
-                });
+                // multiple categories
+                if (selectedCategories.length > 0) {
+                    queryParams.set("category", selectedCategories.join(","));
+                }
+
+                // multiple brands
+                if (selectedBrands.length > 0) {
+                    queryParams.set("brand", selectedBrands.join(","));
+                }
+
+                const res = await fetch(
+                    `${BE_URL}/products/?${queryParams.toString()}`,
+                    { cache: "no-store" }
+                );
+
+                if (!res.ok) {
+                    throw new Error(`API error ${res.status}`);
+                }
 
                 const data = await res.json();
                 const apiProducts = data.results || [];
@@ -267,22 +270,13 @@ function ProductGrid({
                 }
             } catch (error) {
                 console.error("Failed to fetch products", error);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         }
 
-        const fetchCategory = () => {
-            apiClient.get<Category>(`/categories/details/${id}/`).then((response) => {
-                setCategoryName(response.name || "Unknown Category");
-            }).catch((error) => {
-                console.error("Failed to fetch category", error);
-                setCategoryName("Unknown Category");
-            })
-        }
-
-        fetchCategory()
         fetchProducts(page);
-    }, [page, id]);
+    }, [page, id, selectedCategories, selectedBrands]);
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
         setPage(value);
@@ -298,9 +292,11 @@ function ProductGrid({
             ) : (
                 <>
                     {/* 2 cols on mobile/tablet, 3 on md laptop, 4 on lg desktop */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 bg-white">
                         {products.map((product) => (
                             <ItemCard
+                                imageSrc={null}
+                                inStock={true}
                                 id={product.id}
                                 key={product.id}
                                 imageUrl={`${BE_URL}${product.images?.[0] || ""}`}
@@ -344,6 +340,9 @@ export default function Page() {
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
     const [sortBy, setSortBy] = useState("new");
+    const [categoryName, setCategoryName] = useState<string>("");
+    const [brands, setBrands] = useState([]);
+    const [subcategories, setSubcategories] = useState([]);
 
     const params = useParams();
     const id = params?.id;
@@ -360,15 +359,32 @@ export default function Page() {
         );
     };
 
+    useEffect(() => {
+        const fetchCategory = () => {
+            apiClient.get<DetailsResponse>(`/categories/details/${id}/`).then((response) => {
+                setCategoryName(response.name || "Unknown Category");
+                setBrands(response.brands)
+                setSubcategories(response.subcategories)
+            }).catch((error) => {
+                console.error("Failed to fetch category", error);
+            })
+        }
+
+        fetchCategory();
+    }, []);
+
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col">
+        <div className="min-h-screen bg-white flex flex-col">
             {/* Main Content */}
             <div className="mx-auto mt-4 gap-6 flex flex-1 max-w-screen-xl px-4 md:px-2">
                 <Sidebar
+                    id={id}
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
                     selectedCategories={selectedCategories}
                     selectedBrands={selectedBrands}
+                    brands={brands}
+                    subcategories={subcategories}
                     toggleCategory={toggleCategory}
                     toggleBrand={toggleBrand}
                 />
@@ -381,7 +397,7 @@ export default function Page() {
                             className="flex items-center gap-2 text-red-600 font-semibold"
                             aria-label="Open filters"
                         >
-                            <Menu size={20} />
+                            <Menu size={20}/>
                             Filters
                         </button>
 
@@ -399,11 +415,11 @@ export default function Page() {
                     </div>
 
 
-
                     <ProductGrid
                         id={id}
                         selectedCategories={selectedCategories}
                         selectedBrands={selectedBrands}
+                        categoryName={categoryName}
                         sortBy={sortBy}
                         setSortBy={setSortBy}
                     />
