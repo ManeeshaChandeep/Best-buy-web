@@ -332,20 +332,26 @@ const CategoryManagement = () => {
                     value={currentParent || ""}
                     onChange={editingCategory ? handleEditChange : handleCategoryChange}
                 >
-                    <option value="">None (Top Level)</option>
+                    <option value="">None (Top Level Category)</option>
                     {options.map((option) => (
                         <option key={option.id} value={option.id} disabled={editingCategory && option.id === editingCategory.id}>
                             {option.name}
                         </option>
                     ))}
                 </select>
+                <p className="text-sm text-gray-500 mt-1">
+                    {currentParent ?
+                        "This will create a subcategory under the selected parent category." :
+                        "Leave empty to create a top-level category, or select a parent to create a subcategory."
+                    }
+                </p>
             </div>
         );
     };
 
     const renderCategoryTree = (categories: Category[], level = 0) => {
         return categories.map((category) => (
-            <div key={category.id} className="ml-4">
+            <div key={category.id} className={`ml-${level * 4}`}>
                 <div className={`p-3 rounded border ${level > 0 ? "bg-gray-50 border-gray-200" : "bg-white border-gray-300"} hover:shadow-md transition-shadow`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -355,6 +361,9 @@ const CategoryManagement = () => {
                                 ) : (
                                     <span className="w-6"></span>
                                 )}
+                                {level > 0 && (
+                                    <span className="text-gray-400 text-sm">└─</span>
+                                )}
                                 {category.image && (
                                     <img
                                         src={`https://api.bestbuyelectronics.lk${category.image}`}
@@ -362,7 +371,9 @@ const CategoryManagement = () => {
                                         className="h-10 w-10 object-cover rounded"
                                     />
                                 )}
-                                <span className="font-medium text-gray-800">{category.name}</span>
+                                <span className={`font-medium ${level > 0 ? 'text-gray-700' : 'text-gray-800'}`}>
+                                    {category.name}
+                                </span>
                                 {category.subcategories && category.subcategories.length > 0 && (
                                     <span className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
                                         {category.subcategories.length} subcategories
@@ -380,6 +391,17 @@ const CategoryManagement = () => {
                                 title="Manage Brands"
                             >
                                 Brands
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCategoryFormData({ name: "", image: "", imagePreview: "", parent: category.id });
+                                    setShowAddForm(true);
+                                }}
+                                className="text-purple-600 hover:text-purple-800 text-sm font-medium bg-purple-100 hover:bg-purple-200 px-3 py-1 rounded-md transition-colors"
+                                title="Add Subcategory"
+                            >
+                                + Sub
                             </button>
                             <button
                                 onClick={(e) => {
@@ -489,6 +511,16 @@ const CategoryManagement = () => {
                 </div>
             </div>
 
+            {/* Instructions */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <h3 className="text-blue-800 font-semibold mb-2">How to create categories and subcategories:</h3>
+                <ul className="text-blue-700 text-sm space-y-1">
+                    <li>• <strong>Top-level category:</strong> Click "Add Category" and leave "Parent Category" as "None"</li>
+                    <li>• <strong>Subcategory:</strong> Click "Add Category" and select a parent category, or use the "+ Sub" button on any existing category</li>
+                    <li>• <strong>Quick subcategory:</strong> Click the purple "+ Sub" button on any category to immediately start adding a subcategory</li>
+                </ul>
+            </div>
+
             {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                     {error}
@@ -503,9 +535,16 @@ const CategoryManagement = () => {
                 {(showAddForm || editingCategory) && (
                     <div className="bg-white p-6 rounded-lg shadow-md">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-semibold text-gray-700">
-                                {editingCategory ? `Edit Category` : "Add New Category"}
-                            </h2>
+                            <div>
+                                <h2 className="text-xl font-semibold text-gray-700">
+                                    {editingCategory ? `Edit Category` : "Add New Category"}
+                                </h2>
+                                {!editingCategory && categoryFormData.parent && (
+                                    <p className="text-sm text-blue-600 mt-1">
+                                        Adding subcategory to: {categories.find(cat => cat.id === categoryFormData.parent)?.name}
+                                    </p>
+                                )}
+                            </div>
                             <button
                                 onClick={resetForms}
                                 className="text-gray-500 hover:text-gray-700 text-2xl"
