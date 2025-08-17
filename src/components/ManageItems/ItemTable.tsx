@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { apiClient } from '@/../src/libs/network';
 
 interface Product {
@@ -39,16 +39,17 @@ interface ItemTableProps {
 
 export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps) {
     const [products, setProducts] = useState<Product[]>([]);
-    const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedSubcategory, setSelectedSubcategory] = useState('all');
     const [loading, setLoading] = useState(true);
+    const [searchLoading, setSearchLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [activeActionMenu, setActiveActionMenu] = useState<number | null>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const actionMenuRef = useRef<HTMLDivElement>(null);
+    const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -74,53 +75,98 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
         );
     }
 
-    // Fetch products and categories
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
+    // Fetch products and categories with search and filters
+    const fetchData = useCallback(async (page: number = 1, search: string = '', category: string = 'all', subcategory: string = 'all', isSearch: boolean = false) => {
+        try {
+            if (isSearch) {
+                setSearchLoading(true);
+            } else {
                 setLoading(true);
-                setError(null);
+            }
+            setError(null);
 
-                const [productsResponse, categoriesResponse] = await Promise.all([
-                    apiClient.get<ProductListResponse>(`products/?page=${currentPage}&limit=${pageSize}`),
-                    apiClient.get<Category[]>('categories/')
-                ]);
+            // Build query parameters
+            const params = new URLSearchParams();
+            params.append('page', page.toString());
+            params.append('limit', pageSize.toString());
 
-                if (!isProductArray(productsResponse.results)) {
-                    throw new Error('Invalid product data format from API');
-                }
+            if (search.trim()) {
+                params.append('search', search.trim());
+            }
 
-                if (!isCategoryArray(categoriesResponse)) {
-                    throw new Error('Invalid category data format from API');
-                }
+            if (category !== 'all') {
+                params.append('category', category);
+            }
 
-                // Convert all prices to numbers and handle potential missing data
-                const processedProducts = productsResponse.results.map(product => ({
-                    ...product,
-                    price: typeof product.price === 'string' ? parseFloat(product.price) : product.price,
-                    old_price: product.old_price
-                        ? (typeof product.old_price === 'string' ? parseFloat(product.old_price) : product.old_price)
-                        : undefined,
-                    quantity: product.quantity || 0,
-                    delivery_available: product.delivery_available || false,
-                    warranty: product.warranty || undefined
-                }));
+            if (subcategory !== 'all') {
+                params.append('subcategory', subcategory);
+            }
 
-                setProducts(processedProducts);
-                setCategories(categoriesResponse);
-                setFilteredProducts(processedProducts);
-                setTotalPages(productsResponse.total_pages);
-                setTotalCount(productsResponse.count);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to load data');
-                console.error('API Error:', err);
-            } finally {
+            const [productsResponse, categoriesResponse] = await Promise.all([
+                apiClient.get<ProductListResponse>(`products/?${params.toString()}`),
+                apiClient.get<Category[]>('categories/')
+            ]);
+
+            if (!isProductArray(productsResponse.results)) {
+                throw new Error('Invalid product data format from API');
+            }
+
+            if (!isCategoryArray(categoriesResponse)) {
+                throw new Error('Invalid category data format from API');
+            }
+
+            // Convert all prices to numbers and handle potential missing data
+            const processedProducts = productsResponse.results.map(product => ({
+                ...product,
+                price: typeof product.price === 'string' ? parseFloat(product.price) : product.price,
+                old_price: product.old_price
+                    ? (typeof product.old_price === 'string' ? parseFloat(product.old_price) : product.old_price)
+                    : undefined,
+                quantity: product.quantity || 0,
+                delivery_available: product.delivery_available || false,
+                warranty: product.warranty || undefined
+            }));
+
+            setProducts(processedProducts);
+            setCategories(categoriesResponse);
+            setTotalPages(productsResponse.total_pages);
+            setTotalCount(productsResponse.count);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load data');
+            console.error('API Error:', err);
+        } finally {
+            if (isSearch) {
+                setSearchLoading(false);
+            } else {
                 setLoading(false);
             }
-        };
+        }
+    }, [pageSize]);
 
-        fetchData();
-    }, [refreshKey, currentPage, pageSize]);
+    // Fetch data on component mount and refresh
+    useEffect(() => {
+        fetchData(currentPage, searchTerm, selectedCategory, selectedSubcategory);
+    }, [refreshKey, currentPage, fetchData]);
+
+    // Debounced search function
+    const debouncedSearch = useCallback((searchValue: string) => {
+        // Clear existing timeout
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+        }
+
+        // Set new timeout for search
+        searchTimeoutRef.current = setTimeout(() => {
+            setCurrentPage(1); // Reset to first page when searching
+            fetchData(1, searchValue, selectedCategory, selectedSubcategory, true); // Pass true for search loading
+        }, 500); // 500ms delay
+    }, [fetchData, selectedCategory, selectedSubcategory]);
+
+    // Handle search input change
+    const handleSearchChange = (value: string) => {
+        setSearchTerm(value);
+        debouncedSearch(value);
+    };
 
     // Close action menu when clicking outside
     useEffect(() => {
@@ -153,29 +199,14 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
         };
     }, []);
 
-    // Filter products based on search term, category, and subcategory
+    // Cleanup search timeout on unmount
     useEffect(() => {
-        let results = products;
-
-        if (searchTerm) {
-            const term = searchTerm.toLowerCase();
-            results = results.filter(product =>
-                product.name.toLowerCase().includes(term) ||
-                product.sku.toLowerCase().includes(term) ||
-                (product.model_number && product.model_number.toLowerCase().includes(term))
-            );
-        }
-
-        if (selectedCategory !== 'all') {
-            results = results.filter(product => product.category.name === selectedCategory);
-
-            if (selectedSubcategory !== 'all') {
-                results = results.filter(product => product.subcategory?.name === selectedSubcategory);
+        return () => {
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
             }
-        }
-
-        setFilteredProducts(results);
-    }, [searchTerm, selectedCategory, selectedSubcategory, products]);
+        };
+    }, []);
 
     // Get unique main categories
     const mainCategories = ['all', ...new Set(
@@ -217,7 +248,8 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
 
         try {
             await apiClient.delete(`products/${product.id}/`);
-            setProducts(products.filter(p => p.id !== product.id));
+            // Refresh data after deletion
+            fetchData(currentPage, searchTerm, selectedCategory, selectedSubcategory, true);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to delete product');
             console.error('Delete Error:', err);
@@ -233,22 +265,23 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
         setActiveActionMenu(null);
-    };
-
-    const handleSearch = (term: string) => {
-        setSearchTerm(term);
-        setCurrentPage(1); // Reset to first page when searching
+        // Fetch data for the new page
+        fetchData(page, searchTerm, selectedCategory, selectedSubcategory, true);
     };
 
     const handleCategoryFilter = (category: string) => {
         setSelectedCategory(category);
         setSelectedSubcategory('all');
-        setCurrentPage(1); // Reset to first page when filtering
+        setCurrentPage(1);
+        // Fetch data with new category filter
+        fetchData(1, searchTerm, category, 'all', true);
     };
 
     const handleSubcategoryFilter = (subcategory: string) => {
         setSelectedSubcategory(subcategory);
-        setCurrentPage(1); // Reset to first page when filtering
+        setCurrentPage(1);
+        // Fetch data with new subcategory filter
+        fetchData(1, searchTerm, selectedCategory, subcategory, true);
     };
 
     // Generate page numbers for pagination
@@ -316,13 +349,22 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
                             className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                             placeholder="Search by name, SKU or model (Press F2 to focus)"
                             value={searchTerm}
-                            onChange={(e) => handleSearch(e.target.value)}
+                            onChange={(e) => handleSearchChange(e.target.value)}
                         />
-                        {searchTerm && (
+                        {searchLoading && (
+                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
+                            </div>
+                        )}
+                        {searchTerm && !searchLoading && (
                             <button
                                 type="button"
                                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
-                                onClick={() => handleSearch('')}
+                                onClick={() => {
+                                    setSearchTerm('');
+                                    setCurrentPage(1);
+                                    fetchData(1, '', selectedCategory, selectedSubcategory, true);
+                                }}
                             >
                                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -374,7 +416,7 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
 
                     {/* Results Count */}
                     <div className="text-sm text-gray-600">
-                        Showing {filteredProducts.length} of {totalCount} products (Page {currentPage} of {totalPages})
+                        Showing {products.length} of {totalCount} products (Page {currentPage} of {totalPages})
                     </div>
                 </div>
             </div>
@@ -411,8 +453,8 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredProducts.length > 0 ? (
-                            filteredProducts.map(product => (
+                        {products.length > 0 ? (
+                            products.map(product => (
                                 <tr key={product.id} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         {product.images?.length > 0 ? (
@@ -547,8 +589,8 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
                                 key={page}
                                 onClick={() => handlePageChange(page)}
                                 className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${page === currentPage
-                                        ? 'bg-blue-600 text-white'
-                                        : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
                                     }`}
                             >
                                 {page}

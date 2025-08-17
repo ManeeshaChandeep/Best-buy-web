@@ -208,7 +208,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                         const filename = imageUrl.replace('/media/products/', '');
                         return {
                             id: filename,
-                            url: imageUrl, // Keep full URL for display
+                            url: `${BE_URL}${imageUrl}`,
                             file: null
                         };
                     } else {
@@ -270,11 +270,18 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
             if (isEditing && formData.id) {
                 await apiClient.put(`products/${formData.id}/`, payload);
                 setSuccess(true);
+                // Refresh the item table after update
                 onProductUpdated?.();
+                // Reset form after successful update
+                setTimeout(() => {
+                    resetForm();
+                }, 2000);
             } else {
                 await apiClient.post('products/', payload);
                 setSuccess(true);
-                resetForm()
+                // Refresh the item table after creation
+                onProductUpdated?.();
+                resetForm();
             }
         } catch (err) {
             setError('Failed to save product');
@@ -356,7 +363,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                 const newImagePreviews = [...imagePreviews];
                 newImagePreviews[index] = {
                     ...newImagePreviews[index],
-                    url: reader.result as string,
+                    url: `${BE_URL}/media/products/${imageName}`,
                     file: file,
                     id: imageName
                 };
@@ -396,7 +403,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                         {image.url ? (
                             <>
                                 <img
-                                    src={`${BE_URL}${image.url}`}
+                                    src={`${image.url}`}
                                     alt={`Preview ${index + 1}`}
                                     className="w-full h-32 object-contain mb-2"
                                 />
