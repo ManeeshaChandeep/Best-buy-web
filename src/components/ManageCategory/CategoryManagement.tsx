@@ -143,7 +143,7 @@ const CategoryManagement = () => {
     const handleDeleteCategory = async (categoryId: string) => {
         if (window.confirm("Are you sure you want to delete this category and all its subcategories?")) {
             try {
-                await apiClient.delete(`categories/?id=${categoryId}`);
+                await apiClient.delete(`categories/?id=${categoryId}`, {id: categoryId});
                 fetchCategories();
                 if (editingCategory?.id === categoryId) {
                     setEditingCategory(null);
