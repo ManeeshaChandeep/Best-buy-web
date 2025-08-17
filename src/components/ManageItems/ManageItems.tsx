@@ -208,7 +208,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                     warranty: product.warranty?.toString() || '',
                     delivery_available: product.delivery_available,
                     description: product.description,
-                    category: product.category?.id?.toString() || '',
+                    category: product.subcategory?.id?.toString() || '',
                     subcategory: product.subcategory?.id?.toString() || '',
                     brand: product.brand?.id?.toString() || '',
                     image_url: product.image_url,
