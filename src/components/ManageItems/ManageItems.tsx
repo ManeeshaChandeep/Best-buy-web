@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { Select, MenuItem, ListSubheader } from '@mui/material';
 import { apiClient } from '@/../src/libs/network';
 import 'react-quill-new/dist/quill.snow.css';
+const BE_URL = "https://api.bestbuyelectronics.lk";
 
 const ReactQuill = dynamic(() => import('react-quill-new'), {
     ssr: false,
@@ -197,6 +198,30 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
             try {
                 setLoading(true);
                 const product: Product = await apiClient.get(`products/${productId}/`);
+
+                // Process existing images to extract filenames and set up image previews
+                const existingImages = product.images || [];
+                const processedImagePreviews = Array(5).fill(null).map((_, index) => {
+                    if (index < existingImages.length) {
+                        const imageUrl = existingImages[index];
+                        // Extract filename from full path (remove /media/products/ prefix)
+                        const filename = imageUrl.replace('/media/products/', '');
+                        return {
+                            id: filename,
+                            url: imageUrl, // Keep full URL for display
+                            file: null
+                        };
+                    } else {
+                        return {
+                            id: `img-${Date.now()}-${index}`,
+                            url: '',
+                            file: null
+                        };
+                    }
+                });
+
+                setImagePreviews(processedImagePreviews);
+
                 setFormData({
                     id: product.id,
                     name: product.name,
@@ -212,7 +237,8 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                     subcategory: product.subcategory?.id?.toString() || '',
                     brand: product.brand?.id?.toString() || '',
                     image_url: product.image_url,
-                    images: product.images || [],
+                    // Store only filenames (without /media/products/ prefix)
+                    images: existingImages.map(img => img.replace('/media/products/', '')),
                 });
                 setIsEditing(true);
             } catch (err) {
@@ -283,6 +309,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
             description: '',
             category: '',
             subcategory: '',
+            brand: '',
             images: []
         });
         setImagePreviews(Array(5).fill(null).map((_, index) => ({
@@ -313,9 +340,10 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                 await apiClient.post("upload/", formPayload).then((res: UploadResponse) => {
                     if (res?.filename) {
                         imageName = res?.filename;
+                        // Store only the filename, not the full path
                         setFormData(prev => ({
                             ...prev,
-                            images: [...prev?.images, res.filename]
+                            images: [...(prev?.images || []), res.filename]
                         }));
                     }
                 })
@@ -350,10 +378,13 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
         };
         setImagePreviews(newImagePreviews);
 
-        setFormData(prev => ({
-            ...prev,
-            images: prev.images.filter(imgName => imgName !== previousId)
-        }));
+        // Remove the filename from the images array
+        if (previousId && previousId !== `img-${Date.now()}-${index}`) {
+            setFormData(prev => ({
+                ...prev,
+                images: prev.images.filter(imgName => imgName !== previousId)
+            }));
+        }
     };
 
     const renderImageUploads = () => (
@@ -365,7 +396,7 @@ const ManageItems = ({ productId, onProductUpdated }: ManageItemsProps) => {
                         {image.url ? (
                             <>
                                 <img
-                                    src={image.url}
+                                    src={`${BE_URL}${image.url}`}
                                     alt={`Preview ${index + 1}`}
                                     className="w-full h-32 object-contain mb-2"
                                 />
