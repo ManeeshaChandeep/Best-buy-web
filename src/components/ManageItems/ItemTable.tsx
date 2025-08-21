@@ -510,10 +510,10 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm text-gray-900">
-                                            {product.category.name}
+                                            {product.category?.name}
                                             {product.subcategory && (
                                                 <div className="text-xs text-gray-500">
-                                                    {product.subcategory.name}
+                                                    {product.subcategory?.name}
                                                 </div>
                                             )}
                                         </div>
