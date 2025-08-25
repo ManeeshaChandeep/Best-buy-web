@@ -40,50 +40,50 @@ const Footer: React.FC = () => {
     ];
 
     return (
-        <footer className="bg-gradient-to-b from-gray-50 to-gray-100 border-t border-gray-200 pt-12 pb-6">
+        <footer className="bg-gradient-to-b from-gray-50 to-gray-100 border-t border-gray-200 pt-1 pb-6">
 
             <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-                <div className=" text-white py-6">
+                <div className=" text-white pb-6">
                     <div className=" mx-auto grid grid-cols-2 md:grid-cols-4 gap-0.5 text-center">
                         {/* Customer Support */}
-                        <div className='bg-red-500 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
+                        <div className='bg-red-600 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
                             <div className="flex justify-center mb-2 w-f">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                     <path d="M18 15a3 3 0 0 0 3-3V9a6 6 0 0 0-12 0v3a3 3 0 0 0 3 3h6zm-6 4v2m-6-2a6 6 0 0 0 12 0" />
                                 </svg>
                             </div>
-                            <p className="text-sm">Customer Support<br />8am - 5pm</p>
+                            <p className="text-sm text-white font-medium">Customer Support<br />8am - 5pm</p>
                         </div>
 
                         {/* Island-wide Delivery */}
-                        <div className='bg-red-500 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
+                        <div className='bg-red-600 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
                             <div className="flex justify-center mb-2">
                                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 2C8.13 2 5 5.13 5 9c0 4.25 7 13 7 13s7-8.75 7-13c0-3.87-3.13-7-7-7z" />
                                 </svg>
                             </div>
-                            <p className="text-sm">Island-wide<br />Delivery</p>
+                            <p className="text-sm text-white font-medium">Island-wide<br />Delivery</p>
                         </div>
 
                         {/* Express Delivery */}
-                        <div className='bg-red-500 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
+                        <div className='bg-red-600 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
                             <div className="flex justify-center mb-2">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                     <path d="M13 16h-1v-4h-1M12 8h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
                                 </svg>
                             </div>
-                            <p className="text-sm">Express<br />Delivery</p>
+                            <p className="text-sm text-white font-medium">Express<br />Delivery</p>
                         </div>
 
                         {/* 100+ Service Centers */}
-                        <div className='bg-red-500 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
+                        <div className='bg-red-600 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
                             <div className="flex justify-center mb-2">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                     <path d="M12 8v4l3 3M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" />
                                 </svg>
                             </div>
-                            <p className="text-sm">100+ Service<br />Centers</p>
+                            <p className="text-sm text-white font-medium">100+ Service<br />Centers</p>
                         </div>
                     </div>
                 </div>
@@ -92,7 +92,7 @@ const Footer: React.FC = () => {
 
 
                     {/* Policies */}
-                    <div className="mt-0 border-b border-gray-200 md:border-none">
+                    <div className="mt-0 border-b-2 border-gray-200 md:border-none">
                         <h3
                             className={`text-base font-medium text-gray-800 flex justify-between items-center py-3 cursor-pointer ${
                                 !isMobile || expandedSections.policies ? 'mb-1' : ''
@@ -130,7 +130,7 @@ const Footer: React.FC = () => {
                     </div>
 
                     {/* Help Center */}
-                    <div className="mt-0 border-b border-gray-200 md:border-none">
+                    <div className="mt-0 border-b-2 border-gray-200 md:border-none">
                         <h3
                             className={`text-base font-medium text-gray-800 flex justify-between items-center py-3 cursor-pointer ${
                                 !isMobile || expandedSections.help ? 'mb-1' : ''
@@ -168,7 +168,7 @@ const Footer: React.FC = () => {
                     </div>
 
                     {/* Company */}
-                    <div className="mt-0 md:mt-0 border-b border-gray-200 md:border-none">
+                    <div className="mt-0 md:mt-0 border-b-2 border-gray-200 md:border-none">
                         <h3
                             className={`text-base font-medium text-gray-800 flex justify-between items-center py-3 cursor-pointer ${
                                 !isMobile || expandedSections.company ? 'mb-1' : ''

@@ -306,10 +306,7 @@ export default function Home() {
             <div className="mx-4 sm:mx-6 md:mx-12">
                 <div className="border-b border-gray-300 pb-1 mb-2 mt-4">
                     <div className="flex justify-between items-center">
-                        <h1 className="text-gray-800 text-xs md:text-sm font-medium">New Arrived</h1>
-                        <a href="#" className="text-blue-600 hover:text-blue-800 text-xs md:text-sm">
-                            VIEW ALL
-                        </a>
+                        <h1 className="text-red-600 text-[18px] md:text-[16px] font-semibold">New Arrived</h1>
                     </div>
                 </div>
 
@@ -352,7 +349,7 @@ export default function Home() {
                             <div key={category.id} className=" w-full">
                                 <div className="border-b border-gray-300 pb-1 mb-2">
                                     <div className="flex justify-between items-center">
-                                        <h1 className="text-red-600 text-[18px] md:text-[16px] font-bold">
+                                        <h1 className="text-red-600 text-[18px] md:text-[16px] font-semibold">
                                             {category.name}
                                         </h1>
                                         <a

@@ -5,8 +5,8 @@ import React from "react";
 const HeroSection = () => {
 
   return (
-      <section className="relative bg-gray-100">
-          <div className="container mx-auto flex flex-col  items-center justify-between px-6 py-20">
+      <section className="relative bg-gray-100 h-screen flex items-center justify-center">
+          <div className="container mx-auto flex flex-col  items-center justify-between px-6">
 
               {/* Left Side - Text */}
               <div className="max-w-2xl text-center ">
