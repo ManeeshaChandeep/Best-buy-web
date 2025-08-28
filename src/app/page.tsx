@@ -60,10 +60,12 @@ type CategoryKey =
     | "category5"
     | "category6";
 
-const loadProducts = (params: { category?: number; subcategory?: number }) => {
+const loadProducts = (params: { category?: number; subcategory?: number; bestOffers?:boolean; under?:number }) => {
     const query = new URLSearchParams();
     if (params.category) query.append("category", params.category.toString());
     if (params.subcategory) query.append("subcategory", params.subcategory.toString());
+    if (params.bestOffers) query.append("best_offer", "true");
+    if (params.under) query.append("under", params.under.toString());
 
     return apiClient.get<ProductListResponse>(`products/?${query.toString()}`);
 };
@@ -171,6 +173,8 @@ const ResponsiveImageGallery = () => {
 export default function Home() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [newProducts, setNewProducts] = useState<Product[]>([]);
+    const [bestOffers, setBestOffers] = useState<Product[]>([]);
+    const [specificPricedProducts, setSpecificPricedProducts] = useState<Product[]>([]);
     const [productsByCategory, setProductsByCategory] = useState<Record<CategoryKey, Product[]>>({
         category1: [],
         category2: [],
@@ -199,6 +203,12 @@ export default function Home() {
     useEffect(() => {
         loadProducts({}).then((res) => {
             setNewProducts(res.results);
+        });
+        loadProducts({bestOffers:true}).then((res) => {
+            setBestOffers(res.results);
+        });
+        loadProducts({under:10000}).then((res) => {
+            setSpecificPricedProducts(res.results);
         });
 
         apiClient.get<Category[]>("categories/").then(async (res) => {
@@ -335,6 +345,76 @@ export default function Home() {
                 </div>
 
                 {newProducts.length === 0 && (
+                    <p className="text-xs text-gray-500 w-full">No products available.</p>
+                )}
+
+
+                <div className="border-b border-gray-300 pb-1 mb-2 mt-4">
+                    <div className="flex justify-between items-center">
+                        <h1 className="text-red-600 text-[18px] md:text-[16px] font-semibold">Best Offers</h1>
+                    </div>
+                </div>
+
+                <div className="relative">
+                    <Slider {...getProductSettings(bestOffers)}>
+                        {bestOffers.map((product) => (
+                            <div key={product.id} className="px-1">
+                                <ItemCard
+                                    id={product.id}
+                                    imageUrl={
+                                        product.images?.[0]
+                                            ? `${BE_URL}${
+                                                product.images[0].startsWith("/") ? product.images[0] : "/" + product.images[0]
+                                            }`
+                                            : "/fallback.jpg"
+                                    }
+                                    imageSrc={categoryOne}
+                                    title={product.name}
+                                    oldPrice={product.old_price}
+                                    newPrice={product.price}
+                                    inStock={product.quantity > 0}
+                                />
+                            </div>
+                        ))}
+                    </Slider>
+                </div>
+
+                {bestOffers.length === 0 && (
+                    <p className="text-xs text-gray-500 w-full">No products available.</p>
+                )}
+
+
+                <div className="border-b border-gray-300 pb-1 mb-2 mt-4">
+                    <div className="flex justify-between items-center">
+                        <h1 className="text-red-600 text-[18px] md:text-[16px] font-semibold">Under 10,000</h1>
+                    </div>
+                </div>
+
+                <div className="relative">
+                    <Slider {...getProductSettings(specificPricedProducts)}>
+                        {specificPricedProducts.map((product) => (
+                            <div key={product.id} className="px-1">
+                                <ItemCard
+                                    id={product.id}
+                                    imageUrl={
+                                        product.images?.[0]
+                                            ? `${BE_URL}${
+                                                product.images[0].startsWith("/") ? product.images[0] : "/" + product.images[0]
+                                            }`
+                                            : "/fallback.jpg"
+                                    }
+                                    imageSrc={categoryOne}
+                                    title={product.name}
+                                    oldPrice={product.old_price}
+                                    newPrice={product.price}
+                                    inStock={product.quantity > 0}
+                                />
+                            </div>
+                        ))}
+                    </Slider>
+                </div>
+
+                {specificPricedProducts.length === 0 && (
                     <p className="text-xs text-gray-500 w-full">No products available.</p>
                 )}
 
