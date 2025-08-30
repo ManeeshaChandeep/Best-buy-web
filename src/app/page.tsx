@@ -135,15 +135,14 @@ const ResponsiveImageGallery = () => {
     if (!mounted) return null; // Prevent server/client markup mismatch
 
     const sliderSettings = {
-        dots: false,
+        dots: true,
         infinite: true,
         slidesToShow: 1,
         slidesToScroll: 1,
         autoplay: true,
-        speed: 2000,
+        speed: 1000,
         autoplaySpeed: 3000,
         cssEase: "ease-in-out",
-        arrows: true,
     };
 
     const images = [postOne, postTwo];
@@ -233,17 +232,15 @@ export default function Home() {
 
     const sliderImages = [postOne, postTwo, postThree];
     const heroSliderSettings = {
-        dots: false,
+        dots: true,
         infinite: true,
         slidesToShow: 1,
         slidesToScroll: 1,
         autoplay: true,
-        speed: 2000,
+        speed: 1000,
         autoplaySpeed: 3000,
         cssEase: "ease-in-out",
         arrows: true,
-        nextArrow: <HeroNextArrow />,
-        prevArrow: <HeroPrevArrow />,
     };
 
     const productSliderSettings = {
@@ -299,7 +296,7 @@ export default function Home() {
             <HeroSection />
 
             {/* Hero slider */}
-            <div className="mt-10 w-full relative">
+            <div className="w-full relative">
                 <Slider {...heroSliderSettings}>
                     {sliderImages.map((img, index) => (
                         <div key={index} className="w-full h-[180px] sm:h-[250px] md:h-[300px]">
