@@ -61,9 +61,11 @@ const ProductCard = ({
 
                 {/* Price Row */}
                 <div className="flex justify-center items-center gap-2 mt-0.5">
-                    <span className="text-[11px] sm:text-[15px] text-gray-400 line-through">
-                        {formatPrice(oldPrice)}
-                    </span>
+                    {Number(oldPrice) !== 0 && (
+                        <span className="text-[11px] sm:text-[15px] text-gray-400 line-through">
+                            {formatPrice(oldPrice)}
+                        </span>
+                    )}
                     <span className="text-[12px] sm:text-[17px] text-red-600 font-semibold">
                         {formatPrice(newPrice)}
                     </span>
