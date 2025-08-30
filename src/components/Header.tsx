@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useState, useEffect, JSX} from "react";
+import React, { useState, useEffect, JSX } from "react";
 import { useRouter } from "next/navigation";
 import { HiOutlineViewGrid } from "react-icons/hi";
 import { FiSearch } from "react-icons/fi";
@@ -8,56 +8,81 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Drawer from "@mui/material/Drawer";
 import { apiClient } from "@/libs/network";
 import Link from "next/link";
-import {
-    FaTv,
-    FaHeadphones,
-    FaTshirt,
-    FaMobileAlt,
-    FaBlender,
-    FaCogs
-} from "react-icons/fa";
+
+interface ApiSubcategory {
+    id: number;
+    name: string;
+    image: string;
+    parent: number;
+    subcategories: ApiSubcategory[];
+}
 
 interface ApiCategory {
-    id: string;
+    id: number;
     name: string;
-    parent: string | null;
+    image: string;
+    parent: number | null;
+    subcategories: ApiSubcategory[];
 }
 
 interface Subcategory {
-    id: string;
-    name: string;
-}
-
-interface Category {
-    id: string;
+    id: number;
     name: string;
     subcategories: Subcategory[];
 }
 
-const categoryIcons: Record<string, JSX.Element> = {
-    "TV": <FaTv className="text-red-500" />,
-    "Audio & Video": <FaHeadphones className="text-red-500" />,
-    "Home Appliances": <FaCogs className="text-red-500" />,
-    "Kitchen Appliances": <FaBlender className="text-red-500" />,
-    "Mobile Phones & Devices": <FaMobileAlt className="text-red-500" />,
-    "Personal Care": <FaTshirt className="text-red-500" />
-};
+interface Category {
+    id: number;
+    name: string;
+    subcategories: Subcategory[];
+}
 
 function MobileCategoryPanel({
-                                 showMobileCategories,
-                                 setShowMobileCategories,
-                                 categories,
-                                 loading
-                             }: {
+    showMobileCategories,
+    setShowMobileCategories,
+    categories,
+    loading
+}: {
     showMobileCategories: boolean;
     setShowMobileCategories: React.Dispatch<React.SetStateAction<boolean>>;
     categories: Category[];
     loading: boolean;
 }) {
-    const [expanded, setExpanded] = useState<string | null>(null);
+    const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
     const toggleExpanded = (id: string) => {
-        setExpanded(expanded === id ? null : id);
+        const newExpanded = new Set(expanded);
+        if (newExpanded.has(id)) {
+            newExpanded.delete(id);
+        } else {
+            newExpanded.add(id);
+        }
+        setExpanded(newExpanded);
+    };
+
+    const renderSubcategories = (subcategories: Subcategory[], level: number = 0) => {
+        return subcategories.map((sub) => (
+            <div key={sub.id} className={`${level > 0 ? 'ml-4' : ''}`}>
+                <button
+                    onClick={() => toggleExpanded(`sub-${sub.id}`)}
+                    className="w-full flex justify-between items-center py-2 text-left transition-colors"
+                >
+                    <span className="text-sm text-gray-700">{sub.name}</span>
+                    {sub.subcategories.length > 0 && (
+                        <ExpandMoreIcon
+                            className={`transform transition-transform duration-300 ${expanded.has(`sub-${sub.id}`) ? "rotate-180" : "rotate-0"
+                                } text-gray-500 text-sm`}
+                        />
+                    )}
+                </button>
+
+                {sub.subcategories.length > 0 && expanded.has(`sub-${sub.id}`) && (
+                    <div className="ml-4 border-l border-gray-200 pl-2">
+                        {renderSubcategories(sub.subcategories, level + 1)}
+                    </div>
+                )}
+            </div>
+        ));
     };
 
     return (
@@ -93,40 +118,27 @@ function MobileCategoryPanel({
                         >
                             {/* Category Button */}
                             <button
-                                onClick={() => toggleExpanded(category.id)}
-                                className="w-full flex justify-between items-center transition-colors"
+                                onClick={() => toggleExpanded(`cat-${category.id}`)}
+                                className="w-full flex justify-between items-center transition-colors py-2"
                             >
-                                <div className="flex items-center gap-3">
-                                    {categoryIcons[category.name] || <FaCogs className="text-red-500" />}
-                                    <span className="text-base text-black">{category.name}</span>
-                                </div>
+                                <span className="text-base text-black font-medium">{category.name}</span>
                                 <ExpandMoreIcon
-                                    className={`transform transition-transform duration-300 ${
-                                        expanded === category.id ? "rotate-180" : "rotate-0"
-                                    } text-gray-500`}
+                                    className={`transform transition-transform duration-300 ${expanded.has(`cat-${category.id}`) ? "rotate-180" : "rotate-0"
+                                        } text-gray-500`}
                                 />
                             </button>
 
                             {/* Subcategories */}
-                            {expanded === category.id && (
-                                <div className="mt-2 ml-9 flex flex-col space-y-2">
+                            {expanded.has(`cat-${category.id}`) && (
+                                <div className="mt-2 ml-2 flex flex-col space-y-1">
                                     <a
                                         href={`/category/${category.id}`}
-                                        className="text-sm font-medium text-gray-700 hover:text-red-600"
+                                        className="text-sm font-medium text-gray-700 hover:text-red-600 py-1"
                                         onClick={() => setShowMobileCategories(false)}
                                     >
                                         View All
                                     </a>
-                                    {category.subcategories.map((sub) => (
-                                        <a
-                                            key={sub.id}
-                                            href={`/category/${category.id}/subcategory/${sub.id}`}
-                                            className="text-sm text-gray-600 hover:text-red-600"
-                                            onClick={() => setShowMobileCategories(false)}
-                                        >
-                                            {sub.name}
-                                        </a>
-                                    ))}
+                                    {renderSubcategories(category.subcategories)}
                                 </div>
                             )}
                         </div>
@@ -141,7 +153,7 @@ function MobileCategoryPanel({
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [activeCategory, setActiveCategory] = useState<string | null>(null);
+    const [activeCategory, setActiveCategory] = useState<number | null>(null);
     const [showMobileCategories, setShowMobileCategories] = useState(false);
     const [showMobileSearch, setShowMobileSearch] = useState(false);
     const [categories, setCategories] = useState<Category[]>([]);
@@ -161,34 +173,26 @@ export default function Navbar() {
         const fetchCategories = async () => {
             try {
                 setLoading(true);
-                const response = await apiClient.get<ApiCategory[]>("categories/");
-                const mainCategories = response.filter((cat) => !cat.parent);
+                const response = await apiClient.get<ApiCategory[]>("categories/v2/");
 
-                // Order categories according to your first screenshot
-                const desiredOrder = [
-                    "TV",
-                    "Audio & Video",
-                    "Home Appliances",
-                    "Kitchen Appliances",
-                    "Mobile Phones & Devices",
-                    "Personal Care"
-                ];
+                // Filter only main categories (parent is null) and transform the data
+                const mainCategories = response
+                    .filter((cat) => !cat.parent)
+                    .map((category) => ({
+                        id: category.id,
+                        name: category.name,
+                        subcategories: category.subcategories.map((sub) => ({
+                            id: sub.id,
+                            name: sub.name,
+                            subcategories: sub.subcategories.map((subSub) => ({
+                                id: subSub.id,
+                                name: subSub.name,
+                                subcategories: subSub.subcategories
+                            }))
+                        }))
+                    }));
 
-                const categoriesWithSubs = desiredOrder
-                    .map((name) => {
-                        const category = mainCategories.find((cat) => cat.name === name);
-                        if (!category) return null;
-                        return {
-                            id: category.id,
-                            name: category.name,
-                            subcategories: response
-                                .filter((sub) => sub.parent === category.id)
-                                .map((sub) => ({ id: sub.id, name: sub.name }))
-                        };
-                    })
-                    .filter(Boolean) as Category[];
-
-                setCategories(categoriesWithSubs);
+                setCategories(mainCategories);
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Failed to load categories");
             } finally {
@@ -213,9 +217,8 @@ export default function Navbar() {
 
     return (
         <nav
-            className={`sticky top-0 z-50 transition-all ${
-                scrolled ? "bg-white shadow-md" : "bg-white"
-            }`}
+            className={`sticky top-0 z-50 transition-all ${scrolled ? "bg-white shadow-md" : "bg-white"
+                }`}
         >
             <div className="max-w-screen-xl mx-auto px-4">
                 {/* MOBILE NAVBAR */}
@@ -239,9 +242,8 @@ export default function Navbar() {
 
                 {/* MOBILE SEARCH INPUT */}
                 <div
-                    className={`lg:hidden absolute top-full left-0 right-0 px-4 py-3 transition-all duration-300 ${
-                        showMobileSearch ? "opacity-100" : "opacity-0 pointer-events-none"
-                    }`}
+                    className={`lg:hidden absolute top-full left-0 right-0 px-4 py-3 transition-all duration-300 ${showMobileSearch ? "opacity-100" : "opacity-0 pointer-events-none"
+                        }`}
                 >
                     <div className="relative">
                         <input
@@ -327,22 +329,22 @@ export default function Navbar() {
                         </div>
                         {activeCategory && (
                             <div className="w-64 py-2">
-                                <a
+                                <Link
                                     href={`/category/${activeCategory}`}
                                     className="block px-5 py-2 font-medium text-gray-800 hover:text-red-600 border-b border-gray-200"
                                 >
                                     {categories.find((c) => c.id === activeCategory)?.name}
-                                </a>
+                                </Link>
                                 {categories
                                     .find((c) => c.id === activeCategory)
                                     ?.subcategories.map((sub) => (
-                                        <a
+                                        <Link
                                             key={sub.id}
                                             href={`/category/${activeCategory}/subcategory/${sub.id}`}
                                             className="block px-5 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600"
                                         >
                                             {sub.name}
-                                        </a>
+                                        </Link>
                                     ))}
                             </div>
                         )}

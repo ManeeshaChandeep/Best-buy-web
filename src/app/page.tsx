@@ -19,6 +19,7 @@ import postThree from "@/../public/images/posts/postThree.png";
 import HeroSection from "@/components/HeroSection";
 import ItemCard from "@/components/ItemCard";
 import { apiClient } from "@/libs/network";
+import Link from "next/link";
 
 interface Category {
     id: string | number;
@@ -432,12 +433,12 @@ export default function Home() {
                                         <h1 className="text-red-600 text-[18px] md:text-[16px] font-semibold">
                                             {category.name}
                                         </h1>
-                                        <a
-                                            href="#"
+                                        <Link
+                                            href={`/category/${category.id}`}
                                             className="text-red-600 text-[13px] md:text-[12px]"
                                         >
                                             VIEW ALL
-                                        </a>
+                                        </Link>
 
                                     </div>
                                 </div>
