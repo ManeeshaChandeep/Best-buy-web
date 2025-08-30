@@ -8,6 +8,14 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Drawer from "@mui/material/Drawer";
 import { apiClient } from "@/libs/network";
 import Link from "next/link";
+import {
+    FaTv,
+    FaHeadphones,
+    FaTshirt,
+    FaMobileAlt,
+    FaBlender,
+    FaCogs
+} from "react-icons/fa";
 
 interface ApiSubcategory {
     id: number;
@@ -37,6 +45,35 @@ interface Category {
     subcategories: Subcategory[];
 }
 
+const categoryIcons: Record<string, JSX.Element> = {
+    "TV": <FaTv className="text-red-500" />,
+    "Audio & Video": <FaHeadphones className="text-red-500" />,
+    "Home Appliances": <FaCogs className="text-red-500" />,
+    "Kitchen Appliances": <FaBlender className="text-red-500" />,
+    "Mobile Phones & Devices": <FaMobileAlt className="text-red-500" />,
+    "Personal Care": <FaTshirt className="text-red-500" />
+};
+
+// Helper function to generate category URLs
+const generateCategoryUrl = (categoryId: number, categoryName: string, subcategoryPath: Array<{ name: string, id: number }> = []): string => {
+    const categorySlug = categoryName.toLowerCase().replace(/\s+/g, '-');
+
+    if (subcategoryPath.length === 0) {
+        return `/${categorySlug}/${categoryId}`;
+    }
+
+    if (subcategoryPath.length === 1) {
+        const subcategory = subcategoryPath[0];
+        return `/${categorySlug}/${categoryId}/${subcategory.name.toLowerCase().replace(/\s+/g, '-')}/${subcategory.id}`;
+    } else if (subcategoryPath.length === 2) {
+        const firstSub = subcategoryPath[0];
+        const secondSub = subcategoryPath[1];
+        return `/${categorySlug}/${categoryId}/${firstSub.name.toLowerCase().replace(/\s+/g, '-')}-${secondSub.name.toLowerCase().replace(/\s+/g, '-')}/${secondSub.id}`;
+    }
+
+    return `/${categorySlug}/${categoryId}`;
+};
+
 function MobileCategoryPanel({
     showMobileCategories,
     setShowMobileCategories,
@@ -60,29 +97,47 @@ function MobileCategoryPanel({
         setExpanded(newExpanded);
     };
 
-    const renderSubcategories = (subcategories: Subcategory[], level: number = 0) => {
-        return subcategories.map((sub) => (
-            <div key={sub.id} className={`${level > 0 ? 'ml-4' : ''}`}>
-                <button
-                    onClick={() => toggleExpanded(`sub-${sub.id}`)}
-                    className="w-full flex justify-between items-center py-2 text-left transition-colors"
-                >
-                    <span className="text-sm text-gray-700">{sub.name}</span>
-                    {sub.subcategories.length > 0 && (
-                        <ExpandMoreIcon
-                            className={`transform transition-transform duration-300 ${expanded.has(`sub-${sub.id}`) ? "rotate-180" : "rotate-0"
-                                } text-gray-500 text-sm`}
-                        />
-                    )}
-                </button>
+    const renderSubcategories = (subcategories: Subcategory[], level: number = 0, parentPath: Array<{ name: string, id: number }> = []) => {
+        return subcategories.map((sub) => {
+            const currentPath = [...parentPath, { name: sub.name, id: sub.id }];
+            const categoryId = categories.find(cat =>
+                cat.subcategories.some(subcat =>
+                    subcat.id === sub.id ||
+                    subcat.subcategories.some(subSub => subSub.id === sub.id)
+                )
+            )?.id || categories[0]?.id;
 
-                {sub.subcategories.length > 0 && expanded.has(`sub-${sub.id}`) && (
-                    <div className="ml-4 border-l border-gray-200 pl-2">
-                        {renderSubcategories(sub.subcategories, level + 1)}
+            return (
+                <div key={sub.id} className={`${level > 0 ? 'ml-4' : ''}`}>
+                    <div className="flex justify-between items-center">
+                        <Link
+                            href={generateCategoryUrl(categoryId, categories.find(cat => cat.id === categoryId)?.name || '', currentPath)}
+                            className="flex-1 text-sm text-gray-700 hover:text-red-600 py-2"
+                            onClick={() => setShowMobileCategories(false)}
+                        >
+                            {sub.name}
+                        </Link>
+                        {sub.subcategories.length > 0 && (
+                            <button
+                                onClick={() => toggleExpanded(`sub-${sub.id}`)}
+                                className="p-1"
+                            >
+                                <ExpandMoreIcon
+                                    className={`transform transition-transform duration-300 ${expanded.has(`sub-${sub.id}`) ? "rotate-180" : "rotate-0"
+                                        } text-gray-500 text-sm`}
+                                />
+                            </button>
+                        )}
                     </div>
-                )}
-            </div>
-        ));
+
+                    {sub.subcategories.length > 0 && expanded.has(`sub-${sub.id}`) && (
+                        <div className="ml-4 border-l border-gray-200 pl-2">
+                            {renderSubcategories(sub.subcategories, level + 1, currentPath)}
+                        </div>
+                    )}
+                </div>
+            );
+        });
     };
 
     return (
@@ -90,7 +145,7 @@ function MobileCategoryPanel({
             anchor="left"
             open={showMobileCategories}
             onClose={() => setShowMobileCategories(false)}
-            PaperProps={{ sx: { width: "75%", maxWidth: 300 } }}
+            PaperProps={{ sx: { width: "80%", maxWidth: 300 } }}
         >
             <div className="p-4 overflow-y-auto" style={{ maxHeight: "calc(100vh - 64px)" }}>
 
@@ -114,14 +169,17 @@ function MobileCategoryPanel({
                     categories.map((category, index) => (
                         <div
                             key={category.id}
-                            className={`pb-3 ${index !== categories.length - 1 ? "border-b border-gray-200 mb-3" : ""}`}
+                            className={`${index !== categories.length - 1 ? "border-b border-gray-200 mb-3" : ""}`}
                         >
                             {/* Category Button */}
                             <button
                                 onClick={() => toggleExpanded(`cat-${category.id}`)}
                                 className="w-full flex justify-between items-center transition-colors py-2"
                             >
-                                <span className="text-base text-black font-medium">{category.name}</span>
+                                <div className="flex items-center gap-2">
+                                    {categoryIcons[category.name] || <FaCogs className="text-red-500" />}
+                                    <span className="text-sm text-gray-800">{category.name}</span>
+                                </div>
                                 <ExpandMoreIcon
                                     className={`transform transition-transform duration-300 ${expanded.has(`cat-${category.id}`) ? "rotate-180" : "rotate-0"
                                         } text-gray-500`}
@@ -131,14 +189,14 @@ function MobileCategoryPanel({
                             {/* Subcategories */}
                             {expanded.has(`cat-${category.id}`) && (
                                 <div className="mt-2 ml-2 flex flex-col space-y-1">
-                                    <a
-                                        href={`/category/${category.id}`}
+                                    <Link
+                                        href={generateCategoryUrl(category.id, category.name)}
                                         className="text-sm font-medium text-gray-700 hover:text-red-600 py-1"
                                         onClick={() => setShowMobileCategories(false)}
                                     >
                                         View All
-                                    </a>
-                                    {renderSubcategories(category.subcategories)}
+                                    </Link>
+                                    {renderSubcategories(category.subcategories, 0, [])}
                                 </div>
                             )}
                         </div>
@@ -258,7 +316,7 @@ export default function Navbar() {
                         {searchQuery && (
                             <button
                                 onClick={() => setSearchQuery("")}
-                                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                                className="absolute right-3 top-2 text-gray-400 hover:text-gray-600"
                             >
                                 ✕
                             </button>
@@ -330,7 +388,7 @@ export default function Navbar() {
                         {activeCategory && (
                             <div className="w-64 py-2">
                                 <Link
-                                    href={`/category/${activeCategory}`}
+                                    href={generateCategoryUrl(activeCategory, categories.find(c => c.id === activeCategory)?.name || '')}
                                     className="block px-5 py-2 font-medium text-gray-800 hover:text-red-600 border-b border-gray-200"
                                 >
                                     {categories.find((c) => c.id === activeCategory)?.name}
@@ -338,13 +396,30 @@ export default function Navbar() {
                                 {categories
                                     .find((c) => c.id === activeCategory)
                                     ?.subcategories.map((sub) => (
-                                        <Link
-                                            key={sub.id}
-                                            href={`/category/${activeCategory}/subcategory/${sub.id}`}
-                                            className="block px-5 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600"
-                                        >
-                                            {sub.name}
-                                        </Link>
+                                        <div key={sub.id}>
+                                            <Link
+                                                href={generateCategoryUrl(activeCategory, categories.find(c => c.id === activeCategory)?.name || '', [{ name: sub.name, id: sub.id }])}
+                                                className="block px-5 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600"
+                                            >
+                                                {sub.name}
+                                            </Link>
+                                            {/* Show nested subcategories in horizontal grid */}
+                                            {sub.subcategories.length > 0 && (
+                                                <div className="ml-4 border-l border-gray-200 pl-2">
+                                                    <div className="grid grid-cols-2 gap-1 mt-1 mb-2">
+                                                        {sub.subcategories.map((subSub) => (
+                                                            <Link
+                                                                key={subSub.id}
+                                                                href={generateCategoryUrl(activeCategory, categories.find(c => c.id === activeCategory)?.name || '', [{ name: sub.name, id: sub.id }, { name: subSub.name, id: subSub.id }])}
+                                                                className="text-xs text-gray-600 hover:bg-gray-50 hover:text-red-600 px-2 py-1 rounded text-center hover:bg-gray-100 transition-colors"
+                                                            >
+                                                                {subSub.name}
+                                                            </Link>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     ))}
                             </div>
                         )}
