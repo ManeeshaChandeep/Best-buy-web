@@ -230,9 +230,9 @@ export default function ItemTable({ onEditProduct, refreshKey }: ItemTableProps)
     // Safe price formatter
     const formatPrice = (price?: number): string => {
         if (price === undefined) return 'N/A';
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('en-lk', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'LKR',
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }).format(price);
