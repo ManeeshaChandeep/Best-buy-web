@@ -20,6 +20,11 @@ import { apiClient } from "@/libs/network";
 
 const BE_URL = "https://api.bestbuyelectronics.lk";
 
+interface brand {
+    id: number;
+    name: string;
+}
+
 interface Product {
     id: number;
     name: string;
@@ -35,6 +40,7 @@ interface Product {
     image_url?: string;
     description?: string;
     images?: string[];
+    brand: brand;
 }
 
 const loadProductById = (id: number | string) => {
@@ -59,6 +65,10 @@ const ItemView: React.FC = () => {
         image_url: '',
         description: '',
         images: [],
+        brand: {
+            id: 0,
+            name: '',
+        },
     });
 
     useEffect(() => {
@@ -157,7 +167,7 @@ const ItemView: React.FC = () => {
 
                                 {/* Brand Name */}
                                 <div className="flex items-center space-x-3 mb-5">
-                                    <p className="text-2xl font-bold text-red-600 text-center">{'LG'}</p>
+                                    <p className="text-2xl font-bold text-red-600 text-center">{details.brand.name}</p>
                                     <div className="w-full mt-2"></div>
                                 </div>
 

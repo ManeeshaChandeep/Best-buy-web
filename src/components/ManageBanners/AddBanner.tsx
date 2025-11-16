@@ -2,10 +2,12 @@
 import React, { useState } from 'react';
 import { apiClient } from '@/../src/libs/network';
 import { FiUpload } from 'react-icons/fi';
+
 interface Banner {
     image: string;
     end_date: string;
-    link_url: string;
+    link?: string;
+    type?: string;
 }
 
 interface UploadResponse {
@@ -13,18 +15,24 @@ interface UploadResponse {
     status?: string;
 }
 
-const AddBanner = () => {
+interface AddBannerProps {
+    onBannerAdded?: () => void;
+}
+
+const AddBanner = ({ onBannerAdded }: AddBannerProps) => {
     const [formData, setFormData] = useState<Banner>({
         image: '',
         end_date: '',
-        link_url: ''
+        link: '',
+        type: 'banner'
     });
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
@@ -55,9 +63,9 @@ const AddBanner = () => {
         };
         reader.readAsDataURL(file);
 
-        // Upload image
+        // Upload image using upload/ endpoint like categories
         try {
-            setLoading(true);
+            setUploading(true);
             setError(null);
 
             const formPayload = new FormData();
@@ -65,7 +73,7 @@ const AddBanner = () => {
             formPayload.append("image_name", `banner_${Date.now()}`);
             formPayload.append("type", "banners");
 
-            const response: UploadResponse = await apiClient.post("offers/banners/", formPayload);
+            const response: UploadResponse = await apiClient.post("upload/", formPayload);
 
             setFormData(prev => ({
                 ...prev,
@@ -74,8 +82,9 @@ const AddBanner = () => {
 
         } catch (err) {
             setError('Failed to upload image. Please try again.');
+            setImagePreview(null);
         } finally {
-            setLoading(false);
+            setUploading(false);
         }
     };
 
@@ -87,19 +96,40 @@ const AddBanner = () => {
             return;
         }
 
+        if (!formData.end_date) {
+            setError('Please select an end date');
+            return;
+        }
+
         try {
             setLoading(true);
             setError(null);
 
-            await apiClient.post('offers/banners/', formData);
+            // Prepare payload matching API structure
+            const payload: any = {
+                image: formData.image,
+                end_date: formData.end_date,
+                type: formData.type || 'banner'
+            };
+
+            // Only include link if provided
+            if (formData.link) {
+                payload.link = formData.link;
+            }
+
+            await apiClient.post('offers/banners/', payload);
 
             setSuccess(true);
             setFormData({
                 image: '',
                 end_date: '',
-                link_url: ''
+                link: '',
+                type: 'banner'
             });
             setImagePreview(null);
+
+            // Refresh table
+            onBannerAdded?.();
 
             // Reset success message after 3 seconds
             setTimeout(() => setSuccess(false), 3000);
@@ -166,7 +196,7 @@ const AddBanner = () => {
                                     className="hidden"
                                     accept="image/*"
                                     onChange={handleImageChange}
-                                    disabled={loading}
+                                    disabled={loading || uploading}
                                 />
                             </label>
                         </div>
@@ -174,23 +204,23 @@ const AddBanner = () => {
                 </div>
 
                 <div className='flex gap-3 '>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2" htmlFor="link_url">
+                    <div className="mb-4 flex-1">
+                        <label className="block text-gray-700 font-bold mb-2" htmlFor="link">
                             Link URL
                         </label>
                         <input
                             className=" px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                            id="link_url"
+                            id="link"
                             type="url"
-                            name="link_url"
-                            value={formData.link_url}
+                            name="link"
+                            value={formData.link}
                             onChange={handleChange}
                             placeholder="https://example.com"
-                            disabled={loading}
+                            disabled={loading || uploading}
                         />
                     </div>
 
-                    <div className="mb-4">
+                    <div className="mb-4 flex-1">
                         <label className="block text-gray-700 font-bold mb-2" htmlFor="end_date">
                             End Date*
                         </label>
@@ -202,24 +232,42 @@ const AddBanner = () => {
                             value={formData.end_date}
                             onChange={handleChange}
                             required
-                            disabled={loading}
+                            disabled={loading || uploading}
                         />
+                    </div>
+
+                    <div className="mb-4 flex-1">
+                        <label className="block text-gray-700 font-bold mb-2" htmlFor="type">
+                            Type*
+                        </label>
+                        <select
+                            className=" px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                            id="type"
+                            name="type"
+                            value={formData.type}
+                            onChange={handleChange}
+                            required
+                            disabled={loading || uploading}
+                        >
+                            <option value="banner">Banner</option>
+                            <option value="popup">Popup</option>
+                        </select>
                     </div>
                 </div>
 
                 <button
                     type="submit"
                     className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-                    disabled={loading || !formData.image || !formData.end_date}
+                    disabled={loading || uploading || !formData.image || !formData.end_date}
                 >
-                    {loading ? (
+                    {loading || uploading ? (
                         <span className="flex items-center">
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Adding...
-            </span>
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            {uploading ? 'Uploading...' : 'Adding...'}
+                        </span>
                     ) : 'Add Banner'}
                 </button>
             </form>
