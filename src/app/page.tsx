@@ -161,11 +161,11 @@ const ResponsiveImageGallery = ({banners}: {banners: Banner[]}) => {
             <div className={`flex ${isMobile ? 'flex-col' : 'flex-row gap-5 justify-center items-center'}`}>
 
                 {banners.slice(0, 2).map((banner, idx) => (
-                    <div key={idx} className={`px-4 flex justify-center ${banners.length !== 1 ? 'w-1/2' : 'w-full'}`}>
+                    <div key={idx} className={`px-4 flex justify-center ${banners.length !== 1 ? `${isMobile ? 'w-full' : 'w-1/2'}` : 'w-full'}`}>
                         <img
                             src={`${BE_URL}${banner.image.startsWith('/') ? banner.image : '/' + banner.image}`}
                             alt={`Post ${idx}`}
-                            className={`rounded-md ${banners.length === 1 ? 'w-1/2' : 'w-full'} h-auto`}
+                            className={`rounded-md ${banners.length === 1 ? 'w-1/2' : 'w-full'} h-auto mb-4`}
                         />
                     </div>
                 ))}
@@ -331,7 +331,7 @@ export default function Home() {
                         {defaultBanners.map((banner, index) => (
                             <div
                                 key={index}
-                                className="w-full h-[180px] sm:h-[250px] md:h-[300px]"
+                                className="w-full h-[90px] sm:h-[120px] md:h-[180px] lg:h-[240px] xl:h-[300px]"
                             >
                                 <Image
                                     src={`${BE_URL}${banner.image.startsWith('/') ? banner.image : '/' + banner.image}`}
@@ -527,7 +527,7 @@ export default function Home() {
                     <img
                         key={index}
                         src={`${BE_URL}${banner.image.startsWith('/') ? banner.image : '/' + banner.image}`}
-                        alt="" className="rounded-md w-full h-auto px-8 pt-8"
+                        alt="" className="rounded-md w-full h-auto md:px-8 md:pt-8 pt-4 px-4"
                     />
                 ))}
             </div>
