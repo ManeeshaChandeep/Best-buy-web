@@ -1,15 +1,12 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import Image from "next/image";
 import Slider from "react-slick";
-import { useMediaQuery } from "react-responsive";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import {useMediaQuery} from "react-responsive";
+import {FaChevronLeft, FaChevronRight} from "react-icons/fa";
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-
-const BE_URL = "https://api.bestbuyelectronics.lk";
-
 // images
 import categoryOne from "@/../public/images/tv.png";
 import postOne from "@/../public/images/posts/postOne.png";
@@ -18,8 +15,10 @@ import postThree from "@/../public/images/posts/postThree.png";
 
 import HeroSection from "@/components/HeroSection";
 import ItemCard from "@/components/ItemCard";
-import { apiClient } from "@/libs/network";
+import {apiClient} from "@/libs/network";
 import Link from "next/link";
+
+const BE_URL = "https://api.bestbuyelectronics.lk";
 
 interface Category {
     id: string | number;
@@ -51,6 +50,16 @@ interface ProductListResponse {
     current_page: number;
     limit: number;
     results: Product[];
+}
+
+interface Banner {
+    id: number;
+    image: string;
+    end_date: string;
+    link?: string;
+    type?: string;
+    is_active?: boolean;
+    created_at?: string;
 }
 
 type CategoryKey =
@@ -125,7 +134,7 @@ const HeroPrevArrow = (props: any) => {
     );
 };
 
-const ResponsiveImageGallery = () => {
+const ResponsiveImageGallery = ({banners}: {banners: Banner[]}) => {
     // Hydration fix: only render after mounted on client
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
@@ -149,23 +158,18 @@ const ResponsiveImageGallery = () => {
 
     return (
         <div className="w-full my-4">
-            {isMobile ? (
-                <Slider {...sliderSettings}>
-                    {images.map((img, idx) => (
-                        <div key={idx} className="px-4">
-                            <Image src={img} alt={`Post ${idx}`} className="rounded-md" />
-                        </div>
-                    ))}
-                </Slider>
-            ) : (
-                <div className="flex gap-5 justify-center">
-                    {images.map((img, idx) => (
-                        <div key={idx}>
-                            <Image src={img} alt={`Post ${idx}`} className="rounded-md" />
-                        </div>
-                    ))}
-                </div>
-            )}
+            <div className={`flex ${isMobile ? 'flex-col' : 'flex-row gap-5 justify-center items-center'}`}>
+
+                {banners.slice(0, 2).map((banner, idx) => (
+                    <div key={idx} className={`px-4 flex justify-center ${banners.length !== 1 ? 'w-1/2' : 'w-full'}`}>
+                        <img
+                            src={`${BE_URL}${banner.image.startsWith('/') ? banner.image : '/' + banner.image}`}
+                            alt={`Post ${idx}`}
+                            className={`rounded-md ${banners.length === 1 ? 'w-1/2' : 'w-full'} h-auto`}
+                        />
+                    </div>
+                ))}
+            </div>
         </div>
     );
 };
@@ -183,6 +187,9 @@ export default function Home() {
         category5: [],
         category6: [],
     });
+    const [defaultBanners, setDefaultBanners] = useState<Banner[]>([]);
+    const [popupBanners, setPopupBanners] = useState<Banner[]>([]);
+
 
     // Hydration fix for media queries in Home
     const [mounted, setMounted] = useState(false);
@@ -199,6 +206,26 @@ export default function Home() {
             console.error(`Failed to load products for ${categoryKey}:`, error);
         }
     };
+
+    const getBanners = async (typeFilter: string) => {
+        // https://api.bestbuyelectronics.lk/offers/banners/?type=banner
+        let endpoint = `offers/banners/?type=${typeFilter}`;
+        return await apiClient.get(endpoint) as Banner[];
+    }
+
+    const getDefaultBanners = () => {
+        getBanners("banner").then((res) => {
+            const revArr = [...res].reverse()
+            setDefaultBanners(revArr)
+        })
+    }
+
+    const getPopupBanners = () => {
+        getBanners("popup").then((res) => {
+            const revArr = [...res].reverse()
+            setPopupBanners(revArr)
+        })
+    }
 
     useEffect(() => {
         loadProducts({}).then((res) => {
@@ -224,13 +251,15 @@ export default function Home() {
                 await loadProductsByCategory(categoryKey, categoryId);
             }
         });
+
+        getDefaultBanners()
+        getPopupBanners()
     }, []);
 
     const getSlidesToShow = (maxSlides, length) => {
         return Math.min(maxSlides, length);
     };
 
-    const sliderImages = [postOne, postTwo, postThree];
     const heroSliderSettings = {
         dots: true,
         infinite: true,
@@ -240,7 +269,7 @@ export default function Home() {
         speed: 1000,
         autoplaySpeed: 3000,
         cssEase: "ease-in-out",
-        arrows: true,
+        arrows: false,
     };
 
     const productSliderSettings = {
@@ -297,18 +326,38 @@ export default function Home() {
 
             {/* Hero slider */}
             <div className="w-full relative">
-                <Slider {...heroSliderSettings}>
-                    {sliderImages.map((img, index) => (
-                        <div key={index} className="w-full h-[180px] sm:h-[250px] md:h-[300px]">
-                            <Image
-                                src={img}
-                                alt={`Slide ${index + 1}`}
-                                className="rounded-none w-full h-full object-cover"
-                            />
-                        </div>
-                    ))}
-                </Slider>
+                {defaultBanners.length > 1 && (
+                    <Slider {...heroSliderSettings}>
+                        {defaultBanners.map((banner, index) => (
+                            <div
+                                key={index}
+                                className="w-full h-[180px] sm:h-[250px] md:h-[300px]"
+                            >
+                                <Image
+                                    src={`${BE_URL}${banner.image.startsWith('/') ? banner.image : '/' + banner.image}`}
+                                    alt={`Slide ${index + 1}`}
+                                    width={1200}
+                                    height={300}
+                                    className="rounded-none w-full h-full object-cover"
+                                />
+                            </div>
+                        ))}
+                    </Slider>
+                )}
+
+                {defaultBanners.length === 1 && (
+                    <div className="w-full h-[180px] sm:h-[250px] md:h-[300px]">
+                        <Image
+                            src={`${BE_URL}${defaultBanners[0].image.startsWith('/') ? defaultBanners[0].image : '/' + defaultBanners[0].image}`}
+                            alt="Slide"
+                            width={1200}
+                            height={300}
+                            className="rounded-none w-full h-full object-cover"
+                        />
+                    </div>
+                )}
             </div>
+
 
             {/* New Arrived */}
             <div className="mx-4 sm:mx-6 md:mx-12">
@@ -417,7 +466,7 @@ export default function Home() {
                 )}
 
                 <section className="flex justify-center flex-wrap">
-                    <ResponsiveImageGallery />
+                    <ResponsiveImageGallery banners={popupBanners} />
 
                     {categories.slice(0, 6).map((category, index) => {
                         const categoryKey = `category${index + 1}` as CategoryKey;
@@ -473,8 +522,14 @@ export default function Home() {
                 </section>
             </div>
 
-            <div className="mt-10 w-full">
-                <Image src={postThree} alt="" className="rounded-md" />
+            <div className="my-10 w-full">
+                {defaultBanners.slice(0, 2).map((banner, index) => (
+                    <img
+                        key={index}
+                        src={`${BE_URL}${banner.image.startsWith('/') ? banner.image : '/' + banner.image}`}
+                        alt="" className="rounded-md w-full h-auto px-8 pt-8"
+                    />
+                ))}
             </div>
         </div>
     );

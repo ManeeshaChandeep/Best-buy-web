@@ -44,9 +44,9 @@ const Footer: React.FC = () => {
 
             <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-                <div className=" text-white pb-6">
+                {/*<div className=" text-white pb-6">
                     <div className=" mx-auto grid grid-cols-2 md:grid-cols-4 gap-0.5 text-center">
-                        {/* Customer Support */}
+                         Customer Support
                         <div className='bg-red-600 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
                             <div className="flex justify-center mb-2 w-f">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -56,7 +56,7 @@ const Footer: React.FC = () => {
                             <p className="text-sm text-white font-medium">Customer Support<br />8am - 5pm</p>
                         </div>
 
-                        {/* Island-wide Delivery */}
+                         Island-wide Delivery
                         <div className='bg-red-600 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
                             <div className="flex justify-center mb-2">
                                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -66,7 +66,7 @@ const Footer: React.FC = () => {
                             <p className="text-sm text-white font-medium">Island-wide<br />Delivery</p>
                         </div>
 
-                        {/* Express Delivery */}
+                         Express Delivery
                         <div className='bg-red-600 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
                             <div className="flex justify-center mb-2">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -76,7 +76,7 @@ const Footer: React.FC = () => {
                             <p className="text-sm text-white font-medium">Express<br />Delivery</p>
                         </div>
 
-                        {/* 100+ Service Centers */}
+                         100+ Service Centers
                         <div className='bg-red-600 p-3 flex lg:flex-col items-center gap-5 flex-wrap'>
                             <div className="flex justify-center mb-2">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -86,9 +86,9 @@ const Footer: React.FC = () => {
                             <p className="text-sm text-white font-medium">100+ Service<br />Centers</p>
                         </div>
                     </div>
-                </div>
+                </div>*/}
 
-                <div className="grid px-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6"> {/* Reduced gap from gap-6 md:gap-10 */}
+                <div className="pt-6 grid px-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6"> {/* Reduced gap from gap-6 md:gap-10 */}
 
 
                     {/* Policies */}
