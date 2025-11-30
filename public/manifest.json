@@ -1,0 +1,22 @@
+{
+    "name": "Best Buy Electronics - Shop Latest Electronics, Appliances & Gadgets",
+    "short_name": "Best Buy",
+    "description": "Shop the latest electronics, appliances, and gadgets at Best Buy Electronics. Discover unbeatable deals on TVs, smartphones, refrigerators, washing machines, and more.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#dc2626",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/favicon.ico",
+            "sizes": "any",
+            "type": "image/x-icon"
+        }
+    ],
+    "categories": [
+        "shopping",
+        "electronics"
+    ],
+    "lang": "en"
+}
