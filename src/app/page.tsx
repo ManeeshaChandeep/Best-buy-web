@@ -4,6 +4,7 @@ import Image from "next/image";
 import Slider from "react-slick";
 import {useMediaQuery} from "react-responsive";
 import {FaChevronLeft, FaChevronRight} from "react-icons/fa";
+import {useRouter} from "next/navigation";
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -19,6 +20,26 @@ import {apiClient} from "@/libs/network";
 import Link from "next/link";
 
 const BE_URL = "https://api.bestbuyelectronics.lk";
+
+// Helper function to check if a link is internal (same origin)
+const isInternalLink = (link: string): boolean => {
+    if (!link || typeof window === 'undefined') return false;
+    
+    try {
+        // If it's a relative path (starts with /), it's internal
+        if (link.startsWith('/')) return true;
+        
+        // Parse both URLs and compare their origins (protocol + hostname + port)
+        const linkUrl = new URL(link);
+        const currentUrl = new URL(window.location.href);
+        
+        // Compare origins - if they match exactly, it's internal
+        return linkUrl.origin === currentUrl.origin;
+    } catch (e) {
+        // If URL parsing fails, treat relative paths as internal
+        return link.startsWith('/');
+    }
+};
 
 interface Category {
     id: string | number;
@@ -137,6 +158,7 @@ const HeroPrevArrow = (props: any) => {
 const ResponsiveImageGallery = ({banners}: {banners: Banner[]}) => {
     // Hydration fix: only render after mounted on client
     const [mounted, setMounted] = useState(false);
+    const router = useRouter();
     useEffect(() => setMounted(true), []);
 
     const isMobile = useMediaQuery({ maxWidth: 767 });
@@ -154,6 +176,27 @@ const ResponsiveImageGallery = ({banners}: {banners: Banner[]}) => {
         cssEase: "ease-in-out",
     };
 
+    const handleBannerClick = (banner: Banner) => {
+        if (!banner.link) return;
+        
+        if (isInternalLink(banner.link)) {
+            // Extract path from full URL if needed
+            let path = banner.link;
+            if (banner.link.startsWith('http')) {
+                try {
+                    const url = new URL(banner.link);
+                    path = url.pathname + url.search + url.hash;
+                } catch (e) {
+                    path = banner.link;
+                }
+            }
+            router.push(path);
+        } else {
+            // External link - open in new tab
+            window.open(banner.link, '_blank', 'noopener,noreferrer');
+        }
+    };
+
     const images = [postOne, postTwo];
 
     return (
@@ -161,7 +204,12 @@ const ResponsiveImageGallery = ({banners}: {banners: Banner[]}) => {
             <div className={`flex ${isMobile ? 'flex-col' : 'flex-row gap-5 justify-center items-center'}`}>
 
                 {banners.slice(0, 2).map((banner, idx) => (
-                    <div key={idx} className={`px-4 flex justify-center ${banners.length !== 1 ? `${isMobile ? 'w-full' : 'w-1/2'}` : 'w-full'}`}>
+                    <div 
+                        key={idx} 
+                        className={`px-4 flex justify-center ${banners.length !== 1 ? `${isMobile ? 'w-full' : 'w-1/2'}` : 'w-full'}`}
+                        onClick={() => handleBannerClick(banner)}
+                        style={{ cursor: banner.link ? 'pointer' : 'default' }}
+                    >
                         <img
                             src={`${BE_URL}${banner.image.startsWith('/') ? banner.image : '/' + banner.image}`}
                             alt={`Post ${idx}`}
@@ -175,6 +223,7 @@ const ResponsiveImageGallery = ({banners}: {banners: Banner[]}) => {
 };
 
 export default function Home() {
+    const router = useRouter();
     const [categories, setCategories] = useState<Category[]>([]);
     const [newProducts, setNewProducts] = useState<Product[]>([]);
     const [bestOffers, setBestOffers] = useState<Product[]>([]);
@@ -194,6 +243,27 @@ export default function Home() {
     // Hydration fix for media queries in Home
     const [mounted, setMounted] = useState(false);
     useEffect(() => setMounted(true), []);
+
+    const handleBannerClick = (banner: Banner) => {
+        if (!banner.link) return;
+        
+        if (isInternalLink(banner.link)) {
+            // Extract path from full URL if needed
+            let path = banner.link;
+            if (banner.link.startsWith('http')) {
+                try {
+                    const url = new URL(banner.link);
+                    path = url.pathname + url.search + url.hash;
+                } catch (e) {
+                    path = banner.link;
+                }
+            }
+            router.push(path);
+        } else {
+            // External link - open in new tab
+            window.open(banner.link, '_blank', 'noopener,noreferrer');
+        }
+    };
 
     const loadProductsByCategory = async (categoryKey: CategoryKey, category: number) => {
         try {
@@ -332,6 +402,8 @@ export default function Home() {
                             <div
                                 key={index}
                                 className="w-full h-[90px] sm:h-[120px] md:h-[180px] lg:h-[240px] xl:h-[300px]"
+                                onClick={() => handleBannerClick(banner)}
+                                style={{ cursor: banner.link ? 'pointer' : 'default' }}
                             >
                                 <Image
                                     src={`${BE_URL}${banner.image.startsWith('/') ? banner.image : '/' + banner.image}`}
@@ -346,7 +418,11 @@ export default function Home() {
                 )}
 
                 {defaultBanners.length === 1 && (
-                    <div className="w-full h-[180px] sm:h-[250px] md:h-[300px]">
+                    <div 
+                        className="w-full h-[180px] sm:h-[250px] md:h-[300px]"
+                        onClick={() => handleBannerClick(defaultBanners[0])}
+                        style={{ cursor: defaultBanners[0].link ? 'pointer' : 'default' }}
+                    >
                         <Image
                             src={`${BE_URL}${defaultBanners[0].image.startsWith('/') ? defaultBanners[0].image : '/' + defaultBanners[0].image}`}
                             alt="Slide"
@@ -524,11 +600,18 @@ export default function Home() {
 
             <div className="my-10 w-full">
                 {defaultBanners.slice(0, 2).map((banner, index) => (
-                    <img
+                    <div
                         key={index}
-                        src={`${BE_URL}${banner.image.startsWith('/') ? banner.image : '/' + banner.image}`}
-                        alt="" className="rounded-md w-full h-auto md:px-8 md:pt-8 pt-4 px-4"
-                    />
+                        onClick={() => handleBannerClick(banner)}
+                        style={{ cursor: banner.link ? 'pointer' : 'default' }}
+                        className="md:px-8 md:pt-8 pt-4 px-4"
+                    >
+                        <img
+                            src={`${BE_URL}${banner.image.startsWith('/') ? banner.image : '/' + banner.image}`}
+                            alt="" 
+                            className="rounded-md w-full h-auto"
+                        />
+                    </div>
                 ))}
             </div>
         </div>

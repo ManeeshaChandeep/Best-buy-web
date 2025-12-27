@@ -86,8 +86,25 @@ const BannerTable = ({ refreshTrigger }: BannerTableProps) => {
         }
     };
 
+    // Helper function to extract just the filename from image path
+    const extractImageFilename = (imagePath: string): string => {
+        if (!imagePath) return '';
+        
+        // If it's already just a filename (no slashes), return as is
+        if (!imagePath.includes('/')) return imagePath;
+        
+        // Extract filename from path (handles /media/banners/filename.png or media/banners/filename.png)
+        const parts = imagePath.split('/');
+        return parts[parts.length - 1];
+    };
+
     const handleEdit = (banner: Banner) => {
-        setEditingBanner({ ...banner });
+        // Extract just the filename from the image path when editing
+        const bannerWithCleanImage = {
+            ...banner,
+            image: extractImageFilename(banner.image)
+        };
+        setEditingBanner(bannerWithCleanImage);
         setActiveActionMenu(null);
     };
 
@@ -147,7 +164,10 @@ const BannerTable = ({ refreshTrigger }: BannerTableProps) => {
                 id: editingBanner.id
             };
 
-            if (editingBanner.image) payload.image = editingBanner.image;
+            // Extract just the filename from image path before sending
+            if (editingBanner.image) {
+                payload.image = extractImageFilename(editingBanner.image);
+            }
             if (editingBanner.end_date) payload.end_date = editingBanner.end_date;
             if (editingBanner.link !== undefined) payload.link = editingBanner.link;
             if (editingBanner.type) payload.type = editingBanner.type;
@@ -254,7 +274,11 @@ const BannerTable = ({ refreshTrigger }: BannerTableProps) => {
                                             alt="Banner preview"
                                             className="h-32 w-full object-contain border rounded"
                                             onError={(e) => {
-                                                (e.target as HTMLImageElement).src = '/placeholder-banner.png';
+                                                const target = e.target as HTMLImageElement;
+                                                // Prevent infinite loop by checking if already showing placeholder
+                                                if (!target.src.includes('placeholder-banner.png')) {
+                                                    target.src = '/placeholder-banner.png';
+                                                }
                                             }}
                                         />
                                     </div>
@@ -366,8 +390,12 @@ const BannerTable = ({ refreshTrigger }: BannerTableProps) => {
                                             alt="Banner"
                                             className="h-16 w-32 object-cover rounded"
                                             onError={(e) => {
-                                                (e.target as HTMLImageElement).src = '/placeholder-banner.png';
-                                                (e.target as HTMLImageElement).classList.add('bg-gray-100');
+                                                const target = e.target as HTMLImageElement;
+                                                // Prevent infinite loop by checking if already showing placeholder
+                                                if (!target.src.includes('placeholder-banner.png')) {
+                                                    target.src = '/placeholder-banner.png';
+                                                    target.classList.add('bg-gray-100');
+                                                }
                                             }}
                                         />
                                     </td>
