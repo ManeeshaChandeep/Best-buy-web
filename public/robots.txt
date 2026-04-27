@@ -7,9 +7,9 @@ Sitemap: https://bestbuyelectronics.lk/sitemap.xml
 # Disallow admin/dashboard pages
 Disallow: /dashboard
 Disallow: /api/
+Disallow: /details/
 
 # Allow all product and category pages
 Allow: /category/
-Allow: /details/
 Allow: /search
 

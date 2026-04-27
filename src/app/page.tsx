@@ -411,6 +411,7 @@ export default function Home() {
                                     width={1200}
                                     height={300}
                                     className="rounded-none w-full h-full object-cover"
+                                    unoptimized
                                 />
                             </div>
                         ))}
@@ -429,6 +430,7 @@ export default function Home() {
                             width={1200}
                             height={300}
                             className="rounded-none w-full h-full object-cover"
+                            unoptimized
                         />
                     </div>
                 )}
