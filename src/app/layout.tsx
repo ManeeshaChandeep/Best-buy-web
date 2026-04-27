@@ -71,6 +71,9 @@ export const metadata: Metadata = {
         images: ["/images/logo.png"],
         creator: "@bestbuyelectronics"
     },
+    verification: {
+        google: "1-fnyFEYrv8AnwikpHliEkzkY60r21zlI1i-y3ksre4"
+    },
     robots: {
         index: true,
         follow: true,
