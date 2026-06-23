@@ -158,7 +158,7 @@ function MobileCategoryPanel({
                     </div>
                     <div>
                         <p className="text-sm ">HOT LINE</p>
-                        <p className="text-sm text-gray-600">+94 76 123 4567</p>
+                        <p className="text-sm text-gray-600">+94 91 223 6900</p>
                     </div>
                 </div>
 
