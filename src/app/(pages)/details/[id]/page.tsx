@@ -167,7 +167,7 @@ const ItemView: React.FC = () => {
 
                                 {/* Brand Name */}
                                 <div className="flex items-center space-x-3 mb-5">
-                                    <p className="text-2xl font-bold text-red-600 text-center">{details.brand.name}</p>
+                                    <p className="text-2xl font-bold text-red-600 text-center">{details?.brand?.name}</p>
                                     <div className="w-full mt-2"></div>
                                 </div>
 
@@ -250,7 +250,7 @@ const ItemView: React.FC = () => {
 
                     {/* Brand Name */}
                     <div className="w-full flex justify-center mb-3">
-                        <p className="text-2xl font-bold text-red-600">{details.brand.name}</p>
+                        <p className="text-2xl font-bold text-red-600">{details?.brand?.name}</p>
                     </div>
 
                     {/* Model Number & SKU */}
